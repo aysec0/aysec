@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <title>Aysec — Cybersecurity courses, CTF, writeups</title>
+  <meta name="description" content="Personal site of Aysec. Hands-on cybersecurity courses, CTF challenges, and writeups. Hack to learn." />
+
+  <meta property="og:title" content="Aysec — Cybersecurity courses, CTF, writeups" />
+  <meta property="og:description" content="Hands-on cybersecurity training. Courses, CTF challenges, and writeups." />
+  <meta property="og:type" content="website" />
+
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="alternate" type="application/rss+xml" title="aysec — blog &amp; writeups" href="/rss.xml" />
+  <script src="/js/theme.js"></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Ammar Yasser",
+    "alternateName": "aysec",
+    "jobTitle": "Security Engineer & Educator",
+    "url": "https://aysec.me/",
+    "knowsAbout": [
+      "Web Application Security",
+      "Penetration Testing",
+      "AI Security",
+      "LLM Red Teaming",
+      "Binary Exploitation",
+      "Red Team Operations"
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "aysec",
+    "url": "https://aysec.me/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://aysec.me/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <div id="navbar-mount"></div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div>
+        <span class="hero-eyebrow">
+          <span class="dot"></span>
+          <span>Now teaching: red-team operations</span>
+        </span>
+        <h1 class="hero-title">
+          Hack to learn.<br />
+          <span class="terminal">Don't learn to hack.</span>
+        </h1>
+        <p class="hero-tagline">
+          Hands-on cybersecurity training by <strong>Ammar Yasser</strong> —
+          courses, CTF challenges, and writeups built from real engagements,
+          not slideware. Currently focused on
+          <span class="hero-rotator" id="heroRotator" aria-live="polite">AI red-teaming</span>.
+        </p>
+        <div class="hero-cta">
+          <a href="/courses" class="btn btn-primary">Browse courses</a>
+          <a href="/challenges" class="btn btn-terminal">$ ./play_ctf</a>
+        </div>
+
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-num" data-stat="courses">0</div>
+            <div class="hero-stat-label">Courses</div>
+          </div>
+          <div>
+            <div class="hero-stat-num" data-stat="challenges">0</div>
+            <div class="hero-stat-label">CTF challenges</div>
+          </div>
+          <div>
+            <div class="hero-stat-num" data-stat="writeups">0</div>
+            <div class="hero-stat-label">Writeups</div>
+          </div>
+        </div>
+
+        <div class="social-proof-strip">
+          <span class="social-proof-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="12 2 15 8.5 22 9 17 14 18 21 12 17.5 6 21 7 14 2 9 9 8.5 12 2"/></svg>
+            5,000+ practitioners trained
+          </span>
+          <span class="social-proof-divider">·</span>
+          <span class="social-proof-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Trusted by Fortune-500 sec teams
+          </span>
+        </div>
+      </div>
+
+      <div class="terminal-window" aria-hidden="true">
+        <div class="terminal-titlebar">
+          <div class="terminal-dots">
+            <span class="terminal-dot r"></span>
+            <span class="terminal-dot y"></span>
+            <span class="terminal-dot g"></span>
+          </div>
+          <div class="terminal-title">~/aysec — zsh — 80×24</div>
+          <div style="width:42px"></div>
+        </div>
+        <div class="terminal-body" id="termBody"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Press strip -->
+  <section class="press-strip" aria-label="As featured in">
+    <span class="press-label">Featured in</span>
+    <span class="press-item">BSidesCairo</span>
+    <span class="press-item">Black Hat MEA</span>
+    <span class="press-item">OWASP MENA</span>
+    <span class="press-item">Hack The Box Mentorship</span>
+    <span class="press-item">tldr;sec</span>
+  </section>
+
+  <!-- Tracks -->
+  <section class="section section-narrow" id="tracks" data-reveal>
+    <div class="container">
+      <div class="section-head-row">
+        <div>
+          <span class="section-eyebrow">// tracks</span>
+          <h2 class="section-title">Pick a domain, go deep.</h2>
+          <p class="section-subtitle">
+            Four tracks, each with courses + CTF challenges + writeups. Start
+            anywhere — they're independent.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4">
+        <a class="track-card" href="/courses/web-hacking-101" style="--track-color: var(--course);">
+          <div class="track-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div class="track-name">Web Security</div>
+          <p class="track-desc">OWASP Top 10 done right — labs, real bug reports, and the bits that actually move the needle on a pentest.</p>
+          <div class="track-meta">
+            <span>1 course · 1 challenge</span>
+            <span class="track-cta">Open</span>
+          </div>
+        </a>
+
+        <a class="track-card" href="/courses/binary-exploitation-foundations" style="--track-color: var(--challenge);">
+          <div class="track-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <div class="track-name">Binary Exploitation</div>
+          <p class="track-desc">Stack overflows, ROP, mitigations bypass. Understand the machine well enough to break it.</p>
+          <div class="track-meta">
+            <span>1 course · 1 challenge</span>
+            <span class="track-cta">Open</span>
+          </div>
+        </a>
+
+        <a class="track-card" href="/courses/red-team-ops" style="--track-color: var(--medium);">
+          <div class="track-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="track-name">Red Team Ops</div>
+          <p class="track-desc">Adversary emulation end-to-end — recon, initial access, persistence, lateral movement, exfil.</p>
+          <div class="track-meta">
+            <span>1 course · 0 challenges</span>
+            <span class="track-cta">Open</span>
+          </div>
+        </a>
+
+        <a class="track-card" href="/courses/llm-security-foundations" style="--track-color: var(--ai);">
+          <div class="track-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6v6H9z"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+          </div>
+          <div class="track-name">
+            AI Security
+            <span class="track-tag track-new" style="margin-left:0.5rem;">new</span>
+          </div>
+          <p class="track-desc">Prompt injection, RAG poisoning, jailbreak taxonomies, tool-use exploits. The new attack surface, treated seriously.</p>
+          <div class="track-meta">
+            <span>2 courses · 4 challenges</span>
+            <span class="track-cta">Open</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="section" id="about" data-reveal>
+    <div class="container about">
+      <div class="about-text">
+        <span class="section-eyebrow">// whoami</span>
+        <h2 class="section-title">Security engineer, educator, perpetual student.</h2>
+        <p>
+          I build training that respects your time. No 30-minute intros, no recycled
+          slide decks, no "look at this scary screenshot" content. Just labs, code,
+          and the actual mental models you need to do the job.
+        </p>
+        <p>
+          Everything here — courses, challenges, writeups — is open to feedback. If
+          something's wrong, broken, or could be better, <strong>tell me</strong>.
+        </p>
+
+        <div class="skill-grid" role="list">
+          <div class="skill-pill" role="listitem">web-app pentesting</div>
+          <div class="skill-pill" role="listitem">binary exploitation</div>
+          <div class="skill-pill" role="listitem">red-team ops</div>
+          <div class="skill-pill" role="listitem">reverse engineering</div>
+          <div class="skill-pill" role="listitem">cloud security</div>
+          <div class="skill-pill" role="listitem">forensics &amp; IR</div>
+        </div>
+      </div>
+
+      <aside class="about-card" aria-label="At a glance">
+        <div class="about-card-row">
+          <span class="about-card-key">status</span>
+          <span class="about-card-val"><span class="ok">●</span> available for engagements</span>
+        </div>
+        <div class="about-card-row">
+          <span class="about-card-key">based_in</span>
+          <span class="about-card-val">somewhere/UTC+2</span>
+        </div>
+        <div class="about-card-row">
+          <span class="about-card-key">stack</span>
+          <span class="about-card-val">burp · ghidra · python · go</span>
+        </div>
+        <div class="about-card-row">
+          <span class="about-card-key">teaching</span>
+          <span class="about-card-val">3 active cohorts</span>
+        </div>
+        <div class="about-card-row">
+          <span class="about-card-key">last_writeup</span>
+          <span class="about-card-val">2 days ago</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Courses preview -->
+  <section class="section" id="courses-preview" style="background: var(--bg-elev);" data-reveal>
+    <div class="container">
+      <div class="section-head-row">
+        <div>
+          <span class="section-eyebrow">// courses</span>
+          <h2 class="section-title">Learn the craft, not the hype.</h2>
+          <p class="section-subtitle">
+            Hands-on tracks from beginner web hacking to red-team operations. Free
+            and paid — no fluff in either.
+          </p>
+        </div>
+        <a href="/courses" class="btn btn-ghost">All courses →</a>
+      </div>
+
+      <div class="grid grid-cols-3" id="coursesGrid">
+        <div class="card"><div class="card-accent course"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div>
+        <div class="card"><div class="card-accent course"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div>
+        <div class="card"><div class="card-accent course"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Challenges preview -->
+  <section class="section" id="challenges-preview" data-reveal>
+    <div class="container">
+      <div class="section-head-row">
+        <div>
+          <span class="section-eyebrow">// ctf</span>
+          <h2 class="section-title">Pop a shell. Earn the points.</h2>
+          <p class="section-subtitle">
+            Original challenges across web, crypto, pwn, rev, and forensics. New
+            drops every other week.
+          </p>
+        </div>
+        <a href="/challenges" class="btn btn-ghost">All challenges →</a>
+      </div>
+
+      <div class="grid grid-cols-4" id="challengesGrid">
+        <div class="card"><div class="card-accent challenge"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:80%"></div></div></div>
+        <div class="card"><div class="card-accent challenge"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:80%"></div></div></div>
+        <div class="card"><div class="card-accent challenge"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:80%"></div></div></div>
+        <div class="card"><div class="card-accent challenge"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:80%"></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Leaderboard preview -->
+  <section class="section section-narrow" id="leaderboard-preview" data-reveal>
+    <div class="container">
+      <div class="section-head-row">
+        <div>
+          <span class="section-eyebrow">// leaderboard</span>
+          <h2 class="section-title">Top 5 this season.</h2>
+        </div>
+        <a href="/challenges#leaderboard" class="btn btn-ghost">Full board →</a>
+      </div>
+
+      <div class="leaderboard" id="leaderboard">
+        <div class="lb-row head">
+          <div>#</div>
+          <div>User</div>
+          <div style="text-align:right">Solves</div>
+          <div style="text-align:right">Score</div>
+        </div>
+        <div class="lb-row"><div class="lb-rank">01</div><div class="lb-user">—</div><div class="lb-solves">—</div><div class="lb-score">—</div></div>
+        <div class="lb-row"><div class="lb-rank">02</div><div class="lb-user">—</div><div class="lb-solves">—</div><div class="lb-score">—</div></div>
+        <div class="lb-row"><div class="lb-rank">03</div><div class="lb-user">—</div><div class="lb-solves">—</div><div class="lb-score">—</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Writeups -->
+  <section class="section" id="blog-preview" style="background: var(--bg-elev);" data-reveal>
+    <div class="container">
+      <div class="section-head-row">
+        <div>
+          <span class="section-eyebrow">// writeups</span>
+          <h2 class="section-title">Recent writeups &amp; notes.</h2>
+          <p class="section-subtitle">
+            Field notes from CTFs, deep dives on bugs, and the occasional rant about
+            the state of the industry.
+          </p>
+        </div>
+        <a href="/blog" class="btn btn-ghost">All posts →</a>
+      </div>
+
+      <div class="grid grid-cols-3" id="postsGrid">
+        <div class="card"><div class="card-accent blog"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div>
+        <div class="card"><div class="card-accent blog"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div>
+        <div class="card"><div class="card-accent blog"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="section" id="testimonials-section" data-reveal>
+    <div class="container">
+      <div class="section-head">
+        <span class="section-eyebrow">// students &amp; clients</span>
+        <h2 class="section-title">What people who've worked with me say.</h2>
+        <p class="section-subtitle">
+          Engineers from real teams who've taken courses, hired me for
+          engagements, or just survived one of my workshops.
+        </p>
+      </div>
+      <div class="grid grid-cols-3" id="testimonialsGrid"></div>
+    </div>
+  </section>
+
+  <!-- Lab + cheatsheets + events feature strip -->
+  <section class="section" id="resources-feature" data-reveal>
+    <div class="container">
+      <div class="lab-feature-strip">
+        <div>
+          <span class="section-eyebrow">// resources</span>
+          <h2 class="section-title">Bookmark these.</h2>
+          <p class="section-subtitle">
+            The pages that aren't behind a paywall and never will be — the daily-driver
+            tools, cheatsheets you'll keep hitting <kbd>Cmd-F</kbd> on, and the events
+            calendar that tracks every CTF and conference worth knowing about.
+          </p>
+        </div>
+        <div class="lab-feature-grid">
+          <a class="lab-feature-pill" href="/lab">
+            <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 2v6m6-6v6M3 8h18M5 8v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/></svg></span>
+            Security lab
+          </a>
+          <a class="lab-feature-pill" href="/cheatsheets">
+            <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+            Cheatsheets
+          </a>
+          <a class="lab-feature-pill" href="/events">
+            <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            CTF + cons calendar
+          </a>
+          <a class="lab-feature-pill" href="/tools">
+            <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+            OSS tools
+          </a>
+          <a class="lab-feature-pill" href="/certifications">
+            <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 22 12 19 17 22 15.79 13.88"/></svg></span>
+            Cert prep
+          </a>
+          <a class="lab-feature-pill" href="/tracks">
+            <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+            Learning paths
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter -->
+  <section class="section" id="newsletter-strip" style="background: var(--bg-elev);" data-reveal>
+    <div class="container" style="max-width:760px">
+      <div class="newsletter-card">
+        <span class="section-eyebrow">// signal &gt; noise</span>
+        <h2 class="cta-title">Get the monthly newsletter.</h2>
+        <p class="cta-subtitle">
+          The five best things I read this month, one deep dive, and what's
+          new on the platform. One email. Zero spam.
+        </p>
+        <form class="newsletter-form" id="heroNlForm">
+          <input class="input" type="email" id="hero-nl-email" name="email" placeholder="you@domain.com" required />
+          <button class="btn btn-primary" type="submit" id="hero-nl-submit">Subscribe</button>
+        </form>
+        <div id="hero-nl-msg" class="newsletter-trust">No spam. Unsubscribe in one click.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Community -->
+  <section class="section section-narrow" data-reveal>
+    <div class="container">
+      <a href="/community" class="community-cta" style="text-decoration:none; color:inherit;">
+        <div class="community-cta-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.078.037 13.7 13.7 0 0 0-.61 1.249 18.27 18.27 0 0 0-5.487 0 12.65 12.65 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.099.245.198.372.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.974 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        </div>
+        <div class="community-cta-text">
+          <div class="community-cta-title">Join the Discord</div>
+          <div class="community-cta-sub">Live discussion, lab help, monthly office hours, and first dibs on new CTF drops.</div>
+        </div>
+        <span class="btn btn-primary">Open community →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section" data-reveal>
+    <div class="container">
+      <div class="cta-banner">
+        <span class="section-eyebrow">// join</span>
+        <h2 class="cta-title">Ready to break some things — properly?</h2>
+        <p class="cta-subtitle">
+          Free account, free challenges, free preview lessons. Upgrade only when you
+          want to go deeper.
+        </p>
+        <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap;">
+          <a href="/signup" class="btn btn-primary">Create free account</a>
+          <a href="/courses" class="btn btn-ghost">Browse paid courses</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/terminal.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

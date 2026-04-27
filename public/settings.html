@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Settings — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs">
+        <a href="/">~</a><span class="sep">/</span>
+        <a href="/dashboard">dashboard</a><span class="sep">/</span>
+        <span>settings</span>
+      </div>
+      <span class="page-eyebrow">// /settings</span>
+      <h1 class="page-title">Settings</h1>
+      <p class="page-subtitle">Profile, password, theme, notifications.</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="settings-shell" data-reveal>
+        <nav class="settings-nav" aria-label="Settings sections">
+          <a href="#profile"  class="active">Profile</a>
+          <a href="#password">Password</a>
+          <a href="#theme">Theme</a>
+          <a href="#notifications">Notifications</a>
+          <a href="#account" style="margin-top:0.4rem; padding-top:0.6rem; border-top:1px solid var(--border); color:var(--hard);">Danger zone</a>
+        </nav>
+        <div>
+          <!-- Profile -->
+          <section class="settings-card" id="profile">
+            <h2>Profile</h2>
+            <p class="desc">How your name and avatar appear on your public profile, the leaderboard, and challenge solver lists. Username can't be changed.</p>
+            <form class="form" id="profileForm">
+              <div id="profileAlert" hidden></div>
+
+              <div class="field">
+                <label class="field-label">Avatar</label>
+                <div class="avatar-preview-row">
+                  <div class="avatar-preview" id="avatarPreview">A</div>
+                  <div>
+                    <div class="avatar-tabs">
+                      <button type="button" class="avatar-tab is-active" data-tab="emoji">Pick an emoji</button>
+                      <button type="button" class="avatar-tab"           data-tab="url">Paste image URL</button>
+                      <button type="button" class="avatar-tab"           data-tab="initials">Initials (default)</button>
+                    </div>
+
+                    <div class="avatar-tab-panel is-active" data-panel="emoji">
+                      <div class="avatar-emoji-grid" id="avatarEmojiGrid"></div>
+                      <div class="field-row">
+                        <input class="input" type="text" id="avatarCustomEmoji" maxlength="4" placeholder="or type any emoji" />
+                        <button type="button" class="btn btn-ghost" id="avatarCustomApply">use</button>
+                      </div>
+                    </div>
+
+                    <div class="avatar-tab-panel" data-panel="url">
+                      <div class="field-row">
+                        <input class="input mono" type="url" id="avatarUrlInput" placeholder="https://example.com/me.jpg" maxlength="200" />
+                        <button type="button" class="btn btn-ghost" id="avatarUrlApply">apply</button>
+                      </div>
+                      <span class="field-hint">Must be HTTPS. Square images render best. Max 200 chars.</span>
+                    </div>
+
+                    <div class="avatar-tab-panel" data-panel="initials">
+                      <p class="field-hint">Reset to your auto-generated initials avatar — gradient color comes from your level tier.</p>
+                      <button type="button" class="avatar-clear-btn" id="avatarClear">reset to initials</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field-label" for="set-username">Username</label>
+                <input class="input mono" id="set-username" disabled />
+                <span class="field-hint">Permanent. Email me if you really need to change it.</span>
+              </div>
+              <div class="field">
+                <label class="field-label" for="set-display">Display name</label>
+                <input class="input" id="set-display" maxlength="64" />
+              </div>
+              <div class="field">
+                <label class="field-label" for="set-bio">Bio</label>
+                <textarea class="textarea" id="set-bio" maxlength="500" placeholder="A line or two about you (visible on your public profile)."></textarea>
+                <span class="field-hint" id="bioCounter">0 / 500</span>
+              </div>
+              <button type="submit" class="btn btn-primary" id="profileSubmit">Save profile</button>
+            </form>
+          </section>
+
+          <!-- Password -->
+          <section class="settings-card" id="password">
+            <h2>Password</h2>
+            <p class="desc">Use a passphrase. Long beats complex.</p>
+            <form class="form" id="pwForm">
+              <div id="pwAlert" hidden></div>
+              <div class="field">
+                <label class="field-label" for="set-cur-pw">Current password</label>
+                <input class="input" type="password" id="set-cur-pw" autocomplete="current-password" required />
+              </div>
+              <div class="field">
+                <label class="field-label" for="set-new-pw">New password</label>
+                <input class="input" type="password" id="set-new-pw" autocomplete="new-password" minlength="8" required />
+                <span class="field-hint">8+ characters.</span>
+              </div>
+              <button type="submit" class="btn btn-primary" id="pwSubmit">Change password</button>
+            </form>
+          </section>
+
+          <!-- Theme -->
+          <section class="settings-card" id="theme">
+            <h2>Theme</h2>
+            <p class="desc">Saved per-browser. Defaults to your system preference.</p>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button class="btn btn-ghost" data-theme-set="dark"  id="themeDark">Dark</button>
+              <button class="btn btn-ghost" data-theme-set="light" id="themeLight">Light</button>
+              <button class="btn btn-ghost" data-theme-set="system" id="themeSystem">Match system</button>
+            </div>
+          </section>
+
+          <!-- Notifications -->
+          <section class="settings-card" id="notifications">
+            <h2>Notifications</h2>
+            <p class="desc">In-platform notifications fire automatically (achievements, level-ups, certs). Email is opt-in.</p>
+            <form class="form" id="notifForm">
+              <div id="notifAlert" hidden></div>
+              <div class="field">
+                <label style="display:flex; align-items:center; gap:0.6rem; cursor:pointer;">
+                  <input type="checkbox" id="notif-newsletter" />
+                  <div>
+                    <div style="color:var(--text); font-weight:500;">Subscribe to the monthly newsletter</div>
+                    <span class="field-hint">One email per month. Five things I read, one deep dive, what's new on the platform.</span>
+                  </div>
+                </label>
+              </div>
+              <button type="submit" class="btn btn-primary" id="notifSubmit">Save preferences</button>
+            </form>
+          </section>
+
+          <!-- Danger zone -->
+          <section class="settings-card settings-danger" id="account">
+            <h2>Delete account</h2>
+            <p class="desc">Permanently delete your account, progress, and certificates. Cannot be undone.</p>
+            <button class="btn btn-ghost" id="deleteBtn" style="border-color: color-mix(in srgb, var(--hard) 50%, var(--border)); color: var(--hard);">Delete my account</button>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/avatar.js"></script>
+  <script src="/js/settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Changelog — aysec</title>
+  <meta name="description" content="Everything that ships, with dates. Platform updates, new courses, new CTF challenges." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>changelog</span></div>
+      <span class="page-eyebrow">// /changelog</span>
+      <h1 class="page-title">Changelog</h1>
+      <p class="page-subtitle">
+        Everything that ships, with dates. The platform is alive — this page proves it.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container" style="max-width:880px">
+
+      <div class="changelog-entry" data-reveal>
+        <div>
+          <div class="changelog-date">2026-04-26</div>
+          <div class="changelog-version">v0.7.0</div>
+        </div>
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:0.4rem;">
+            <span class="changelog-tag added">added</span>
+            Tracks, profiles, hints
+          </h3>
+          <ul style="color:var(--text-muted); padding-left:1.2rem; line-height:1.7;">
+            <li><strong>4 learning paths</strong> launched: Web Pentester, AI Red Teamer, Red Teamer, Cloud Security Specialist</li>
+            <li><strong>Public profile pages</strong> at <code>/u/:username</code> — score, solves, certs, heatmap, all shareable</li>
+            <li><strong>CTF hints</strong> — progressive hints on 8 challenges, click-to-reveal</li>
+            <li><strong>Lesson time estimates</strong> on every lesson</li>
+            <li><strong>5 new blog posts</strong>, including JWT alg=none in 2026 + AWS field report + CTF authoring</li>
+            <li><strong>Roadmap, changelog, and tools pages</strong> (this one)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div>
+          <div class="changelog-date">2026-04-26</div>
+          <div class="changelog-version">v0.6.0</div>
+        </div>
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:0.4rem;">
+            <span class="changelog-tag added">added</span>
+            9 new courses + picoCTF redesign
+          </h3>
+          <ul style="color:var(--text-muted); padding-left:1.2rem; line-height:1.7;">
+            <li>9 new courses: Linux Privesc, OSINT, RE 101, Bug Bounty, API Security, Mobile, Cloud AWS, AD Attacks, Smart Contracts</li>
+            <li>10 new CTF challenges, filling rev + misc categories</li>
+            <li><strong>/challenges</strong> rebuilt picoCTF-style: stat strip, grouped categories, lime-on-purple solved states</li>
+            <li>8 new course-specific testimonials, 10 new per-course FAQs</li>
+            <li><span class="changelog-tag removed">removed</span> Global ⌘K search bar (will return when content volume justifies it)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div>
+          <div class="changelog-date">2026-04-26</div>
+          <div class="changelog-version">v0.5.0</div>
+        </div>
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:0.4rem;">
+            <span class="changelog-tag added">added</span>
+            Monetization &amp; portfolio expansion
+          </h3>
+          <ul style="color:var(--text-muted); padding-left:1.2rem; line-height:1.7;">
+            <li>Pricing page with 3 tiers (single course, lifetime bundle, Pro Monthly)</li>
+            <li>Newsletter system: footer + landing forms + dedicated <code>/newsletter</code> page</li>
+            <li><strong>Course completion certificates</strong> — auto-issued, shareable URL, LinkedIn/X share buttons</li>
+            <li>Hire me page with services + working contact form</li>
+            <li>Talks page with speaking history</li>
+            <li>About page rebuild with credentials, philosophy, embedded talks &amp; FAQs</li>
+            <li>Legal: Terms / Privacy / Refunds — written, not lorem</li>
+            <li>SEO: <code>sitemap.xml</code>, <code>rss.xml</code>, <code>robots.txt</code>, JSON-LD on landing + about</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div>
+          <div class="changelog-date">2026-04-26</div>
+          <div class="changelog-version">v0.4.0</div>
+        </div>
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:0.4rem;">
+            <span class="changelog-tag added">added</span>
+            Iconic pattern theft (HackTheBox / TryHackMe / 0xdf)
+          </h3>
+          <ul style="color:var(--text-muted); padding-left:1.2rem; line-height:1.7;">
+            <li>First-blood crown + top-10 solver list on every challenge page</li>
+            <li>Difficulty dots indicator</li>
+            <li>Glow-on-hover for cards</li>
+            <li>Activity heatmap on dashboard (last 12 weeks, GitHub-style)</li>
+            <li>Streak pill (🔥 N-day streak)</li>
+            <li>Sticky TOC sidebar on blog posts (0xdf-style)</li>
+            <li>Heading anchor links + copy-code buttons in prose</li>
+            <li>Related posts at the bottom of each blog post</li>
+            <li>Animated stat counters on hero</li>
+            <li>Category breakdown bars on dashboard</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div>
+          <div class="changelog-date">2026-04-26</div>
+          <div class="changelog-version">v0.3.0</div>
+        </div>
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:0.4rem;">
+            <span class="changelog-tag added">added</span>
+            Full subpages + polish pass
+          </h3>
+          <ul style="color:var(--text-muted); padding-left:1.2rem; line-height:1.7;">
+            <li>All 11 navbar pages now real (courses, course detail with lesson viewer, challenges, challenge detail, blog, post detail, dashboard, login, signup, about)</li>
+            <li>Markdown rendering on lessons + posts via <code>marked</code></li>
+            <li>Token-based design system, dark + light themes</li>
+            <li>Complete CSS scaffolding for forms, alerts, prose, code blocks, breadcrumbs</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div>
+          <div class="changelog-date">2026-04-26</div>
+          <div class="changelog-version">v0.2.0</div>
+        </div>
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:0.4rem;">
+            <span class="changelog-tag changed">renamed</span>
+            Brand finalized — aysec
+          </h3>
+          <ul style="color:var(--text-muted); padding-left:1.2rem; line-height:1.7;">
+            <li>Personal handle locked in: <strong>aysec</strong> (Ammar Yasser)</li>
+            <li>Sweep across all HTML/JS/SEO/.env</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="changelog-entry">
+        <div>
+          <div class="changelog-date">2026-04-26</div>
+          <div class="changelog-version">v0.1.0</div>
+        </div>
+        <div>
+          <h3 style="font-size:1.2rem; font-weight:700; letter-spacing:-0.02em; margin-bottom:0.4rem;">
+            <span class="changelog-tag added">added</span>
+            Initial scaffold
+          </h3>
+          <ul style="color:var(--text-muted); padding-left:1.2rem; line-height:1.7;">
+            <li>Express + SQLite + JWT auth + Stripe checkout backend</li>
+            <li>Hacker-aesthetic landing page with terminal typewriter hero</li>
+            <li>Free + paid courses, CTF challenges with sha256-checked flags + leaderboard, blog/writeups</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Dashboard — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <!-- HERO: greeting + avatar + level + XP -->
+  <header class="dash-hero">
+    <div class="container">
+      <div class="dash-hero-row" id="dashHero">
+        <!-- avatar / greeting / streak — populated by JS -->
+        <div style="position:relative;">
+          <div class="skeleton" style="width:92px; height:92px; border-radius:50%;"></div>
+        </div>
+        <div>
+          <div class="skeleton" style="height:14px; width:140px; margin-bottom:0.6rem;"></div>
+          <div class="skeleton" style="height:32px; width:60%; margin-bottom:1rem;"></div>
+          <div class="skeleton" style="height:20px; width:80%;"></div>
+        </div>
+        <div class="dash-hero-streak">
+          <div class="skeleton" style="height:32px; width:120px;"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- QUICK ACTIONS: continue learning + today's challenge + weekly ring -->
+  <section class="section section-narrow">
+    <div class="container">
+      <div class="dash-section-head">
+        <div>
+          <span class="eyebrow">// quick actions</span>
+          <h2 class="title">What's next</h2>
+        </div>
+      </div>
+      <div class="dash-actions-grid" id="dashActions" data-reveal>
+        <div class="dash-action"><div class="skeleton" style="height:14px; width:60%; margin-bottom:0.5rem;"></div><div class="skeleton" style="height:18px; width:80%;"></div></div>
+        <div class="dash-action"><div class="skeleton" style="height:14px; width:60%; margin-bottom:0.5rem;"></div><div class="skeleton" style="height:18px; width:80%;"></div></div>
+        <div class="dash-action"><div class="skeleton" style="height:14px; width:60%; margin-bottom:0.5rem;"></div><div class="skeleton" style="height:18px; width:80%;"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS ROW (animated counters) -->
+  <section class="section section-narrow">
+    <div class="container">
+      <div class="stat-grid" data-reveal>
+        <div class="stat-card dash-stat-card">
+          <div class="stat-card-label dash-tip" data-tip="Total points across all CTF challenges you've solved.">Score</div>
+          <div class="stat-card-value counter" id="statScore" data-target="0">—</div>
+          <div class="stat-card-foot">CTF points</div>
+        </div>
+        <div class="stat-card dash-stat-card">
+          <div class="stat-card-label dash-tip" data-tip="Number of CTF challenges you've solved correctly.">Solves</div>
+          <div class="stat-card-value counter" id="statSolves" data-target="0">—</div>
+          <div class="stat-card-foot">Challenges done</div>
+        </div>
+        <div class="stat-card dash-stat-card">
+          <div class="stat-card-label dash-tip" data-tip="Your position on the all-time leaderboard. #1 is the highest score across all users.">Rank</div>
+          <div class="stat-card-value" id="statRank">—</div>
+          <div class="stat-card-foot">All-time</div>
+        </div>
+        <div class="stat-card dash-stat-card">
+          <div class="stat-card-label dash-tip" data-tip="Number of courses you've enrolled in (free or paid). Tracked progress and certificate upon completion.">Courses</div>
+          <div class="stat-card-value counter" id="statCourses" data-target="0">—</div>
+          <div class="stat-card-foot">Enrolled</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HEATMAP + WEEKLY GOALS / SUMMARY -->
+  <section class="section section-narrow">
+    <div class="container">
+      <div class="grid" style="grid-template-columns: 1fr; gap: 1.5rem;" id="overviewGrid" data-reveal>
+        <div class="heatmap-card" id="heatmapCard">
+          <div class="heatmap-head">
+            <div>
+              <div class="heatmap-title">Activity</div>
+              <div class="dim" style="font-size:0.82rem; font-family:var(--font-mono); margin-top:2px;">Last 12 weeks · solves + lesson completions</div>
+            </div>
+            <div class="heatmap-legend">
+              less
+              <span class="swatches">
+                <span class="heatmap-cell"></span>
+                <span class="heatmap-cell" data-lvl="1"></span>
+                <span class="heatmap-cell" data-lvl="2"></span>
+                <span class="heatmap-cell" data-lvl="3"></span>
+                <span class="heatmap-cell" data-lvl="4"></span>
+              </span>
+              more
+            </div>
+          </div>
+          <div class="heatmap" id="heatmap"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SKILL RADAR + CATEGORY BARS + ACTIVITY FEED -->
+  <section class="section section-narrow">
+    <div class="container">
+      <div class="dash-grid-2" data-reveal>
+        <div class="dash-radar-card" id="radarCard">
+          <div class="dash-section-head" style="margin-bottom:0.5rem;">
+            <div>
+              <span class="eyebrow">// skill profile</span>
+              <h3 class="title">Score by category</h3>
+            </div>
+          </div>
+          <svg class="dash-radar-svg" id="skillRadar" viewBox="-160 -160 320 320" aria-label="Skill radar"></svg>
+          <div class="cat-bar-card" id="categoryCard" hidden style="margin-top:1rem; background:transparent; border:none; padding:0;">
+            <div id="categoryBars"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="dash-section-head">
+            <div>
+              <span class="eyebrow">// activity feed</span>
+              <h3 class="title">Recent</h3>
+            </div>
+            <a href="/challenges" class="more">all challenges →</a>
+          </div>
+          <div class="dash-feed" id="activityFeed">
+            <div class="dash-empty"><span>Loading…</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACHIEVEMENTS -->
+  <section class="section section-narrow">
+    <div class="container">
+      <div class="dash-section-head">
+        <div>
+          <span class="eyebrow">// achievements</span>
+          <h2 class="title">Earned badges</h2>
+        </div>
+        <a href="#" class="more dash-tip" data-tip="Achievements are computed from your activity — keep playing to earn more.">how this works</a>
+      </div>
+      <div id="achievementsGrid" data-reveal></div>
+    </div>
+  </section>
+
+  <!-- CERTIFICATES -->
+  <section class="section section-narrow" id="certsSection" hidden>
+    <div class="container">
+      <div class="dash-section-head">
+        <div>
+          <span class="eyebrow">// certificates</span>
+          <h2 class="title">Certificates earned</h2>
+        </div>
+        <a href="/certifications" class="more">browse cert prep →</a>
+      </div>
+      <div id="certsBox" data-reveal></div>
+    </div>
+  </section>
+
+  <!-- IN-PROGRESS COURSES -->
+  <section class="section">
+    <div class="container">
+      <div class="dash-section-head">
+        <div>
+          <span class="eyebrow">// my courses</span>
+          <h2 class="title">In progress</h2>
+        </div>
+        <a href="/courses" class="more">browse all →</a>
+      </div>
+      <div class="grid grid-cols-3" id="enrolledGrid" data-reveal></div>
+    </div>
+  </section>
+
+  <!-- RECENT SOLVES TABLE -->
+  <section class="section" style="background: var(--bg-elev);">
+    <div class="container">
+      <div class="dash-section-head">
+        <div>
+          <span class="eyebrow">// ctf history</span>
+          <h2 class="title">Recent solves (full)</h2>
+        </div>
+        <a href="/challenges" class="more">play more →</a>
+      </div>
+      <div id="solvedBox" data-reveal></div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/tier-icons.js"></script>
+  <script src="/js/avatar.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

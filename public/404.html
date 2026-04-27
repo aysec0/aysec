@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — page not found</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <main class="container" style="min-height:80vh; display:flex; align-items:center; justify-content:center; padding:4rem 1.5rem;">
+    <div class="terminal-window" style="max-width:560px; width:100%;">
+      <div class="terminal-titlebar">
+        <div class="terminal-dots">
+          <span class="terminal-dot r"></span>
+          <span class="terminal-dot y"></span>
+          <span class="terminal-dot g"></span>
+        </div>
+        <div class="terminal-title">~/error — zsh</div>
+        <div style="width:42px"></div>
+      </div>
+      <div class="terminal-body">
+<span class="term-prompt">~$</span> <span class="term-cmd">cat ./that-page</span>
+<span class="term-out">cat: ./that-page: No such file or directory</span>
+
+<span class="term-comment"># 404 — the page you wanted does not exist</span>
+
+<span class="term-prompt">~$</span> <a href="/" style="color: var(--accent); text-decoration: underline;">cd /</a><span class="term-cursor"></span>
+      </div>
+    </div>
+  </main>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

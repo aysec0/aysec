@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Newsletter — aysec</title>
+  <meta name="description" content="A monthly cybersecurity + AI security newsletter from aysec. The best things I read, the best bugs I saw, and what's worth your time." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>newsletter</span></div>
+      <span class="page-eyebrow">// /newsletter</span>
+      <h1 class="page-title">The aysec newsletter.</h1>
+      <p class="page-subtitle">
+        One email a month. The best things I read, the best bugs I saw, the
+        best CTF challenges I played, and what I think you should pay attention to.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container" style="max-width:680px">
+      <div class="newsletter-card" data-reveal>
+        <span class="section-eyebrow">// signal, not noise</span>
+        <h2 class="cta-title">Subscribe</h2>
+        <p class="cta-subtitle">Free. One email per month. Unsubscribe in one click.</p>
+        <form class="newsletter-form" id="nlForm">
+          <input class="input" type="email" id="nl-email" name="email" placeholder="you@domain.com" required />
+          <button class="btn btn-primary" type="submit" id="nl-submit">Subscribe</button>
+        </form>
+        <div id="nl-msg" class="newsletter-trust">No spam. Ever. <span id="nl-count"></span></div>
+      </div>
+
+      <article class="prose" style="margin-top:3rem;" data-reveal>
+        <h2>What you'll get</h2>
+        <ul>
+          <li><strong>Five things I read this month</strong> — short summaries with my honest take.</li>
+          <li><strong>One deep dive</strong> — a bug I worked on, an exploit pattern that's trending, or a tool worth knowing.</li>
+          <li><strong>What's new on aysec</strong> — new courses, new CTF challenges, new writeups.</li>
+        </ul>
+
+        <h2>What you won't get</h2>
+        <ul>
+          <li>Affiliate links.</li>
+          <li>"Sponsored content".</li>
+          <li>Recycled news you already saw on Twitter.</li>
+          <li>More than one email per month.</li>
+        </ul>
+
+        <h2>Past issues</h2>
+        <p class="muted">
+          Issues become public 30 days after they ship. Past issues will appear here as the archive grows.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/newsletter.js"></script>
+</body>
+</html>

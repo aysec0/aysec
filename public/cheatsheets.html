@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Cheatsheets — aysec</title>
+  <meta name="description" content="Curated cheatsheets for the tools security professionals use daily: nmap, ffuf, hashcat, impacket, burp, linux privesc." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>cheatsheets</span></div>
+      <span class="page-eyebrow">// /cheatsheets</span>
+      <h1 class="page-title">Cheatsheets.</h1>
+      <p class="page-subtitle">
+        Quick-reference cards for the tools security folks use daily. Each one is a single page
+        with copy-paste-able commands. Bookmark the ones you reach for most.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="toolbar">
+        <div class="chips" id="catChips" role="tablist">
+          <button class="chip active" data-cat="all">all</button>
+          <button class="chip" data-cat="recon">recon</button>
+          <button class="chip" data-cat="web">web</button>
+          <button class="chip" data-cat="post-ex">post-ex</button>
+          <button class="chip" data-cat="crypto">crypto</button>
+          <button class="chip" data-cat="reversing">reversing</button>
+          <button class="chip" data-cat="forensics">forensics</button>
+          <button class="chip" data-cat="cloud">cloud</button>
+        </div>
+        <label class="search-box" aria-label="Search cheatsheets">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="searchInput" placeholder="Search…" />
+        </label>
+      </div>
+
+      <div class="grid grid-cols-3" id="cheatGrid" data-reveal></div>
+      <div id="emptyState" hidden></div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/cheatsheets-list.js"></script>
+</body>
+</html>

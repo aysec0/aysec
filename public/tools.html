@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Tools — aysec</title>
+  <meta name="description" content="Open-source security tools by aysec. Free for the community." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>tools</span></div>
+      <span class="page-eyebrow">// /tools</span>
+      <h1 class="page-title">Tools.</h1>
+      <p class="page-subtitle">
+        Open-source tools I've built or maintain. Free, MIT-licensed, written
+        because I needed them on a real engagement and decided to clean up the
+        result for the rest of the community.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-cols-3" data-reveal>
+
+        <a class="tool-card" href="#">
+          <div class="tool-card-head">
+            <h3 class="tool-card-title">jwt-fuzz</h3>
+            <span class="tool-card-lang" data-lang="python">python</span>
+          </div>
+          <p class="tool-card-desc">
+            A JWT fuzzer that catches all the alg/key confusion bugs in one pass.
+            Detects <code>alg=none</code>, weak HMAC keys, RSA→HMAC confusion, JKU/JWK injection.
+            Built because every existing tool only catches a subset.
+          </p>
+          <div class="tool-card-foot">
+            <span>★ 1.2k</span>
+            <span>v2.1.0</span>
+          </div>
+        </a>
+
+        <a class="tool-card" href="#">
+          <div class="tool-card-head">
+            <h3 class="tool-card-title">recon-pipe</h3>
+            <span class="tool-card-lang" data-lang="go">go</span>
+          </div>
+          <p class="tool-card-desc">
+            A continuous-recon orchestrator. Subfinder → httpx → nuclei →
+            diff-vs-yesterday, runnable as a single binary. Outputs to JSON,
+            sqlite, or markdown reports. Built for bug-bounty automation.
+          </p>
+          <div class="tool-card-foot">
+            <span>★ 840</span>
+            <span>v1.3.4</span>
+          </div>
+        </a>
+
+        <a class="tool-card" href="#">
+          <div class="tool-card-head">
+            <h3 class="tool-card-title">aws-trail</h3>
+            <span class="tool-card-lang" data-lang="python">python</span>
+          </div>
+          <p class="tool-card-desc">
+            Walks an AWS account looking for the 5 IAM/S3/IMDS misconfigs that
+            cause 80% of real-world breaches. Read-only. Output is a heat-map
+            you can hand to engineering on day 1.
+          </p>
+          <div class="tool-card-foot">
+            <span>★ 670</span>
+            <span>v0.9.0</span>
+          </div>
+        </a>
+
+        <a class="tool-card" href="#">
+          <div class="tool-card-head">
+            <h3 class="tool-card-title">prompt-eval</h3>
+            <span class="tool-card-lang" data-lang="python">python</span>
+          </div>
+          <p class="tool-card-desc">
+            A red-team eval harness for LLM apps. Pluggable adversarial prompts,
+            scoring across direct/indirect injection + jailbreak axes,
+            CI-friendly JSON output. Used in <a href="/courses/ai-red-teaming">AI Red Teaming</a>.
+          </p>
+          <div class="tool-card-foot">
+            <span>★ 2.4k</span>
+            <span>v3.0.0</span>
+          </div>
+        </a>
+
+        <a class="tool-card" href="#">
+          <div class="tool-card-head">
+            <h3 class="tool-card-title">ad-acl-walk</h3>
+            <span class="tool-card-lang" data-lang="python">python</span>
+          </div>
+          <p class="tool-card-desc">
+            BloodHound-friendly ACL collector that handles the edge cases in
+            modern AD environments (cross-forest trusts, ADCS templates,
+            inherited rights via security groups).
+          </p>
+          <div class="tool-card-foot">
+            <span>★ 510</span>
+            <span>v1.1.2</span>
+          </div>
+        </a>
+
+        <a class="tool-card" href="#">
+          <div class="tool-card-head">
+            <h3 class="tool-card-title">mobile-pinned</h3>
+            <span class="tool-card-lang" data-lang="bash">bash</span>
+          </div>
+          <p class="tool-card-desc">
+            Universal cert-pinning bypass scripts for Frida + Objection,
+            covering Android (OkHttp/TrustKit/native pinning) and iOS
+            (NSURLSession/AFNetworking/TrustKit). One command.
+          </p>
+          <div class="tool-card-foot">
+            <span>★ 950</span>
+            <span>v2.0.1</span>
+          </div>
+        </a>
+
+      </div>
+
+      <div class="alert info" style="margin-top:2rem;">
+        <svg class="alert-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div>
+          Repo links go live when the GitHub org migration is complete. In the meantime, email me for early access.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+</body>
+</html>

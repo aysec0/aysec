@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Events — cybersec calendar — aysec</title>
+  <meta name="description" content="A curated calendar of CTFs, conferences, bug-bounty live events, and awareness campaigns. Filterable by region and kind." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>events</span></div>
+      <span class="page-eyebrow">// /events</span>
+      <h1 class="page-title">Cybersec calendar.</h1>
+      <p class="page-subtitle">
+        Curated CTFs, conferences, bug-bounty live events, and awareness campaigns. Each one
+        links to its detail page (with an <code>.ics</code> for your calendar app). Updated by hand.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+
+      <div class="event-toolbar">
+        <div class="chips" id="kindChips" role="tablist">
+          <button class="chip active" data-kind="all"        role="tab">all</button>
+          <button class="chip"        data-kind="ctf"        role="tab">CTF</button>
+          <button class="chip"        data-kind="conference" role="tab">conferences</button>
+          <button class="chip"        data-kind="bugbounty"  role="tab">bug bounty</button>
+          <button class="chip"        data-kind="awareness"  role="tab">awareness</button>
+          <button class="chip"        data-kind="workshop"   role="tab">workshops</button>
+        </div>
+        <div class="chips" id="regionChips" role="tablist">
+          <button class="chip active" data-region="all"    role="tab">any region</button>
+          <button class="chip"        data-region="global" role="tab">online / global</button>
+          <button class="chip"        data-region="us"     role="tab">us</button>
+          <button class="chip"        data-region="eu"     role="tab">eu</button>
+          <button class="chip"        data-region="mena"   role="tab">mena</button>
+          <button class="chip"        data-region="apac"   role="tab">apac</button>
+        </div>
+        <div class="chips" id="whenChips" role="tablist">
+          <button class="chip active" data-when="upcoming" role="tab">upcoming</button>
+          <button class="chip"        data-when="all"      role="tab">all time</button>
+          <button class="chip"        data-when="past"     role="tab">past</button>
+        </div>
+      </div>
+
+      <div id="eventsList" data-reveal></div>
+      <div id="emptyState" hidden></div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/events-list.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Courses — aysec</title>
+  <meta name="description" content="Hands-on cybersecurity courses, free and paid." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs">
+        <a href="/">~</a><span class="sep">/</span><span>courses</span>
+      </div>
+      <span class="page-eyebrow">// /courses</span>
+      <h1 class="page-title">Courses</h1>
+      <p class="page-subtitle">
+        Lab-driven training, beginner to advanced. Free tracks for the foundations,
+        paid tracks where the lab time is worth charging for.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="toolbar">
+        <div class="chips" id="filterChips" role="tablist">
+          <button class="chip active" data-filter="all"          role="tab">all</button>
+          <button class="chip"        data-filter="free"         role="tab">free</button>
+          <button class="chip"        data-filter="paid"         role="tab">paid</button>
+          <button class="chip"        data-filter="beginner"     role="tab">beginner</button>
+          <button class="chip"        data-filter="intermediate" role="tab">intermediate</button>
+          <button class="chip"        data-filter="advanced"     role="tab">advanced</button>
+        </div>
+        <label class="search-box" aria-label="Search courses">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="searchInput" placeholder="Search…" />
+        </label>
+      </div>
+
+      <div class="grid grid-cols-3" id="coursesGrid" data-reveal>
+        <div class="card"><div class="card-accent course"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div>
+        <div class="card"><div class="card-accent course"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div>
+        <div class="card"><div class="card-accent course"></div><div class="card-body"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%"></div><div class="skeleton" style="height:14px;width:70%"></div></div></div>
+      </div>
+
+      <div id="emptyState" hidden></div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/courses-list.js"></script>
+</body>
+</html>

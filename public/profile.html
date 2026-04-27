@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Profile — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <section class="container">
+    <div class="profile-hero" id="profileHero">
+      <div class="skeleton profile-avatar" style="background:var(--surface);"></div>
+      <div>
+        <div class="skeleton" style="height:30px;width:50%;margin-bottom:0.5rem"></div>
+        <div class="skeleton" style="height:14px;width:30%"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-narrow" style="background: var(--bg-elev);">
+    <div class="container">
+      <div class="stat-grid" data-reveal id="profileStats"></div>
+    </div>
+  </section>
+
+  <section class="section section-narrow">
+    <div class="container">
+      <div class="grid" style="grid-template-columns: 1fr; gap: 1.5rem;" data-reveal>
+        <div class="heatmap-card" id="profileHeatmapCard">
+          <div class="heatmap-head">
+            <div>
+              <div class="heatmap-title">Activity</div>
+              <div class="dim" style="font-size:0.82rem; font-family:var(--font-mono); margin-top:2px;">Last 12 weeks of CTF solves</div>
+            </div>
+            <div class="heatmap-legend">
+              less
+              <span class="swatches">
+                <span class="heatmap-cell"></span>
+                <span class="heatmap-cell" data-lvl="1"></span>
+                <span class="heatmap-cell" data-lvl="2"></span>
+                <span class="heatmap-cell" data-lvl="3"></span>
+                <span class="heatmap-cell" data-lvl="4"></span>
+              </span>
+              more
+            </div>
+          </div>
+          <div class="heatmap" id="profileHeatmap"></div>
+        </div>
+
+        <div class="cat-bar-card" id="profileCategoryCard" hidden>
+          <div class="cat-bar-title">Score by category</div>
+          <div id="profileCategoryBars"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-narrow">
+    <div class="container">
+      <a class="dna-preview-card" id="dnaPreviewCard" href="#" data-reveal>
+        <div class="dna-preview-svg" id="dnaPreviewSvg"></div>
+        <div>
+          <div class="dna-preview-eyebrow">// skill dna</div>
+          <h2 class="dna-preview-title">A visual fingerprint of every solve</h2>
+          <p class="dna-preview-desc">
+            Every challenge solved becomes a star — plotted by category and difficulty.
+            First bloods get a white halo. Your tier sits at the center. <strong>Unique to you.</strong>
+          </p>
+          <span class="dna-preview-cta">View full DNA</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <section class="section" id="profileCertsSection" hidden>
+    <div class="container">
+      <div class="section-head"><span class="section-eyebrow">// certificates</span><h2 class="section-title">Certificates</h2></div>
+      <div id="profileCerts" class="grid grid-cols-3" data-reveal></div>
+    </div>
+  </section>
+
+  <section class="section" style="background: var(--bg-elev);">
+    <div class="container">
+      <div class="section-head"><span class="section-eyebrow">// recent activity</span><h2 class="section-title">Recent solves</h2></div>
+      <div id="profileSolves" data-reveal></div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/tier-icons.js"></script>
+  <script src="/js/avatar.js"></script>
+  <script src="/js/skill-dna.js"></script>
+  <script src="/js/profile.js"></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Pricing — aysec</title>
+  <meta name="description" content="Course-by-course pricing, bundle, and Pro subscription for aysec — hands-on cybersecurity training." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>pricing</span></div>
+      <span class="page-eyebrow">// /pricing</span>
+      <h1 class="page-title">Honest pricing.</h1>
+      <p class="page-subtitle">
+        Pay once per course, bundle the whole catalog, or subscribe to Pro. No
+        upsells, no recurring "platform fees", no surprises at checkout.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="pricing-grid" data-reveal>
+
+        <!-- Per-course tier -->
+        <div class="tier">
+          <span class="tier-eyebrow">Per course</span>
+          <h2 class="tier-name">Single Course</h2>
+          <div class="tier-price">
+            <span class="currency">from $</span>
+            <span class="amount">49</span>
+          </div>
+          <p class="tier-tagline">Buy any individual course. Lifetime access. Updates included.</p>
+          <ul class="tier-features">
+            <li><span class="check">✓</span> Full lifetime access to one course</li>
+            <li><span class="check">✓</span> All future updates to that course</li>
+            <li><span class="check">✓</span> Completion certificate</li>
+            <li><span class="check">✓</span> Direct email feedback channel</li>
+            <li><span class="x">—</span> CTF challenges (free for everyone)</li>
+            <li><span class="x">—</span> Access to other courses</li>
+          </ul>
+          <a href="/courses" class="btn btn-ghost btn-block">Pick a course</a>
+        </div>
+
+        <!-- Bundle tier (featured) -->
+        <div class="tier featured">
+          <span class="tier-ribbon">Best value</span>
+          <span class="tier-eyebrow">Lifetime bundle</span>
+          <h2 class="tier-name">All-Access</h2>
+          <div class="tier-price">
+            <span class="currency">$</span>
+            <span class="amount">199</span>
+            <span class="period">/ once</span>
+          </div>
+          <p class="tier-tagline">Every paid course. Every future course. Forever.</p>
+          <ul class="tier-features">
+            <li><span class="check">✓</span> <strong>Every paid course in the catalog</strong></li>
+            <li><span class="check">✓</span> Every future paid course at no extra cost</li>
+            <li><span class="check">✓</span> Completion certificate per course</li>
+            <li><span class="check">✓</span> Priority email + Discord support</li>
+            <li><span class="check">✓</span> Beta access to new content 30 days early</li>
+            <li><span class="check">✓</span> Invoice with company name (expense it)</li>
+          </ul>
+          <a href="/signup?plan=lifetime" class="btn btn-primary btn-block" id="ctaLifetime">Get All-Access</a>
+        </div>
+
+        <!-- Pro subscription -->
+        <div class="tier">
+          <span class="tier-eyebrow">Subscription</span>
+          <h2 class="tier-name">Pro Monthly</h2>
+          <div class="tier-price">
+            <span class="currency">$</span>
+            <span class="amount">19</span>
+            <span class="period">/ month</span>
+          </div>
+          <p class="tier-tagline">All courses + monthly office hours. Cancel any time.</p>
+          <ul class="tier-features">
+            <li><span class="check">✓</span> All paid courses while subscribed</li>
+            <li><span class="check">✓</span> Monthly live office hours (1 hour, recorded)</li>
+            <li><span class="check">✓</span> Private Discord channel access</li>
+            <li><span class="check">✓</span> Career feedback / resume review (1×/quarter)</li>
+            <li><span class="check">✓</span> Cancel anytime, no questions</li>
+            <li class="muted"><span class="x">—</span> Lifetime access ends with subscription</li>
+          </ul>
+          <a href="/signup?plan=pro" class="btn btn-ghost btn-block" id="ctaPro">Start Pro</a>
+        </div>
+
+      </div>
+
+      <div class="value-badges" style="justify-content:center; margin-top:2.5rem;" data-reveal>
+        <span class="value-badge"><span class="icon">✓</span> 30-day money-back guarantee</span>
+        <span class="value-badge"><span class="icon">✓</span> Lifetime updates on owned courses</span>
+        <span class="value-badge"><span class="icon">✓</span> Stripe-secured checkout</span>
+        <span class="value-badge"><span class="icon">✓</span> Invoices for expensing</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-narrow" style="background: var(--bg-elev);">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-eyebrow">// teams</span>
+        <h2 class="section-title">Team & corporate licenses</h2>
+        <p class="section-subtitle">
+          Buying for a team? Flat per-seat pricing for 5+ engineers, with
+          centralized billing and a real invoice. Email me — same-day quote.
+        </p>
+      </div>
+      <a href="/hire?topic=team" class="btn btn-primary">Request a team quote</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-eyebrow">// faq</span>
+        <h2 class="section-title">Pricing FAQ</h2>
+      </div>
+      <div class="faq" id="faqBox" data-reveal>
+        <div class="empty"><p>Loading…</p></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/pricing.js"></script>
+</body>
+</html>

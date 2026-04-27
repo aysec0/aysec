@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Community — Discord — aysec</title>
+  <meta name="description" content="The aysec Discord — live discussion, lab help, monthly office hours, and first dibs on new CTF drops." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>community</span></div>
+      <span class="page-eyebrow">// /community</span>
+      <h1 class="page-title">Community.</h1>
+      <p class="page-subtitle">
+        The aysec Discord. Where the lab help, monthly office hours, first-blood announcements,
+        and the new-challenge drops all happen. Open to everyone — paid and free users alike.
+      </p>
+    </div>
+  </header>
+
+  <section class="section section-narrow">
+    <div class="container" style="max-width:760px;">
+      <div class="discord-hero" id="discordHero">
+        <div class="discord-hero-icon">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.078.037 13.7 13.7 0 0 0-.61 1.249 18.27 18.27 0 0 0-5.487 0 12.65 12.65 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.099.245.198.372.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.974 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        </div>
+        <h2>Join the aysec Discord</h2>
+        <p class="discord-hero-sub">
+          Get unstuck on a lab in 5 minutes instead of 2 days. Stack-rank yourself against
+          thousands of other practitioners. First dibs on every new CTF drop. Free.
+        </p>
+        <div id="discordStats"></div>
+        <div id="discordCTA">
+          <span class="discord-cta-disabled">// loading invite…</span>
+        </div>
+        <div class="discord-online-list" id="discordOnline"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:880px;">
+      <div class="dash-section-head">
+        <div>
+          <span class="eyebrow">// what's inside</span>
+          <h2 class="title">Channels</h2>
+        </div>
+      </div>
+      <div class="channel-grid" data-reveal>
+        <div class="channel-card">
+          <div class="channel-name announce">announcements</div>
+          <div class="channel-desc">New courses, new CTF drops, first-blood news. Auto-pinged from the website.</div>
+        </div>
+        <div class="channel-card">
+          <div class="channel-name">general</div>
+          <div class="channel-desc">Open chat — anything cybersec.</div>
+        </div>
+        <div class="channel-card">
+          <div class="channel-name">help-web</div>
+          <div class="channel-desc">Stuck on a web challenge or lesson? Drop your question + what you've tried.</div>
+        </div>
+        <div class="channel-card">
+          <div class="channel-name">help-binex</div>
+          <div class="channel-desc">Stack overflows, ROP, format strings — the unsexy questions get the best answers here.</div>
+        </div>
+        <div class="channel-card">
+          <div class="channel-name">help-ai</div>
+          <div class="channel-desc">LLM security, prompt injection, RAG poisoning. The newest channel.</div>
+        </div>
+        <div class="channel-card">
+          <div class="channel-name">writeups</div>
+          <div class="channel-desc">Share writeups for retired challenges. Best ones get pinned.</div>
+        </div>
+        <div class="channel-card">
+          <div class="channel-name">jobs-board</div>
+          <div class="channel-desc">Member-only job postings. Hiring or hunting — drop it here.</div>
+        </div>
+        <div class="channel-card">
+          <div class="channel-name announce">office-hours</div>
+          <div class="channel-desc">Monthly live Q&amp;A — Pro subscribers get scheduling priority.</div>
+        </div>
+        <div class="channel-card">
+          <div class="channel-name voice">voice-lounge</div>
+          <div class="channel-desc">Drop in, work alongside others, body-double your way through a challenge.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-narrow">
+    <div class="container" style="max-width:760px;">
+      <div class="dash-section-head">
+        <div>
+          <span class="eyebrow">// expectations</span>
+          <h2 class="title">House rules</h2>
+        </div>
+      </div>
+      <div class="rules-list" data-reveal>
+        <div class="rule">
+          <div class="rule-num">1</div>
+          <div class="rule-text"><strong>Be kind.</strong> Everyone was a beginner once. Some people still are. They are not your enemy.</div>
+        </div>
+        <div class="rule">
+          <div class="rule-num">2</div>
+          <div class="rule-text"><strong>Don't post flags or full solutions for active CTF challenges.</strong> Hints &amp; partial guidance are fine. Full solutions go in <code>#writeups</code> after the challenge retires.</div>
+        </div>
+        <div class="rule">
+          <div class="rule-num">3</div>
+          <div class="rule-text"><strong>Show your work when asking for help.</strong> "I tried X, expected Y, got Z" gets ten times the response of "is anyone good at this?"</div>
+        </div>
+        <div class="rule">
+          <div class="rule-num">4</div>
+          <div class="rule-text"><strong>No illegal targets, ever.</strong> Practice on the lab boxes, on the CTF, on your own systems, on bug-bounty programs in scope. Anything else gets you banned + reported.</div>
+        </div>
+        <div class="rule">
+          <div class="rule-num">5</div>
+          <div class="rule-text"><strong>No spam, no recruiting outside <code>#jobs-board</code>, no NFT/crypto talk, no political flame.</strong></div>
+        </div>
+        <div class="rule">
+          <div class="rule-num">6</div>
+          <div class="rule-text"><strong>Use threads.</strong> Long discussions belong in threads, not in the main channel.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:760px;">
+      <div class="cta-banner">
+        <span class="section-eyebrow">// ready</span>
+        <h2 class="cta-title">Got a question right now?</h2>
+        <p class="cta-subtitle">
+          The Discord is faster than email for most things. For deeper engagements,
+          private support, or anything that's NDA — use the form on the hire page.
+        </p>
+        <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap;">
+          <a href="#discordHero" class="btn btn-primary">↑ Jump back to invite</a>
+          <a href="/hire" class="btn btn-ghost">Private contact form</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/community.js"></script>
+</body>
+</html>

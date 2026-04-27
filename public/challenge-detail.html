@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Challenge — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs">
+        <a href="/">~</a><span class="sep">/</span>
+        <a href="/challenges">challenges</a><span class="sep">/</span>
+        <span id="crumbSlug">…</span>
+      </div>
+      <div id="detailHead">
+        <div class="skeleton" style="height:34px;width:50%"></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="challenge-shell">
+        <main>
+          <div id="challengeBody">
+            <div class="skeleton" style="height:14px;width:90%;margin-bottom:0.5rem"></div>
+            <div class="skeleton" style="height:14px;width:80%"></div>
+          </div>
+
+          <div class="flag-form" style="margin-top:2rem">
+            <h3 style="font-size:1.05rem; font-weight:600; margin-bottom:0.85rem;">Submit flag</h3>
+            <form id="flagForm" class="form">
+              <div id="flagAlert" hidden></div>
+              <div class="field">
+                <div class="field-row">
+                  <input class="input mono flag-input" type="text" id="flagInput" name="flag" placeholder="flag{...}" autocomplete="off" required />
+                  <button class="btn btn-primary" type="submit" id="flagBtn">Submit</button>
+                </div>
+                <span class="field-hint">Hashed server-side. 5 attempts/min per challenge.</span>
+              </div>
+            </form>
+          </div>
+
+          <div id="solversSection" style="margin-top:2rem">
+            <h3 style="font-size:1.05rem; font-weight:600; margin-bottom:0.85rem; display:flex; align-items:center; gap:0.5rem;">
+              Solvers
+              <span id="solverCount" class="card-meta-item dim" style="font-family:var(--font-mono); font-size:0.78rem;"></span>
+            </h3>
+            <div id="solversBox"></div>
+          </div>
+        </main>
+
+        <aside class="detail-side challenge-side">
+          <div id="challengeStats">
+            <div class="skeleton" style="height:14px;width:80%;margin-bottom:0.5rem"></div>
+            <div class="skeleton" style="height:14px;width:70%"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/challenge-detail.js"></script>
+</body>
+</html>

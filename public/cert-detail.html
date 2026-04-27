@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Certification — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs">
+        <a href="/">~</a><span class="sep">/</span>
+        <a href="/certifications">certifications</a><span class="sep">/</span>
+        <span id="crumbSlug">…</span>
+      </div>
+      <div id="certHeadEyebrow">
+        <span class="page-eyebrow">// loading</span>
+      </div>
+      <div class="cert-detail-title">
+        <span class="cert-detail-shortname" id="certShortName">…</span>
+        <span class="cert-detail-fullname"  id="certFullName"></span>
+      </div>
+      <p class="page-subtitle" id="certTagline"></p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="cert-hero" data-reveal>
+        <div>
+          <article class="prose" id="certDescription" style="max-width:none;"></article>
+        </div>
+        <aside class="cert-hero-side" id="certSide"></aside>
+      </div>
+
+      <div class="cert-section" id="coverageSection">
+        <span class="cert-section-eyebrow">// scope</span>
+        <h2 class="cert-section-title">What the exam covers (and doesn't)</h2>
+        <div class="cert-coverage-grid">
+          <div class="cert-coverage covers">
+            <h4>✓ What it covers</h4>
+            <div class="prose" id="certCovers"></div>
+          </div>
+          <div class="cert-coverage uncovers">
+            <h4>✗ What it doesn't</h4>
+            <div class="prose" id="certUncovers"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cert-section" id="tipsSection" hidden>
+        <span class="cert-section-eyebrow">// from the trenches</span>
+        <h2 class="cert-section-title">Exam tips</h2>
+        <div class="cert-tips">
+          <h4>// my notes</h4>
+          <div class="prose" id="certTips"></div>
+        </div>
+      </div>
+
+      <div class="cert-section">
+        <span class="cert-section-eyebrow">// curriculum</span>
+        <h2 class="cert-section-title">The prep path</h2>
+        <p class="muted" id="curriculumMeta" style="margin-bottom:1.25rem;"></p>
+        <div id="certCourses"></div>
+      </div>
+
+      <div class="cert-section" id="challengesSection" hidden>
+        <span class="cert-section-eyebrow">// practice</span>
+        <h2 class="cert-section-title">Aligned CTF challenges</h2>
+        <p class="muted" style="margin-bottom:1.25rem;">Solve these alongside the courses to build muscle memory in exam-relevant categories.</p>
+        <div class="grid grid-cols-3" id="certChallenges"></div>
+      </div>
+
+      <div class="cert-section">
+        <div class="cta-banner">
+          <span class="section-eyebrow">// ready</span>
+          <h2 class="cta-title">Ready to start?</h2>
+          <p class="cta-subtitle">
+            Create a free account, enroll in the first free course in the path,
+            and start tracking progress. Lifetime access on every paid course.
+          </p>
+          <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap;">
+            <a href="/signup" class="btn btn-primary">Create free account</a>
+            <a href="/courses" class="btn btn-ghost">Browse all courses</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/cert-detail.js"></script>
+</body>
+</html>

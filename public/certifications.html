@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Certification Prep — aysec</title>
+  <meta name="description" content="OSCP, OSEP, OSWE, CRTO, CRTP, PNPT — exam-aligned curricula built from aysec courses + CTF practice." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>certifications</span></div>
+      <span class="page-eyebrow">// /certifications</span>
+      <h1 class="page-title">Certification prep.</h1>
+      <p class="page-subtitle">
+        Curated exam-aligned curricula. Each cert page maps the aysec courses
+        and CTF challenges that prepare you for it, with my honest take on what
+        the exam actually tests, what it doesn't, and how to study for it.
+      </p>
+    </div>
+  </header>
+
+  <section class="section section-narrow">
+    <div class="container">
+      <div class="quiz-shell" id="quizShell">
+        <div class="quiz-intro" id="quizIntro">
+          <div class="quiz-intro-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 22 12 19 17 22 15.79 13.88"/></svg>
+          </div>
+          <div class="quiz-intro-text">
+            <h2 class="quiz-intro-title">Not sure which cert to chase?</h2>
+            <p class="quiz-intro-sub">6 questions about your budget, timeline, and career goals — we'll rank all 8 certs by fit.</p>
+          </div>
+          <button class="btn btn-primary" id="quizStart">Find my cert →</button>
+        </div>
+        <div class="quiz-active" id="quizActive" hidden>
+          <div class="quiz-progress">
+            <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgressFill"></div></div>
+            <div class="quiz-progress-meta"><span id="quizStep">1</span> of <span id="quizTotal">6</span><button class="quiz-link" id="quizExit">cancel</button></div>
+          </div>
+          <div class="quiz-question" id="quizQuestion"></div>
+          <div class="quiz-options" id="quizOptions"></div>
+          <div class="quiz-nav">
+            <button class="btn btn-ghost" id="quizBack" disabled>← back</button>
+            <span class="quiz-hint">click an option to continue</span>
+          </div>
+        </div>
+        <div class="quiz-result" id="quizResult" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-cols-3" id="certsGrid" data-reveal>
+        <div class="cert-card"><div class="skeleton" style="height:30px;width:50%"></div><div class="skeleton" style="height:14px;width:80%"></div></div>
+        <div class="cert-card"><div class="skeleton" style="height:30px;width:50%"></div><div class="skeleton" style="height:14px;width:80%"></div></div>
+        <div class="cert-card"><div class="skeleton" style="height:30px;width:50%"></div><div class="skeleton" style="height:14px;width:80%"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background: var(--bg-elev);">
+    <div class="container">
+      <article class="prose" data-reveal style="max-width:760px;">
+        <h2>How these prep paths work</h2>
+        <p>
+          For each certification I support, you get:
+        </p>
+        <ul>
+          <li><strong>An honest take on the exam.</strong> What it tests, what it doesn't, and whether it's worth the price.</li>
+          <li><strong>A curated course sequence.</strong> Ordered, with notes on why each course matters for that specific exam.</li>
+          <li><strong>Aligned CTF challenges.</strong> Practice problems matching the categories and difficulty of the exam.</li>
+          <li><strong>Exam tips.</strong> The non-technical advice nobody tells you — pacing, when to walk away, the report.</li>
+        </ul>
+        <h2>What this isn't</h2>
+        <p>
+          A guarantee. Cert prep is your work. These paths organize the material — the studying is on you.
+        </p>
+        <p>
+          Also: I'm not affiliated with any cert issuer. Pricing reflects public exam fees at the time of writing and may change.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/certifications-list.js"></script>
+  <script src="/js/cert-picker.js"></script>
+</body>
+</html>

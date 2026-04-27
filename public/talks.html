@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Talks — aysec</title>
+  <meta name="description" content="Past talks, podcasts, and workshops by aysec." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>talks</span></div>
+      <span class="page-eyebrow">// /talks</span>
+      <h1 class="page-title">Talks &amp; workshops</h1>
+      <p class="page-subtitle">
+        Conferences, podcasts, and corporate workshops. If you'd like me to
+        speak, <a href="/hire?topic=speaker">get in touch</a>.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container" style="max-width:880px">
+      <div id="talksList" data-reveal>
+        <div class="skeleton" style="height:14px;width:90%;margin-bottom:0.5rem"></div>
+        <div class="skeleton" style="height:14px;width:80%;margin-bottom:0.5rem"></div>
+        <div class="skeleton" style="height:14px;width:70%"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background: var(--bg-elev);">
+    <div class="container">
+      <div class="cta-banner">
+        <span class="section-eyebrow">// invite me</span>
+        <h2 class="cta-title">Want me to speak at your event?</h2>
+        <p class="cta-subtitle">
+          Cybersecurity, AI security, education. Conferences and corporate
+          workshops both welcome.
+        </p>
+        <a href="/hire?topic=speaker" class="btn btn-primary">Send an invitation</a>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/talks.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Privacy Policy — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>privacy</span></div>
+      <span class="page-eyebrow">// /privacy</span>
+      <h1 class="page-title">Privacy Policy</h1>
+      <p class="page-subtitle">Short version: I collect the minimum I need to run the site, and I don't sell or share your data with third parties.</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container" style="max-width:780px">
+      <article class="prose" data-reveal>
+        <h2>What I collect</h2>
+        <ul>
+          <li><strong>Account info</strong> — username, email, hashed password.</li>
+          <li><strong>Activity</strong> — which lessons you completed, which CTF flags you submitted, your CTF score and rank.</li>
+          <li><strong>Newsletter email</strong> — if you subscribe.</li>
+          <li><strong>Payment metadata</strong> — Stripe handles your card; I see only the order ID, amount, and your email.</li>
+          <li><strong>Server logs</strong> — IP address and request URL for debugging and abuse prevention. Auto-deleted after 30 days.</li>
+        </ul>
+
+        <h2>What I don't collect</h2>
+        <ul>
+          <li>No third-party analytics (no GA, no Mixpanel, no Hotjar — none of it).</li>
+          <li>No tracking cookies. The only cookie is your auth session (HttpOnly, SameSite=lax).</li>
+          <li>No advertising profiles. There are no ads.</li>
+          <li>No data selling or sharing. Ever.</li>
+        </ul>
+
+        <h2>Third parties</h2>
+        <p>
+          Two services handle data on my behalf:
+        </p>
+        <ul>
+          <li><strong>Stripe</strong> — for payments. Their <a href="https://stripe.com/privacy">privacy policy</a>.</li>
+          <li><strong>Hosting provider</strong> — runs the server. They don't read application data.</li>
+        </ul>
+
+        <h2>Your rights</h2>
+        <ul>
+          <li><strong>Access</strong> — email me, I'll send your data within 14 days.</li>
+          <li><strong>Deletion</strong> — email me, full deletion within 30 days.</li>
+          <li><strong>Newsletter unsubscribe</strong> — every email has a one-click unsubscribe link.</li>
+        </ul>
+
+        <h2>Contact</h2>
+        <p>Questions? <a href="/hire">Get in touch</a>.</p>
+      </article>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+</body>
+</html>

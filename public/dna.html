@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Skill DNA — aysec</title>
+  <meta name="description" content="A unique generative visualization of a security practitioner's solve history. No two users get the same DNA." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs">
+        <a href="/">~</a><span class="sep">/</span>
+        <a href="/u/" id="profileBack">u</a><span class="sep">/</span>
+        <span id="crumbUser">…</span><span class="sep">/</span>
+        <span>dna</span>
+      </div>
+      <span class="page-eyebrow">// /u/:user/dna</span>
+      <h1 class="page-title">Skill DNA</h1>
+      <p class="page-subtitle">
+        Every aysec member has a unique visual fingerprint generated from their solve history.
+        Categories are the sectors. Difficulty is the radius. First bloods get white halos.
+        Your last solve pulses. <strong>No two users get the same DNA.</strong>
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container" style="max-width:1100px;">
+      <div class="dna-shell" data-reveal>
+        <div>
+          <div class="dna-stage" id="dnaStage">
+            <div class="dna-hero" id="dnaHero">
+              <div class="skeleton" style="height:32px;width:60%;"></div>
+            </div>
+            <div class="dna-svg-wrap" id="dnaSvg"></div>
+            <div class="dna-fingerprint" id="dnaFingerprint"></div>
+          </div>
+        </div>
+
+        <aside class="dna-side">
+          <div class="dna-stat-card">
+            <h3>// the legend</h3>
+            <div id="dnaLegend"></div>
+          </div>
+          <div class="dna-stat-card">
+            <h3>// stats</h3>
+            <div id="dnaStats"></div>
+          </div>
+          <div class="dna-stat-card">
+            <h3>// share</h3>
+            <div class="dna-actions">
+              <button class="btn btn-primary" id="dnaDownload">↓ Download SVG</button>
+              <button class="btn btn-ghost"   id="dnaPng">↓ Download PNG (1200×1200)</button>
+              <div class="dna-share-buttons">
+                <button class="btn btn-ghost" id="dnaCopyLink">Copy link</button>
+                <a class="btn btn-ghost" id="dnaShareX" target="_blank" rel="noopener">Share on X</a>
+              </div>
+            </div>
+          </div>
+          <div class="dna-stat-card">
+            <h3>// how it's built</h3>
+            <div class="muted" style="font-size:0.88rem; line-height:1.55;">
+              Every solve becomes a star, placed by category (sector) and difficulty (radius).
+              Star size scales with points. Center medallion is your level tier.
+              Concentric rings = certificates earned. Pulsing dashed halo = active streak.
+              Constellation lines connect solves within each category. Deterministic from your data —
+              the same solves always yield the same DNA.
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/skill-dna.js"></script>
+  <script src="/js/dna-page.js"></script>
+</body>
+</html>

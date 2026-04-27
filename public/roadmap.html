@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Roadmap — aysec</title>
+  <meta name="description" content="What's shipping next on aysec — courses, CTF challenges, platform features." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>roadmap</span></div>
+      <span class="page-eyebrow">// /roadmap</span>
+      <h1 class="page-title">What's shipping next.</h1>
+      <p class="page-subtitle">
+        Public roadmap. Three columns: <strong>Now</strong> (in active development),
+        <strong>Next</strong> (queued for the next 4-8 weeks), and
+        <strong>Later</strong> (committed but not scheduled). Updated weekly.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="roadmap-col-grid" data-reveal>
+
+        <div class="roadmap-col" data-status="now">
+          <div class="roadmap-col-head">
+            <div class="roadmap-col-title">// now</div>
+            <span class="badge easy">In progress</span>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Active Directory Attacks — final 2 lessons</div>
+            <div class="roadmap-item-meta">course · advanced · est. ship by end of month</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">CTF Challenge: Misconfigured Service Mesh (web, hard)</div>
+            <div class="roadmap-item-meta">ctf · web · drafted, in test</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Discord community launch</div>
+            <div class="roadmap-item-meta">platform · soft launch this week</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Newsletter issue #08 — "The Cloudflare cache deception bug class"</div>
+            <div class="roadmap-item-meta">newsletter · drafted</div>
+          </div>
+        </div>
+
+        <div class="roadmap-col" data-status="next">
+          <div class="roadmap-col-head">
+            <div class="roadmap-col-title">// next</div>
+            <span class="badge medium">Queued</span>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">New track: <strong>Become a Cloud Security Specialist</strong></div>
+            <div class="roadmap-item-meta">track · 3 courses bundle · landing in 2 weeks</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Course: <strong>Threat Hunting & Detection</strong> (blue-team)</div>
+            <div class="roadmap-item-meta">course · advanced · expanding the catalog beyond offense</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">CTF Challenge Pack: 6 new web challenges</div>
+            <div class="roadmap-item-meta">ctf · web · monthly drop pattern starting</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">User-submitted writeups (community feature)</div>
+            <div class="roadmap-item-meta">platform · moderated · ship after CTF retire</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Stripe subscription wiring for Pro Monthly tier</div>
+            <div class="roadmap-item-meta">platform · payments · backend ready, UI in test</div>
+          </div>
+        </div>
+
+        <div class="roadmap-col" data-status="later">
+          <div class="roadmap-col-head">
+            <div class="roadmap-col-title">// later</div>
+            <span class="badge hard">Committed</span>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Course: <strong>Smart Contract Auditing — Advanced</strong></div>
+            <div class="roadmap-item-meta">course · cross-protocol exploit chains</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Live CTF event (24-hour, monthly)</div>
+            <div class="roadmap-item-meta">platform · scoring window, prizes, sponsorship slots</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Mobile app (iOS/Android) for lesson reading + flag submission</div>
+            <div class="roadmap-item-meta">platform · scope: read-only first, then full</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Team licenses + leaderboard segregation</div>
+            <div class="roadmap-item-meta">platform · enterprise tier prerequisite</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-item-title">Translations: Arabic, Spanish</div>
+            <div class="roadmap-item-meta">platform · community-translated foundations first</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-narrow" style="background: var(--bg-elev);">
+    <div class="container">
+      <div class="cta-banner">
+        <span class="section-eyebrow">// what's missing?</span>
+        <h2 class="cta-title">Want to influence what ships?</h2>
+        <p class="cta-subtitle">Newsletter subscribers vote on the order. Email me directly with course requests.</p>
+        <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap;">
+          <a href="/newsletter" class="btn btn-primary">Subscribe &amp; vote</a>
+          <a href="/hire" class="btn btn-ghost">Email me a request</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Cheatsheet — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs">
+        <a href="/">~</a><span class="sep">/</span>
+        <a href="/cheatsheets">cheatsheets</a><span class="sep">/</span>
+        <span id="crumbSlug">…</span>
+      </div>
+      <div id="cheatHead">
+        <div class="skeleton" style="height:34px;width:50%"></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="post-shell">
+        <article style="max-width:840px; min-width:0;">
+          <div class="prose" id="cheatBody">
+            <div class="skeleton" style="height:14px;width:90%;margin-bottom:0.5rem"></div>
+            <div class="skeleton" style="height:14px;width:80%"></div>
+          </div>
+          <div class="divider"></div>
+          <a href="/cheatsheets" class="btn btn-ghost">← All cheatsheets</a>
+        </article>
+
+        <aside class="toc" id="toc" hidden>
+          <div class="toc-title">// on this page</div>
+          <ul id="tocList"></ul>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="/js/cheatsheet-detail.js"></script>
+</body>
+</html>

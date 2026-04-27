@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Sign in — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <main class="auth-wrap">
+    <div class="auth-card" data-reveal>
+      <div class="auth-head">
+        <h1>Welcome back</h1>
+        <p>Sign in to track progress and submit flags.</p>
+      </div>
+
+      <form class="form" id="loginForm" novalidate>
+        <div id="loginAlert" hidden></div>
+
+        <div class="field">
+          <label class="field-label" for="identifier">Username or email</label>
+          <input class="input mono" type="text" id="identifier" name="identifier" autocomplete="username" required />
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="password">Password</label>
+          <input class="input" type="password" id="password" name="password" autocomplete="current-password" required minlength="8" />
+          <span class="field-hint">8+ characters.</span>
+        </div>
+
+        <button class="btn btn-primary btn-block" type="submit" id="loginBtn">Sign in</button>
+      </form>
+
+      <div class="auth-foot">
+        New here? <a href="/signup">Create an account</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

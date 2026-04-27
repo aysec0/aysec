@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Levels — aysec</title>
+  <meta name="description" content="The aysec levels system. 15 themed tiers, multi-source XP. From n00b to Legend." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>levels</span></div>
+      <span class="page-eyebrow">// /levels</span>
+      <h1 class="page-title">Levels.</h1>
+      <p class="page-subtitle">
+        15 themed tiers from <strong>n00b</strong> to <strong>Legend</strong>. XP comes from
+        every dimension of the platform — solve challenges, complete lessons, earn certificates,
+        plant first bloods. Each level has its own colour, icon, and identity.
+      </p>
+    </div>
+  </header>
+
+  <section class="section section-narrow">
+    <div class="container" style="max-width:680px;">
+      <div class="alert info" id="youAre" hidden></div>
+    </div>
+  </section>
+
+  <section class="section section-narrow">
+    <div class="container" style="max-width:880px;">
+      <div class="dash-section-head">
+        <div>
+          <span class="eyebrow">// XP rules</span>
+          <h2 class="title">How XP works</h2>
+        </div>
+      </div>
+      <div class="grid grid-cols-2" data-reveal>
+        <div class="xp-chip" style="padding:0.85rem 1.1rem; font-size:0.92rem; border-radius:var(--radius-sm); justify-content:space-between;" data-src="ctf">
+          <span><strong>+1 XP</strong> per CTF challenge point</span>
+          <span class="xp-chip-val">CTF</span>
+        </div>
+        <div class="xp-chip" style="padding:0.85rem 1.1rem; font-size:0.92rem; border-radius:var(--radius-sm); justify-content:space-between;" data-src="lesson">
+          <span><strong>+10 XP</strong> per lesson completed</span>
+          <span class="xp-chip-val">LESSONS</span>
+        </div>
+        <div class="xp-chip" style="padding:0.85rem 1.1rem; font-size:0.92rem; border-radius:var(--radius-sm); justify-content:space-between;" data-src="cert">
+          <span><strong>+50 XP</strong> per course certificate</span>
+          <span class="xp-chip-val">CERTS</span>
+        </div>
+        <div class="xp-chip" style="padding:0.85rem 1.1rem; font-size:0.92rem; border-radius:var(--radius-sm); justify-content:space-between;" data-src="fb">
+          <span><strong>+25 XP</strong> per first blood (bonus)</span>
+          <span class="xp-chip-val">FIRST&nbsp;BLOOD</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:880px;">
+      <div class="dash-section-head">
+        <div>
+          <span class="eyebrow">// the ladder</span>
+          <h2 class="title">All 15 tiers</h2>
+        </div>
+      </div>
+      <div class="levels-grid" id="levelsGrid" data-reveal>
+        <div class="level-row"><div class="skeleton" style="height:18px;width:80%;"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/tier-icons.js"></script>
+  <script src="/js/levels-page.js"></script>
+</body>
+</html>
