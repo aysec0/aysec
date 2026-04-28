@@ -136,10 +136,23 @@ app.get('/certifications/:slug',  sendDetail('cert-detail.html'));
 app.get('/cheatsheets/:slug',     sendDetail('cheatsheet-detail.html'));
 app.get('/events/:slug',          sendDetail('event-detail.html'));
 
-// Permanent redirects for routes that have been merged elsewhere.
-app.get(['/pricing', '/pricing/'], (_req, res) => res.redirect(301, '/courses'));
-app.get(['/lab',     '/lab/'],     (_req, res) => res.redirect(301, '/tools'));
-app.get(['/tracks',  '/tracks/'],  (_req, res) => res.redirect(301, '/courses#paths'));
+// Permanent redirects for routes that have been merged elsewhere — covers
+// the bare path, the trailing-slash variant, and the legacy .html variant
+// so old bookmarks all land in the right place.
+app.get(['/pricing', '/pricing/', '/pricing.html'], (_req, res) => res.redirect(301, '/courses'));
+app.get(['/lab',     '/lab/',     '/lab.html'],     (_req, res) => res.redirect(301, '/tools'));
+app.get(['/tracks',  '/tracks/',  '/tracks.html'],  (_req, res) => res.redirect(301, '/courses#paths'));
+
+// Strip trailing slashes — keeps bookmarked/shared URLs like /courses/ from
+// 404'ing because express.static can't find /courses/.html. Skip the root
+// itself and any path that genuinely ends in a file (has a dot in the last
+// segment), so e.g. /css/styles.css/ would not redirect.
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || req.path === '/' || !req.path.endsWith('/')) return next();
+  if (/\.[^/]+$/.test(req.path)) return next();
+  const q = req.url.slice(req.path.length);
+  res.redirect(301, req.path.slice(0, -1) + q);
+});
 
 app.use(express.static(join(__dirname, 'public'), { extensions: ['html'] }));
 

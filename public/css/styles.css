@@ -7707,7 +7707,8 @@ kbd {
 .tools-dd-empty[hidden],
 .ask-fab-panel[hidden],
 .nav-stat-chip[hidden],
-.nav-stat-divider[hidden] { display: none !important; }
+.nav-stat-divider[hidden],
+.empty[hidden] { display: none !important; }
 
 /* ============================================================
    Tools dropdown (navbar)
