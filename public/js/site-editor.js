@@ -303,28 +303,58 @@
 
   $('seKeySearch').addEventListener('input', renderKeyList);
 
-  $('seRevert').addEventListener('click', () => {
+  // "Revert this element" = restore THIS key to its default everywhere:
+  // drop any pending edit AND delete the stored override server-side, then
+  // push the default to the iframe so the change is visible immediately.
+  $('seRevert').addEventListener('click', async () => {
     const key = state.selectedKey || state.selectedHrefKey || state.selectedToggleKey;
     if (!key) return;
     const kind = state.selectedKey ? 'text' : state.selectedHrefKey ? 'link' : 'toggle';
+    const def = state.defaults[key];
+    const hasPending = state.pending[key] != null
+      || state.pending[key + '__href'] != null
+      || state.pending[key + '__toggle'] != null;
+    const hasOverride = state.settings[key] != null && String(state.settings[key]) !== String(def);
+    if (!hasPending && !hasOverride) {
+      window.toast?.(`@${key} is already at default.`, 'info');
+      return;
+    }
+
     delete state.pending[key];
     delete state.pending[key + '__href'];
     delete state.pending[key + '__toggle'];
+
+    if (hasOverride) {
+      try {
+        await api.req('DELETE', `/api/admin/site-settings/${encodeURIComponent(key)}`);
+      } catch (e) {
+        window.toast?.(e.message || 'revert failed', 'error');
+        return;
+      }
+    }
+
+    state.settings[key] = def;
     setUnsaved(Object.keys(state.pending).length > 0);
+    renderModifiedPanel();
     selectKey(key, kind);
-    // Re-apply original to iframe
-    const orig = state.settings[key];
-    if (kind === 'link')   sendToFrame({ type: 'aysec:edit:apply', key, href: orig || '' });
-    else if (kind === 'toggle') sendToFrame({ type: 'aysec:edit:apply', key, visible: !(orig === '0' || orig === 'false' || orig === false) });
-    else                   sendToFrame({ type: 'aysec:edit:apply', key, text: orig || '' });
+    if (kind === 'link')        sendToFrame({ type: 'aysec:edit:apply', key, href: def || '' });
+    else if (kind === 'toggle') sendToFrame({ type: 'aysec:edit:apply', key, visible: !(def === '0' || def === 'false') });
+    else                        sendToFrame({ type: 'aysec:edit:apply', key, text: def || '' });
+    window.toast?.(`@${key} reverted to default.`, 'success');
   });
 
+  // "↺ Discard" = throw away every unsaved edit on this page; saved state
+  // is untouched. Always surfaces a toast so the button never feels dead.
   $('seReset').addEventListener('click', () => {
-    if (!Object.keys(state.pending).length) return;
+    if (!Object.keys(state.pending).length) {
+      window.toast?.('No unsaved edits to discard.', 'info');
+      return;
+    }
     if (!confirm('Discard all unsaved edits on this page?')) return;
     state.pending = {};
     setUnsaved(false);
     loadFrame();
+    window.toast?.('Unsaved edits discarded.', 'success');
   });
 
   // ⌘S / Ctrl+S to save

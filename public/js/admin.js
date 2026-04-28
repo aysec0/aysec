@@ -1011,40 +1011,148 @@
   }
 
   function renderCForm(c) {
+    const isEdit = !!c.id;
+    const dollars = ((c.price_cents || 0) / 100).toFixed(2);
     $('#cForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${c.id ? 'Edit' : 'New'} course</h3>
-        <form id="cSubForm" class="admin-form">
-          <label>slug      <input class="input mono" name="slug" value="${escapeHtml(c.slug || '')}" required /></label>
-          <label>title     <input class="input" name="title" value="${escapeHtml(c.title || '')}" required /></label>
-          <label>subtitle  <input class="input" name="subtitle" value="${escapeHtml(c.subtitle || '')}" /></label>
-          <label>difficulty<select class="input" name="difficulty">${['beginner','intermediate','advanced'].map((x) => `<option ${x===c.difficulty?'selected':''}>${x}</option>`).join('')}</select></label>
-          <label>is paid   <input type="checkbox" name="is_paid" ${c.is_paid ? 'checked' : ''} /></label>
-          <label>price (¢) <input class="input mono" type="number" name="price_cents" value="${c.price_cents || 0}" /></label>
-          <label>currency  <input class="input mono" name="currency" value="${escapeHtml(c.currency || 'USD')}" /></label>
-          <label>published <input type="checkbox" name="published" ${c.published ? 'checked' : ''} /></label>
-          <label class="full">description <textarea class="textarea" name="description" rows="3">${escapeHtml(c.description || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${c.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="cCancel">Cancel</button>
+      <div class="card admin-form-card" style="margin-top:1rem;">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(c.title || 'course') : 'Add a course'}</h3>
           </div>
+          <button class="admin-form-close" type="button" id="cCancel" aria-label="Close" title="Close">×</button>
+        </header>
+
+        <form id="cSubForm" class="admin-form admin-form-sectioned">
+          <section class="admin-form-section">
+            <div class="admin-form-section-head">
+              <h4 class="admin-form-section-title">Identity</h4>
+              <p class="admin-form-section-hint">How the course shows up in URLs, lists, and search.</p>
+            </div>
+            <div class="admin-form-grid">
+              <label class="admin-field full">
+                <span class="admin-field-label">Title <em>required</em></span>
+                <input class="input" name="title" value="${escapeHtml(c.title || '')}" required placeholder="Web Hacking 101" />
+              </label>
+              <label class="admin-field">
+                <span class="admin-field-label">Slug <em>required</em></span>
+                <input class="input mono" name="slug" value="${escapeHtml(c.slug || '')}" required placeholder="web-hacking-101" pattern="[a-z0-9-]+" />
+                <span class="admin-field-hint">Lowercase, hyphens only · used in /courses/&lt;slug&gt;</span>
+              </label>
+              <label class="admin-field">
+                <span class="admin-field-label">Difficulty</span>
+                <select class="input" name="difficulty">
+                  ${['beginner','intermediate','advanced'].map((x) => `<option ${x===(c.difficulty||'beginner')?'selected':''}>${x}</option>`).join('')}
+                </select>
+              </label>
+              <label class="admin-field full">
+                <span class="admin-field-label">Subtitle</span>
+                <input class="input" name="subtitle" value="${escapeHtml(c.subtitle || '')}" placeholder="A practical intro to web app pentesting" />
+              </label>
+            </div>
+          </section>
+
+          <section class="admin-form-section">
+            <div class="admin-form-section-head">
+              <h4 class="admin-form-section-title">Description</h4>
+              <p class="admin-form-section-hint">Markdown supported. This is what shows on the course detail page.</p>
+            </div>
+            <label class="admin-field full">
+              <textarea class="textarea" name="description" rows="6" data-md placeholder="What learners will be able to do after this course…">${escapeHtml(c.description || '')}</textarea>
+            </label>
+          </section>
+
+          <section class="admin-form-section">
+            <div class="admin-form-section-head">
+              <h4 class="admin-form-section-title">Pricing</h4>
+              <p class="admin-form-section-hint">Free courses are open to anyone signed in.</p>
+            </div>
+            <div class="admin-form-grid">
+              <label class="admin-toggle full">
+                <input type="checkbox" name="is_paid" id="cIsPaid" ${c.is_paid ? 'checked' : ''} />
+                <span class="admin-toggle-track" aria-hidden="true"><span class="admin-toggle-thumb"></span></span>
+                <span class="admin-toggle-label">
+                  <strong>Paid course</strong>
+                  <span class="dim">Charges via Stripe checkout. Toggle off for free.</span>
+                </span>
+              </label>
+              <label class="admin-field" id="cPriceField">
+                <span class="admin-field-label">Price (USD)</span>
+                <span class="admin-field-prefixed">
+                  <span class="admin-field-prefix">$</span>
+                  <input class="input mono" type="number" step="0.01" min="0" name="price_dollars" value="${dollars}" />
+                </span>
+              </label>
+              <label class="admin-field" id="cCurrencyField">
+                <span class="admin-field-label">Currency</span>
+                <select class="input mono" name="currency">
+                  ${['USD','EUR','GBP','CAD','AUD'].map((x) => `<option ${x===(c.currency||'USD')?'selected':''}>${x}</option>`).join('')}
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="admin-form-section">
+            <div class="admin-form-section-head">
+              <h4 class="admin-form-section-title">Visibility</h4>
+              <p class="admin-form-section-hint">Unpublished courses stay hidden from the catalog.</p>
+            </div>
+            <label class="admin-toggle full">
+              <input type="checkbox" name="published" ${c.published ? 'checked' : ''} />
+              <span class="admin-toggle-track" aria-hidden="true"><span class="admin-toggle-thumb"></span></span>
+              <span class="admin-toggle-label">
+                <strong>Published</strong>
+                <span class="dim">Shows on /courses and is searchable.</span>
+              </span>
+            </label>
+          </section>
+
+          <footer class="admin-form-foot">
+            <button class="btn btn-ghost" type="button" id="cCancel2">Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create course'}</button>
+          </footer>
         </form>
       </div>`;
-    $('#cCancel').addEventListener('click', () => { $('#cForm').innerHTML = ''; });
+    const close = () => { $('#cForm').innerHTML = ''; };
+    $('#cCancel').addEventListener('click', close);
+    $('#cCancel2').addEventListener('click', close);
+
+    // Toggle the price/currency block based on is_paid
+    const isPaid = $('#cIsPaid');
+    const priceField = $('#cPriceField');
+    const currencyField = $('#cCurrencyField');
+    function syncPaidUI() {
+      const on = isPaid.checked;
+      priceField.classList.toggle('is-disabled', !on);
+      currencyField.classList.toggle('is-disabled', !on);
+      priceField.querySelector('input').disabled = !on;
+      currencyField.querySelector('select').disabled = !on;
+    }
+    isPaid.addEventListener('change', syncPaidUI);
+    syncPaidUI();
+
+    wireMarkdownPreview($('#cForm'));
+
     $('#cSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
+      const isPaidVal = fd.get('is_paid') === 'on';
+      const dollarsVal = Number(fd.get('price_dollars')) || 0;
       const body = {
-        slug: fd.get('slug'), title: fd.get('title'), subtitle: fd.get('subtitle') || null,
-        description: fd.get('description') || null, difficulty: fd.get('difficulty'),
-        is_paid: fd.get('is_paid') === 'on',
-        price_cents: Number(fd.get('price_cents')) || 0,
+        slug: fd.get('slug'),
+        title: fd.get('title'),
+        subtitle: fd.get('subtitle') || null,
+        description: fd.get('description') || null,
+        difficulty: fd.get('difficulty'),
+        is_paid: isPaidVal,
+        price_cents: isPaidVal ? Math.round(dollarsVal * 100) : 0,
         currency: fd.get('currency') || 'USD',
         published: fd.get('published') === 'on',
       };
       try {
         if (c.id) await api.req('PATCH', `/api/admin/courses/${c.id}`, body);
         else      await api.post('/api/admin/courses', body);
+        window.toast?.(c.id ? 'Course updated' : 'Course created', 'success');
         courses();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
