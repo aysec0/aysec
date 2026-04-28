@@ -7469,6 +7469,38 @@ kbd {
 .forum-comment .forum-meta { gap: 0.4rem; }
 .forum-comment .forum-user { white-space: nowrap; }
 
+/* Forum image upload UI */
+.forum-textarea-toolbar {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+.forum-attach-btn {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.forum-attach-btn:hover {
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+.forum-textarea-dropping {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+.forum-md img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin: 0.4rem 0;
+}
+
 /* Flash on permalink scroll */
 @keyframes forum-comment-flash {
   0%   { background: color-mix(in srgb, var(--accent) 25%, transparent); }

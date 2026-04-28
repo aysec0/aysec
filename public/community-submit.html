@@ -32,6 +32,10 @@
           <input class="input mono" name="url" placeholder="https://…" />
         </label>
         <label>body (markdown, optional)
+          <div class="forum-textarea-toolbar">
+            <button type="button" class="forum-attach-btn" id="newPostAttach" title="Attach an image">📎 Image</button>
+            <span class="dim" style="font-size:0.78rem;">or drop / paste an image into the textarea</span>
+          </div>
           <textarea class="textarea" name="body_md" id="newPostBody" rows="10" placeholder="What did you find / learn / question?"></textarea>
         </label>
         <details>
@@ -51,6 +55,7 @@
   <script src="/js/layout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script src="/js/forum-upload.js"></script>
   <script>
     (() => {
       const $ = (id) => document.getElementById(id);
@@ -66,6 +71,7 @@
           prev.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(raw) : '';
         };
         body.addEventListener('input', renderPreview);
+        window.setupForumUpload?.(body, { attachBtn: $('newPostAttach') });
         $('newPostForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const fd = new FormData(e.target);

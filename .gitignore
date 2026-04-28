@@ -10,6 +10,7 @@ data/
 .vscode/
 .idea/
 .claude/
+public/uploads/
 dist/
 build/
 coverage/

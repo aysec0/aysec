@@ -163,6 +163,10 @@
       const id = Number(cn.dataset.id);
       wireVote(cn, `/api/forum/comments/${id}/vote`);
     });
+    // Wire image upload onto every reply textarea (drag/drop + paste)
+    container.querySelectorAll('.forum-reply-form textarea').forEach((ta) => {
+      window.setupForumUpload?.(ta);
+    });
     container.querySelectorAll('[data-collapse]').forEach((b) => {
       b.addEventListener('click', () => {
         const id = Number(b.dataset.collapse);
@@ -225,6 +229,9 @@
       }
     });
   }
+
+  // Top-level comment form: wire image upload + attach button
+  window.setupForumUpload?.($('commentBody'), { attachBtn: $('commentAttachBtn') });
 
   $('commentForm').addEventListener('submit', async (e) => {
     e.preventDefault();
