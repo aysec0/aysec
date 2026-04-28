@@ -25,26 +25,62 @@
       ],
     },
     {
-      group: 'Encoding & Crypto',
+      group: 'Crypto',
       items: [
         { name: 'JWT decoder',     href: '/tools/jwt' },
+        { name: 'JWT signer / forger', href: '/tools/jwt-sign' },
         { name: 'Hash identifier', href: '/tools/hash-id' },
         { name: 'Hash generator',  href: '/tools/hash-gen' },
-        { name: 'Base64',          href: '/tools/base64' },
-        { name: 'URL encode / decode', href: '/tools/url' },
+        { name: 'HMAC generator',  href: '/tools/hmac' },
+        { name: 'X.509 certificate parser', href: '/tools/x509' },
       ],
     },
     {
-      group: 'Web & Network',
+      group: 'Encoding',
+      items: [
+        { name: 'Base64',          href: '/tools/base64' },
+        { name: 'URL encode / decode', href: '/tools/url' },
+        { name: 'Cipher translator', href: '/tools/cipher' },
+        { name: 'Strings extractor', href: '/tools/strings' },
+        { name: 'File-type identifier', href: '/tools/magic' },
+      ],
+    },
+    {
+      group: 'Web',
+      items: [
+        { name: 'HTTP headers analyzer', href: '/tools/headers' },
+        { name: 'Cookie parser',   href: '/tools/cookie' },
+        { name: 'User-agent parser', href: '/tools/ua' },
+        { name: 'URL splitter',    href: '/tools/url-split' },
+        { name: 'Regex tester',    href: '/tools/regex' },
+      ],
+    },
+    {
+      group: 'Network',
       items: [
         { name: 'CIDR calculator', href: '/tools/cidr' },
-        { name: 'Unix timestamp',  href: '/tools/timestamp' },
+        { name: 'Subnet splitter', href: '/tools/subnet-split' },
+      ],
+    },
+    {
+      group: 'Pentest',
+      items: [
+        { name: 'Reverse shell builder', href: '/tools/revsh' },
       ],
     },
     {
       group: 'Generators',
       items: [
         { name: 'UUID generator',  href: '/tools/uuid' },
+        { name: 'Password generator', href: '/tools/password' },
+        { name: 'QR code generator', href: '/tools/qr' },
+      ],
+    },
+    {
+      group: 'Dev',
+      items: [
+        { name: 'Unix timestamp',  href: '/tools/timestamp' },
+        { name: 'JSON / XML formatter', href: '/tools/format' },
       ],
     },
   ];
