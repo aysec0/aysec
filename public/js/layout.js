@@ -7,7 +7,6 @@
 (() => {
   const NAV_ITEMS = [
     { href: '/',               label: 'Home' },
-    { href: '/tracks',         label: 'Paths' },
     { href: '/courses',        label: 'Courses' },
     { href: '/certifications', label: 'Certs' },
     { href: '/challenges',     label: 'CTF' },
@@ -133,8 +132,7 @@
       <nav class="mobile-nav drawer" id="mobileNav" aria-label="Mobile" aria-hidden="true">
         <div class="mobile-section-title">Learn</div>
         <a class="nav-link" href="/" data-href="/">Home</a>
-        <a class="nav-link" href="/tracks" data-href="/tracks">Learning paths</a>
-        <a class="nav-link" href="/courses" data-href="/courses">Courses</a>
+        <a class="nav-link" href="/courses" data-href="/courses">Courses &amp; paths</a>
         <a class="nav-link" href="/certifications" data-href="/certifications">Cert prep</a>
         <a class="nav-link" href="/challenges" data-href="/challenges">CTF</a>
         <a class="nav-link" href="/blog" data-href="/blog">Blog</a>
@@ -176,7 +174,7 @@
           <div>
             <div class="footer-col-title">Learn</div>
             <ul class="footer-links">
-              <li><a href="/tracks">Learning paths</a></li>
+              <li><a href="/courses#paths">Learning paths</a></li>
               <li><a href="/courses">Courses</a></li>
               <li><a href="/certifications">Cert prep</a></li>
               <li><a href="/challenges">CTF challenges</a></li>
@@ -781,6 +779,20 @@
     setYear();
     syncAuthNav();
     reveal();
+    loadAskFab();
+  }
+
+  // Inject the floating "Ask aysec" widget on every page (its own script
+  // suppresses itself on /ask). Keeping it as a deferred load means
+  // pages that already include /js/ask-fab.js explicitly won't double-load.
+  function loadAskFab() {
+    if (location.pathname === '/ask' || location.pathname.startsWith('/ask/')) return;
+    if (document.getElementById('askFab') || document.querySelector('script[data-ask-fab]')) return;
+    const s = document.createElement('script');
+    s.src = '/js/ask-fab.js';
+    s.dataset.askFab = '1';
+    s.defer = true;
+    document.body.appendChild(s);
   }
 
   if (document.readyState === 'loading') {
