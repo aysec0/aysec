@@ -6757,6 +6757,41 @@ kbd {
 .compete-meta { color: var(--text-muted); font-size: 0.85rem; }
 .compete-cta { margin-top: auto; font-size: 0.85rem; color: var(--accent); font-weight: 500; }
 
+/* ============================================================
+   Profile achievement timeline
+   ============================================================ */
+.profile-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1rem;
+  position: relative;
+  border-left: 1px solid var(--border);
+}
+.profile-tl-item {
+  position: relative;
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.6rem 0 0.6rem 0.6rem;
+}
+.profile-tl-item + .profile-tl-item { border-top: 1px dashed color-mix(in srgb, var(--border) 60%, transparent); }
+.profile-tl-dot {
+  position: absolute;
+  left: -1.4rem;
+  top: 1rem;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  border: 2px solid var(--bg);
+}
+.profile-tl-item[data-kind="cert"]        .profile-tl-dot { background: var(--terminal, #39ff7a); }
+.profile-tl-item[data-kind="first_blood"] .profile-tl-dot { background: var(--challenge, #ff6b6b); }
+.profile-tl-item[data-kind="achievement"] .profile-tl-dot { background: var(--medium, #ffb74d); }
+.profile-tl-item[data-kind="level_up"]    .profile-tl-dot { background: var(--accent); }
+.profile-tl-title { font-weight: 600; font-size: 0.95rem; }
+.profile-tl-body  { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.15rem; }
+.profile-tl-when  { color: var(--text-dim);   font-size: 0.78rem; margin-top: 0.2rem; font-family: var(--font-mono); }
+.profile-tl-when a { color: var(--accent); }
+
 .notif-item-title {
   color: var(--text);
   font-size: 0.92rem;

@@ -85,7 +85,7 @@
       return;
     }
 
-    const { user, stats, level, categories, recentSolves, certificates, heatmap } = data;
+    const { user, stats, level, categories, recentSolves, certificates, heatmap, timeline } = data;
     document.title = `${user.display_name || user.username} — aysec`;
 
     const lvlBadge = level && level.current ? (() => {
@@ -178,6 +178,23 @@
         tierColor: level?.current?.color || '#4d9aff',
         streak: stats?.streak?.current ?? 0,
       }, { size: 220, preview: true });
+    }
+
+    // Achievements timeline (notifications of cert/achievement/first_blood/level_up)
+    const tl = timeline || [];
+    const tlSec = document.getElementById('profileTimelineSection');
+    const tlBox = document.getElementById('profileTimeline');
+    if (tl.length && tlSec && tlBox) {
+      tlSec.hidden = false;
+      tlBox.innerHTML = tl.map((t) => `
+        <li class="profile-tl-item" data-kind="${escapeHtml(t.kind)}">
+          <span class="profile-tl-dot"></span>
+          <div>
+            <div class="profile-tl-title">${escapeHtml(t.title)}</div>
+            ${t.body ? `<div class="profile-tl-body">${escapeHtml(t.body)}</div>` : ''}
+            <div class="profile-tl-when">${escapeHtml(window.fmtRelative ? window.fmtRelative(t.created_at) : t.created_at)}${t.link ? ` · <a href="${escapeHtml(t.link)}">open →</a>` : ''}</div>
+          </div>
+        </li>`).join('');
     }
 
     // Certificates

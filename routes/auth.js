@@ -388,6 +388,44 @@ router.get('/dashboard', requireAuth, (req, res) => {
     `).get() || null;
   }
 
+  // ===== Compete loops: today's daily, live events the user joined, pro lab progress =====
+  const todayDate = new Date().toISOString().slice(0, 10);
+  const dailyRow = db.prepare(`
+    SELECT dc.date, dc.bonus_points, c.id AS challenge_id, c.slug, c.title, c.category, c.difficulty, c.points,
+      EXISTS(SELECT 1 FROM daily_solves ds WHERE ds.user_id = ? AND ds.date = dc.date) AS solved,
+      (SELECT time_seconds FROM daily_solves ds WHERE ds.user_id = ? AND ds.date = dc.date) AS time_seconds
+    FROM daily_challenges dc JOIN challenges c ON c.id = dc.challenge_id
+    WHERE dc.date = ?
+  `).get(req.user.id, req.user.id, todayDate);
+  const dailyStreak = db.prepare(
+    'SELECT COALESCE(current, 0) AS current, COALESCE(longest, 0) AS longest FROM daily_streaks WHERE user_id = ?'
+  ).get(req.user.id) || { current: 0, longest: 0 };
+
+  const liveEvents = db.prepare(`
+    SELECT e.id, e.slug, e.title, e.starts_at, e.ends_at,
+      EXISTS(SELECT 1 FROM ctf_event_participants p WHERE p.event_id = e.id AND p.user_id = ?) AS joined,
+      (SELECT COUNT(*) FROM ctf_event_solves s WHERE s.event_id = e.id AND s.user_id = ?) AS my_solves,
+      (SELECT COUNT(*) FROM ctf_event_challenges c WHERE c.event_id = e.id) AS chal_count
+    FROM ctf_events e
+    WHERE datetime(e.starts_at) <= datetime('now') AND datetime(e.ends_at) >= datetime('now')
+    ORDER BY e.starts_at
+  `).all(req.user.id, req.user.id);
+
+  const proLabsProgress = db.prepare(`
+    SELECT l.id, l.slug, l.title,
+      (SELECT COUNT(*) FROM pro_lab_machines m WHERE m.lab_id = l.id) * 2 AS total_flags,
+      (SELECT COUNT(*) FROM pro_lab_solves s WHERE s.user_id = ? AND s.lab_id = l.id) AS my_flags
+    FROM pro_labs l WHERE l.published = 1
+    ORDER BY my_flags DESC, l.id LIMIT 4
+  `).all(req.user.id);
+
+  const assessmentAttempts = db.prepare(`
+    SELECT at.id, at.started_at, at.ended_at, at.points_earned, at.passed,
+      a.slug, a.title, a.passing_points
+    FROM assessment_attempts at JOIN assessments a ON a.id = at.assessment_id
+    WHERE at.user_id = ? ORDER BY at.started_at DESC LIMIT 4
+  `).all(req.user.id);
+
   res.json({
     user: req.user,
     enrolled,
@@ -401,6 +439,12 @@ router.get('/dashboard', requireAuth, (req, res) => {
     heatmap,
     certificates,
     achievements,
+    compete: {
+      daily: dailyRow ? { ...dailyRow, streak: dailyStreak } : null,
+      liveEvents,
+      proLabs: proLabsProgress,
+      assessmentAttempts,
+    },
   });
 });
 

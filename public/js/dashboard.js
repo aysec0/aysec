@@ -212,6 +212,91 @@
   }
 
   // ---------- Quick actions ----------
+  function fmtSec(s) {
+    if (s == null) return '';
+    const m = Math.floor(s / 60); const sec = s % 60;
+    return m ? `${m}m ${sec}s` : `${sec}s`;
+  }
+  function fmtCountdown(targetMs) {
+    const diff = targetMs - Date.now();
+    const abs = Math.abs(diff) / 1000;
+    const h = Math.floor(abs / 3600);
+    const m = Math.floor((abs % 3600) / 60);
+    if (h >= 24) return `${Math.floor(h / 24)}d ${h % 24}h`;
+    return `${h}h ${m}m`;
+  }
+
+  function renderCompete(compete) {
+    if (!compete) return;
+    const cards = [];
+
+    // Daily card
+    if (compete.daily) {
+      const d = compete.daily;
+      const solved = d.solved;
+      cards.push(`
+        <a class="card compete-card" href="/daily">
+          <div class="compete-eyebrow" style="color: var(--accent);">// daily · ${solved ? '✓ solved' : 'unsolved'}</div>
+          <h3 class="compete-title">${escapeHtml(d.title)}</h3>
+          <div class="compete-meta">${d.category} · ${d.difficulty} · streak ${d.streak.current}d</div>
+          <div class="compete-cta">${solved ? `Locked in at ${fmtSec(d.time_seconds)} →` : 'Solve before reset →'}</div>
+        </a>`);
+    } else {
+      cards.push(`
+        <a class="card compete-card" href="/daily">
+          <div class="compete-eyebrow" style="color: var(--accent);">// daily</div>
+          <h3 class="compete-title">Today's challenge</h3>
+          <div class="compete-meta">Tap to load — auto-rotates daily.</div>
+          <div class="compete-cta">Open /daily →</div>
+        </a>`);
+    }
+
+    // Live event card (first one)
+    const ev = (compete.liveEvents || [])[0];
+    if (ev) {
+      const remaining = fmtCountdown(Date.parse(ev.ends_at));
+      cards.push(`
+        <a class="card compete-card" href="/live/${ev.slug}">
+          <div class="compete-eyebrow" style="color: var(--terminal,#39ff7a);">// 🔴 live · ${ev.joined ? 'joined' : 'open'}</div>
+          <h3 class="compete-title">${escapeHtml(ev.title)}</h3>
+          <div class="compete-meta">${ev.my_solves} / ${ev.chal_count} solved · ends in ${remaining}</div>
+          <div class="compete-cta">Open scoreboard →</div>
+        </a>`);
+    }
+
+    // Pro Lab card (top one with progress)
+    const lab = (compete.proLabs || [])[0];
+    if (lab) {
+      const pct = lab.total_flags ? Math.round((lab.my_flags / lab.total_flags) * 100) : 0;
+      cards.push(`
+        <a class="card compete-card" href="/pro-labs/${lab.slug}">
+          <div class="compete-eyebrow" style="color: var(--medium,#ffb74d);">// pro lab</div>
+          <h3 class="compete-title">${escapeHtml(lab.title)}</h3>
+          <div class="compete-meta">${lab.my_flags} / ${lab.total_flags} flags · ${pct}%</div>
+          <div class="compete-cta">${lab.my_flags ? 'Continue →' : 'Start hacking →'}</div>
+        </a>`);
+    }
+
+    // Last assessment attempt
+    const at = (compete.assessmentAttempts || [])[0];
+    if (at && cards.length < 3) {
+      const status = at.ended_at
+        ? (at.passed ? '✓ passed' : '· failed')
+        : '· in progress';
+      cards.push(`
+        <a class="card compete-card" href="/assessments/${at.slug}${!at.ended_at ? `/take/${at.id}` : ''}">
+          <div class="compete-eyebrow" style="color: var(--challenge);">// assessment ${status}</div>
+          <h3 class="compete-title">${escapeHtml(at.title)}</h3>
+          <div class="compete-meta">${at.points_earned} / ${at.passing_points} pts</div>
+          <div class="compete-cta">${at.ended_at ? 'View result →' : 'Resume attempt →'}</div>
+        </a>`);
+    }
+
+    if (!cards.length) return;
+    $('competeSection').hidden = false;
+    $('competeRow').innerHTML = cards.slice(0, 3).join('');
+  }
+
   function renderActions(rec, weekly, stats) {
     const items = [];
 
@@ -541,10 +626,11 @@
       return;
     }
 
-    const { user, enrolled, solved, stats, level, weekly, activity, recommended, categories, heatmap, certificates, achievements } = data;
+    const { user, enrolled, solved, stats, level, weekly, activity, recommended, categories, heatmap, certificates, achievements, compete } = data;
 
     renderHero(user, stats, level);
     renderActions(recommended, weekly, stats);
+    renderCompete(compete);
     renderHeatmap(heatmap);
     renderRadar(categories);
     renderFeed(activity);

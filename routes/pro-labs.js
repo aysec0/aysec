@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
 import { emit as notify } from './notifications.js';
+import * as discord from '../lib/discord.js';
 
 const router = Router();
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
@@ -66,13 +67,28 @@ router.post('/:slug/submit', requireAuth, (req, res) => {
     'INSERT OR IGNORE INTO pro_lab_solves (user_id, lab_id, machine_id, flag_kind) VALUES (?, ?, ?, ?)'
   ).run(req.user.id, lab.id, m.id, flag_kind);
   if (ins.changes === 1) {
-    const labMeta = db.prepare('SELECT title FROM pro_labs WHERE id = ?').get(lab.id);
+    const labMeta = db.prepare('SELECT title, slug FROM pro_labs WHERE id = ?').get(lab.id);
     notify({
       userId: req.user.id, kind: 'first_blood',
       title: `${m.name} ${flag_kind} flag captured`,
       body: `${labMeta.title} — ${flag_kind === 'root' ? 'system pwned' : 'foothold gained'}.`,
       link: `/pro-labs/${req.params.slug}`, icon: 'medal',
     });
+    // Detect platform-wide first blood for this (machine, flag_kind) — announce on Discord
+    const totalForFlag = db.prepare(
+      'SELECT COUNT(*) AS c FROM pro_lab_solves WHERE machine_id = ? AND flag_kind = ?'
+    ).get(m.id, flag_kind).c;
+    if (totalForFlag === 1) {
+      discord.announceProLabFirstBlood({
+        userDisplay:  req.user.display_name,
+        userUsername: req.user.username,
+        labTitle:     labMeta.title,
+        labSlug:      labMeta.slug,
+        machineName:  m.name,
+        flagKind:     flag_kind,
+        points:       flag_kind === 'root' ? m.root_points : m.user_points,
+      }).catch(() => {});
+    }
   }
   res.json({ correct: true, points: flag_kind === 'user' ? m.user_points : m.root_points });
 });

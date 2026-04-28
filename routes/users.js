@@ -125,6 +125,12 @@ router.get('/:username', (req, res) => {
         'SELECT COUNT(*) AS c FROM daily_solves WHERE user_id = ?'
       ).get(user.id).c,
     },
+    timeline: db.prepare(`
+      SELECT kind, title, body, link, icon, created_at
+      FROM notifications WHERE user_id = ?
+        AND kind IN ('cert', 'achievement', 'first_blood', 'level_up')
+      ORDER BY created_at DESC LIMIT 20
+    `).all(user.id),
     level: { ...level, xp_breakdown: xpBreakdown },
     categories: byCategory,
     recentSolves,
