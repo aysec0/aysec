@@ -2,9 +2,18 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-  const md = (s) => window.marked ? window.marked.parse(s || '', { gfm: true, breaks: true }) : escapeHtml(s);
+  const md = (s) => {
+    if (!window.marked) return escapeHtml(s);
+    const raw = window.marked.parse(s || '', { gfm: true, breaks: true });
+    return window.DOMPurify ? window.DOMPurify.sanitize(raw) : escapeHtml(s);
+  };
   const postId = Number(location.pathname.replace(/\/+$/, '').split('/').pop());
   let me = null;
+  let postAuthor = null;            // username of the post author (for OP badge)
+  const collapsed = new Set();      // comment ids whose subtree is collapsed
+  const SORT_KEY = 'forum.commentSort';
+  const sortable = ['top', 'new', 'old'];
+  let sort = sortable.includes(localStorage.getItem(SORT_KEY)) ? localStorage.getItem(SORT_KEY) : 'top';
 
   function relTime(s) {
     if (!s) return '';
@@ -21,6 +30,7 @@
     document.title = p.title + ' — community — aysec';
     $('postCrumb').textContent = p.id;
     $('postEyebrow').textContent = `// /community/${p.cat_slug}`;
+    postAuthor = p.username;
     const isAdmin = me?.role === 'admin';
     const canDelete = me && (me.username === p.username || isAdmin);
     $('postBody').innerHTML = `
@@ -66,10 +76,25 @@
     });
   }
 
-  function commentNode(c, allById, depth = 0) {
-    const childIds = [...allById.values()].filter((x) => x.parent_id === c.id).map((x) => x.id);
+  // Count descendants for collapse-button label
+  function descendantCount(id, kidsByParent) {
+    const direct = kidsByParent.get(id) || [];
+    return direct.length + direct.reduce((acc, k) => acc + descendantCount(k.id, kidsByParent), 0);
+  }
+
+  function commentNode(c, kidsByParent, depth = 0) {
+    const isOp = postAuthor && c.username === postAuthor;
+    const isCollapsed = collapsed.has(c.id);
+    const kids = kidsByParent.get(c.id) || [];
+    const totalDescendants = descendantCount(c.id, kidsByParent);
+    const canDelete = me && (me.id === c.user_id || me.role === 'admin');
+
+    const childrenHtml = isCollapsed
+      ? ''
+      : kids.map((k) => commentNode(k, kidsByParent, depth + 1)).join('');
+
     return `
-      <div class="forum-comment" data-id="${c.id}" style="margin-left:${depth * 16}px;">
+      <div class="forum-comment ${isCollapsed ? 'is-collapsed' : ''}${isOp ? ' is-op' : ''}" data-id="${c.id}" id="c${c.id}" style="margin-left:${depth * 16}px;">
         <div class="forum-vote">
           <button class="forum-arrow ${c.my_vote === 1 ? 'is-up' : ''}" data-v="1">▲</button>
           <div class="forum-score">${c.score}</div>
@@ -77,54 +102,89 @@
         </div>
         <div class="forum-comment-body">
           <div class="forum-meta">
+            <button class="forum-comment-collapse" data-collapse="${c.id}" aria-label="${isCollapsed ? 'Expand' : 'Collapse'}" title="${isCollapsed ? 'Expand thread' : 'Collapse thread'}">${isCollapsed ? '[+]' : '[−]'}</button>
             <a class="forum-user" href="/u/${escapeHtml(c.username)}">@${escapeHtml(c.username)}</a>
-            <span class="dim">${relTime(c.created_at)}</span>
-            ${(me && (me.id === c.user_id || me.role === 'admin')) ? `<button class="forum-del" data-cdel="${c.id}">delete</button>` : ''}
+            ${isOp ? '<span class="forum-op-badge" title="Original poster">OP</span>' : ''}
+            <a class="forum-comment-time dim" href="#c${c.id}" title="Permalink">${relTime(c.created_at)}</a>
+            ${isCollapsed && totalDescendants > 0 ? `<span class="forum-collapsed-info">+${totalDescendants} hidden</span>` : ''}
+            ${canDelete ? `<button class="forum-del" data-cdel="${c.id}">delete</button>` : ''}
           </div>
-          <div class="forum-md prose">${md(c.body_md)}</div>
-          <div class="forum-actions">
-            <button class="forum-reply-btn" data-reply="${c.id}">↩ reply</button>
-          </div>
-          <form class="forum-reply-form" data-rform="${c.id}" hidden style="margin-top:0.4rem;">
-            <textarea class="textarea" rows="2" required></textarea>
-            <div style="display:flex; gap:0.4rem; margin-top:0.3rem;">
-              <button class="btn btn-primary btn-sm" type="submit">Post reply</button>
-              <button class="btn btn-ghost btn-sm" type="button" data-rcancel="${c.id}">cancel</button>
+          ${isCollapsed ? '' : `<div class="forum-md prose">${md(c.body_md)}</div>`}
+          ${isCollapsed ? '' : `
+            <div class="forum-actions">
+              <button class="forum-reply-btn" data-reply="${c.id}">↩ reply</button>
             </div>
-          </form>
+            <form class="forum-reply-form" data-rform="${c.id}" hidden style="margin-top:0.4rem;">
+              <textarea class="textarea" rows="2" required></textarea>
+              <div style="display:flex; gap:0.4rem; margin-top:0.3rem;">
+                <button class="btn btn-primary btn-sm" type="submit">Post reply</button>
+                <button class="btn btn-ghost btn-sm" type="button" data-rcancel="${c.id}">cancel</button>
+              </div>
+            </form>`}
         </div>
-        ${childIds.map((cid) => commentNode(allById.get(cid), allById, depth + 1)).join('')}
+        ${childrenHtml}
       </div>`;
   }
 
+  function sortComments(list, mode) {
+    const arr = [...list];
+    if (mode === 'top') arr.sort((a, b) => b.score - a.score || a.id - b.id);
+    else if (mode === 'new') arr.sort((a, b) => b.id - a.id);
+    else arr.sort((a, b) => a.id - b.id);
+    return arr;
+  }
+
   function renderComments(comments) {
+    const container = $('commentsList');
     if (!comments.length) {
-      $('commentsList').innerHTML = '<p class="dim">No comments yet — say something useful.</p>';
+      container.innerHTML = '<p class="dim">No comments yet — say something useful.</p>';
+      $('commentSortBar').hidden = true;
       return;
     }
-    const byId = new Map(comments.map((c) => [c.id, c]));
-    const tops = comments.filter((c) => !c.parent_id);
-    $('commentsList').innerHTML = tops.map((c) => commentNode(c, byId)).join('');
-    // Wire votes
-    $('commentsList').querySelectorAll('.forum-comment').forEach((cn) => {
+    $('commentSortBar').hidden = false;
+
+    // Group children by parent_id and sort each group consistently
+    const kidsByParent = new Map();
+    for (const c of comments) {
+      const p = c.parent_id ?? 0;
+      if (!kidsByParent.has(p)) kidsByParent.set(p, []);
+      kidsByParent.get(p).push(c);
+    }
+    for (const [k, list] of kidsByParent) {
+      kidsByParent.set(k, sortComments(list, k === 0 ? sort : 'old'));
+    }
+    const tops = kidsByParent.get(0) || [];
+    container.innerHTML = tops.map((c) => commentNode(c, kidsByParent)).join('');
+    wireCommentEvents(container);
+  }
+
+  function wireCommentEvents(container) {
+    container.querySelectorAll('.forum-comment').forEach((cn) => {
       const id = Number(cn.dataset.id);
       wireVote(cn, `/api/forum/comments/${id}/vote`);
     });
-    // Wire reply toggles
-    $('commentsList').querySelectorAll('[data-reply]').forEach((b) => {
+    container.querySelectorAll('[data-collapse]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const id = Number(b.dataset.collapse);
+        if (collapsed.has(id)) collapsed.delete(id);
+        else collapsed.add(id);
+        load();
+      });
+    });
+    container.querySelectorAll('[data-reply]').forEach((b) => {
       b.addEventListener('click', () => {
         const id = b.dataset.reply;
-        const f = $('commentsList').querySelector(`[data-rform="${id}"]`);
+        const f = container.querySelector(`[data-rform="${id}"]`);
         f.hidden = !f.hidden;
         if (!f.hidden) f.querySelector('textarea').focus();
       });
     });
-    $('commentsList').querySelectorAll('[data-rcancel]').forEach((b) => {
+    container.querySelectorAll('[data-rcancel]').forEach((b) => {
       b.addEventListener('click', () => {
-        $('commentsList').querySelector(`[data-rform="${b.dataset.rcancel}"]`).hidden = true;
+        container.querySelector(`[data-rform="${b.dataset.rcancel}"]`).hidden = true;
       });
     });
-    $('commentsList').querySelectorAll('.forum-reply-form').forEach((f) => {
+    container.querySelectorAll('.forum-reply-form').forEach((f) => {
       f.addEventListener('submit', async (e) => {
         e.preventDefault();
         const body = f.querySelector('textarea').value.trim();
@@ -138,18 +198,16 @@
         }
       });
     });
-    $('commentsList').querySelectorAll('[data-cdel]').forEach((b) =>
+    container.querySelectorAll('[data-cdel]').forEach((b) =>
       b.addEventListener('click', async () => {
         if (!confirm('Delete comment?')) return;
         try { await window.api.del(`/api/forum/comments/${b.dataset.cdel}`); await load(); }
-        catch (err) { alert(err.message); }
+        catch (err) { window.toast(err.message, 'error'); }
       })
     );
   }
 
   function wireVote(el, url) {
-    el.querySelectorAll(':scope > .forum-vote .forum-arrow, :scope > .forum-comment-body .forum-vote .forum-arrow, :scope > .forum-vote .forum-arrow').forEach(() => {});
-    // simpler: only top-level vote buttons of this element (not descendants)
     el.querySelectorAll(':scope > .forum-vote .forum-arrow').forEach((b) => bindVote(b, el, url));
   }
   function bindVote(b, el, url) {
@@ -189,13 +247,53 @@
       renderPost(r.post);
       $('commentsHead').textContent = `Comments (${r.comments.length})`;
       renderComments(r.comments);
+      // If the URL has a #cN anchor, scroll to it after render
+      if (location.hash && /^#c\d+$/.test(location.hash)) {
+        const el = document.querySelector(location.hash);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('forum-comment-flash');
+          setTimeout(() => el.classList.remove('forum-comment-flash'), 1600);
+        }
+      }
     } catch (e) {
       $('postBody').innerHTML = `<div class="card" style="padding:1.5rem;"><p class="dim">${escapeHtml(e.message)}</p></div>`;
     }
   }
+
+  // Comment sort bar
+  function wireSortBar() {
+    const bar = $('commentSortBar');
+    if (!bar) return;
+    bar.querySelectorAll('[data-csort]').forEach((b) => {
+      b.classList.toggle('is-active', b.dataset.csort === sort);
+      b.addEventListener('click', () => {
+        sort = b.dataset.csort;
+        try { localStorage.setItem(SORT_KEY, sort); } catch {}
+        bar.querySelectorAll('[data-csort]').forEach((x) => x.classList.toggle('is-active', x === b));
+        load();
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    // Inject the comment sort bar (above the list, below the heading)
+    const head = $('commentsHead');
+    if (head) {
+      const bar = document.createElement('div');
+      bar.id = 'commentSortBar';
+      bar.className = 'forum-comment-sort';
+      bar.hidden = true;
+      bar.innerHTML = `
+        <span class="forum-comment-sort-label">sort by</span>
+        <button class="chip ${sort==='top'?'is-active':''}" data-csort="top">⭐ Top</button>
+        <button class="chip ${sort==='new'?'is-active':''}" data-csort="new">🆕 New</button>
+        <button class="chip ${sort==='old'?'is-active':''}" data-csort="old">⏱ Old</button>`;
+      head.insertAdjacentElement('afterend', bar);
+    }
+    wireSortBar();
     load();
-    // Auto-refresh comments every 12s, but only when the tab is visible
+    // Auto-refresh every 12s when visible & no reply form open
     setInterval(() => {
       if (document.visibilityState === 'visible' && !document.querySelector('.forum-reply-form:not([hidden])')) {
         load();

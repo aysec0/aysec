@@ -7423,6 +7423,59 @@ kbd {
 }
 .forum-user { font-weight: 600; }
 
+/* Comment sort bar (Top / New / Old) */
+.forum-comment-sort {
+  display: flex; align-items: center; gap: 0.4rem;
+  margin: 0.3rem 0 0.7rem;
+}
+.forum-comment-sort-label {
+  font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
+  letter-spacing: 0.06em; text-transform: lowercase; margin-right: 0.2rem;
+}
+
+/* Collapse toggle next to username */
+.forum-comment-collapse {
+  background: transparent; border: 0; color: var(--text-dim);
+  font-family: var(--font-mono); font-size: 0.78rem; padding: 0;
+  cursor: pointer; min-width: 22px;
+}
+.forum-comment-collapse:hover { color: var(--text); }
+
+/* OP badge — when the comment author is also the post author */
+.forum-op-badge {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: 0.66rem; font-weight: 700;
+  background: var(--accent); color: var(--bg);
+  padding: 0.05rem 0.4rem; border-radius: 4px;
+  letter-spacing: 0.06em;
+}
+.forum-comment.is-op { border-left: 2px solid var(--accent); }
+
+/* Collapsed thread "+N hidden" hint */
+.forum-collapsed-info {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim);
+  background: var(--bg-elev); padding: 0.05rem 0.4rem; border-radius: 4px;
+}
+.forum-comment.is-collapsed { padding-bottom: 0.5rem; }
+
+/* Permalink timestamp (link styled like dim text) */
+.forum-comment-time {
+  text-decoration: none; color: var(--text-dim); font-size: 0.78rem;
+  white-space: nowrap;
+}
+.forum-comment-time:hover { color: var(--accent); text-decoration: underline; }
+
+/* Tighten meta layout inside comments so deep-nested ones don't wrap awkwardly */
+.forum-comment .forum-meta { gap: 0.4rem; }
+.forum-comment .forum-user { white-space: nowrap; }
+
+/* Flash on permalink scroll */
+@keyframes forum-comment-flash {
+  0%   { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+  100% { background: var(--surface); }
+}
+.forum-comment-flash { animation: forum-comment-flash 1.6s ease-out; }
+
 /* ============================================================
    Toast notifications (window.toast() in api.js)
    ============================================================ */

@@ -50,6 +50,7 @@
   <script src="/js/api.js"></script>
   <script src="/js/layout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <script>
     (() => {
       const $ = (id) => document.getElementById(id);
@@ -58,13 +59,13 @@
         if (!me?.user) { location.href = '/login?next=/community/submit'; return; }
         const r = await window.api.get('/api/forum/categories');
         $('newPostCat').innerHTML = r.categories.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
-        // Live markdown preview
+        // Live markdown preview (sanitized, even though it's the author's own content)
         const body = $('newPostBody'), prev = $('newPostPreview');
-        body.addEventListener('input', () => {
-          prev.innerHTML = window.marked
-            ? window.marked.parse(body.value || '', { gfm: true, breaks: true })
-            : '';
-        });
+        const renderPreview = () => {
+          const raw = window.marked ? window.marked.parse(body.value || '', { gfm: true, breaks: true }) : '';
+          prev.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(raw) : '';
+        };
+        body.addEventListener('input', renderPreview);
         $('newPostForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const fd = new FormData(e.target);
