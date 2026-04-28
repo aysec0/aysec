@@ -6961,6 +6961,93 @@ kbd {
 .forum-user { font-weight: 600; }
 
 /* ============================================================
+   Toast notifications (window.toast() in api.js)
+   ============================================================ */
+.toast-host {
+  position: fixed; bottom: 1rem; right: 1rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+  z-index: 9999; pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-dim);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.9rem;
+  font-size: 0.88rem;
+  min-width: 220px; max-width: 360px;
+  box-shadow: 0 8px 24px -10px rgba(0,0,0,0.6);
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.toast.is-shown { opacity: 1; transform: translateX(0); }
+.toast-success { border-left-color: var(--terminal, #39ff7a); }
+.toast-error   { border-left-color: var(--hard, #ff6b6b); }
+.toast-info    { border-left-color: var(--accent); }
+
+/* ============================================================
+   Admin polish — table zebra/hover, sidebar icons,
+   skeleton loaders, empty states, sticky table headers
+   ============================================================ */
+.admin-side .admin-tab,
+.admin-side a.admin-tab {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+}
+.admin-tab .ti-ico {
+  width: 14px; height: 14px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: currentColor;
+}
+
+.admin-row { transition: background 0.1s; }
+.admin-row:hover:not(.admin-head) { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+.admin-row:nth-child(even):not(.admin-head):not(:hover) {
+  background: color-mix(in srgb, var(--text-dim) 3%, transparent);
+}
+.admin-row.admin-head { position: sticky; top: 0; z-index: 1; }
+
+.admin-skel {
+  display: grid; gap: 0.4rem;
+  padding: 0.7rem 0.9rem;
+}
+.admin-skel-row { height: 14px; background: color-mix(in srgb, var(--text-dim) 14%, transparent);
+  border-radius: 4px; animation: skel-pulse 1.4s ease-in-out infinite; }
+@keyframes skel-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+
+.admin-empty-state {
+  padding: 2rem; text-align: center; color: var(--text-dim);
+  border: 1px dashed var(--border); border-radius: var(--radius-md);
+}
+.admin-empty-state strong { color: var(--text); display: block; margin-bottom: 0.3rem; font-size: 1.05rem; }
+
+.btn.btn-sm { padding: 0.25rem 0.55rem; font-size: 0.78rem; }
+
+/* ============================================================
+   Forum polish — admin pin/lock badges + reply form md preview
+   ============================================================ */
+.forum-md-preview-pane {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+  max-height: 240px; overflow-y: auto;
+}
+.forum-md-preview-pane:empty::before { content: 'preview will appear here'; color: var(--text-dim); font-style: italic; }
+.forum-mod-row { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; margin-top: 0.5rem; }
+.forum-mod-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+  font: inherit; font-size: 0.74rem; padding: 0.18rem 0.55rem; border-radius: 999px;
+  cursor: pointer; transition: color 0.12s, border-color 0.12s;
+}
+.forum-mod-btn:hover { color: var(--accent); border-color: var(--accent); }
+.forum-mod-btn.is-on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+/* ============================================================
    /site-editor — Elementor-ish visual editor
    ============================================================ */
 .se-body { background: var(--bg-elev); margin: 0; min-height: 100vh; display: flex; flex-direction: column; }

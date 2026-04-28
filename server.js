@@ -10,7 +10,6 @@ import coursesRoutes from './routes/courses.js';
 import challengesRoutes from './routes/challenges.js';
 import postsRoutes from './routes/posts.js';
 import paymentsRoutes, { stripeWebhook } from './routes/payments.js';
-import newsletterRoutes from './routes/newsletter.js';
 import socialRoutes from './routes/social.js';
 import certificatesRoutes from './routes/certificates.js';
 import tracksRoutes from './routes/tracks.js';
@@ -47,7 +46,6 @@ app.use('/api/courses',      coursesRoutes);
 app.use('/api/challenges',   challengesRoutes);
 app.use('/api/posts',        postsRoutes);
 app.use('/api/payments',     paymentsRoutes);
-app.use('/api/newsletter',   newsletterRoutes);
 app.use('/api/social',       socialRoutes);
 app.use('/api/certificates', certificatesRoutes);
 app.use('/api/tracks',         tracksRoutes);
@@ -88,6 +86,10 @@ app.get('/api/site-settings', (_req, res) => {
     compete_subtitle: 'A challenge a day, scheduled CTFs, and multi-machine Pro Labs that simulate real enterprise networks.',
     compete_cta_label: 'Today’s challenge →',
     compete_cta_href:  '/daily',
+    about_eyebrow: '// whoami',
+    about_title:   'Security engineer, educator, perpetual student.',
+    about_p1:      'I build training that respects your time. No 30-minute intros, no recycled slide decks, no "look at this scary screenshot" content. Just labs, code, and the actual mental models you need to do the job.',
+    about_p2:      'Everything here — courses, challenges, writeups — is open to feedback. If something’s wrong, broken, or could be better, tell me.',
   };
   const rows = db.prepare('SELECT key, value FROM site_settings').all();
   const stored = Object.fromEntries(rows.map((r) => [r.key, r.value]));

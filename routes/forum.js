@@ -114,6 +114,21 @@ router.post('/posts/:id/vote', requireAuth, (req, res) => {
   res.json({ score: fresh.score, my_vote: v });
 });
 
+// ===== Mod actions: pin / lock (admin only) =====
+router.post('/posts/:id/mod', requireAuth, (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  const cur = db.prepare('SELECT id, pinned, locked FROM forum_posts WHERE id = ?').get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'Post not found' });
+  const updates = {};
+  if (typeof req.body?.pinned === 'boolean') updates.pinned = req.body.pinned ? 1 : 0;
+  if (typeof req.body?.locked === 'boolean') updates.locked = req.body.locked ? 1 : 0;
+  if (!Object.keys(updates).length) return res.status(400).json({ error: 'Need pinned or locked' });
+  db.prepare(`UPDATE forum_posts SET pinned = ?, locked = ? WHERE id = ?`).run(
+    updates.pinned ?? cur.pinned, updates.locked ?? cur.locked, cur.id
+  );
+  res.json({ ok: true });
+});
+
 // ===== Delete post (own or admin) =====
 router.delete('/posts/:id', requireAuth, (req, res) => {
   const post = db.prepare('SELECT user_id FROM forum_posts WHERE id = ?').get(req.params.id);

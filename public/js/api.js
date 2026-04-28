@@ -49,6 +49,27 @@
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
+  // Tiny toast helper used by admin + forum; replaces alert().
+  // Usage: window.toast('Saved.', 'success'|'error'|'info', 2500);
+  window.toast = (msg, kind = 'info', ttl = 2500) => {
+    let host = document.getElementById('toastHost');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'toastHost';
+      host.className = 'toast-host';
+      document.body.appendChild(host);
+    }
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + kind;
+    el.textContent = msg;
+    host.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('is-shown'));
+    setTimeout(() => {
+      el.classList.remove('is-shown');
+      setTimeout(() => el.remove(), 250);
+    }, ttl);
+  };
+
   window.fmtRelative = (s) => {
     if (!s) return '';
     const then = new Date(s.replace(' ', 'T') + 'Z').getTime();

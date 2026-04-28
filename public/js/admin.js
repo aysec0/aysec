@@ -30,7 +30,15 @@
 
   function loadTab(tab, btn) {
     document.querySelectorAll('.admin-tab').forEach((b) => b.classList.toggle('is-active', b === btn));
-    main().innerHTML = '<div class="card" style="padding:1.5rem;">loading…</div>';
+    main().innerHTML = `
+      <div class="card" style="padding:1.5rem;">
+        <div class="admin-skel">
+          <div class="admin-skel-row" style="width: 40%;"></div>
+          <div class="admin-skel-row" style="width: 90%;"></div>
+          <div class="admin-skel-row" style="width: 75%;"></div>
+          <div class="admin-skel-row" style="width: 60%;"></div>
+        </div>
+      </div>`;
     if (tab === 'overview')     return overview();
     if (tab === 'site')         return siteSettings();
     if (tab === 'users')        return users();
@@ -99,7 +107,7 @@
     return `
       <div class="admin-table">
         <div class="admin-row admin-head">${headers.map((h) => `<div>${h}</div>`).join('')}</div>
-        ${rows.length ? rows.join('') : '<div class="admin-empty">no rows</div>'}
+        ${rows.length ? rows.join('') : '<div class="admin-empty-state"><strong>No rows yet</strong>Use the button above to create the first one.</div>'}
       </div>`;
   }
 
@@ -143,7 +151,7 @@
         s.addEventListener('change', async () => {
           if (!confirm(`Set @${s.closest('.admin-row').querySelector('a').textContent.slice(1)} to ${s.value}?`)) return;
           try { await api.req('PATCH', `/api/admin/users/${s.dataset.uid}`, { role: s.value }); }
-          catch (e) { alert(e.message); }
+          catch (e) { window.toast(e.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -185,7 +193,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete challenge?')) return;
           try { await api.req('DELETE', `/api/admin/challenges/${b.dataset.del}`); challenges(); }
-          catch (e) { alert(e.message); }
+          catch (e) { window.toast(e.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -228,7 +236,7 @@
         if (c.id) await api.req('PATCH', `/api/admin/challenges/${c.id}`, body);
         else      await api.post('/api/admin/challenges', body);
         challenges();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
   }
 
@@ -271,13 +279,13 @@
             bonus_points: Number(fd.get('bonus_points')) || 50,
           });
           daily();
-        } catch (err2) { alert(err2.message); }
+        } catch (err2) { window.toast(err2.message, 'error'); }
       });
       main().querySelectorAll('[data-del]').forEach((b) => {
         b.addEventListener('click', async () => {
           if (!confirm(`Remove daily for ${b.dataset.del}?`)) return;
           try { await api.req('DELETE', `/api/admin/daily/${b.dataset.del}`); daily(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -313,7 +321,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete event?')) return;
           try { await api.req('DELETE', `/api/admin/ctf-events/${b.dataset.del}`); ctfEvents(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
       main().querySelectorAll('[data-chals]').forEach((b) =>
@@ -360,7 +368,7 @@
         if (ev.id) await api.req('PATCH', `/api/admin/ctf-events/${ev.id}`, body);
         else       await api.post('/api/admin/ctf-events', body);
         ctfEvents();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
   }
 
@@ -404,13 +412,13 @@
             position: Number(fd.get('position')) || 0,
           });
           manageEventChallenges(eventId);
-        } catch (err2) { alert(err2.message); }
+        } catch (err2) { window.toast(err2.message, 'error'); }
       });
       main().querySelectorAll('[data-rm]').forEach((b) => {
         b.addEventListener('click', async () => {
           if (!confirm('Remove challenge from event?')) return;
           try { await api.req('DELETE', `/api/admin/ctf-events/${eventId}/challenges/${b.dataset.rm}`); manageEventChallenges(eventId); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -448,7 +456,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete assessment?')) return;
           try { await api.req('DELETE', `/api/admin/assessments/${b.dataset.del}`); assessments(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
       main().querySelectorAll('[data-machines]').forEach((b) =>
@@ -493,7 +501,7 @@
         if (a.id) await api.req('PATCH', `/api/admin/assessments/${a.id}`, body);
         else      await api.post('/api/admin/assessments', body);
         assessments();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
   }
 
@@ -536,13 +544,13 @@
             flag: fd.get('flag'), hint: fd.get('hint') || null,
           });
           manageAssessmentMachines(aid);
-        } catch (err2) { alert(err2.message); }
+        } catch (err2) { window.toast(err2.message, 'error'); }
       });
       main().querySelectorAll('[data-rm]').forEach((b) => {
         b.addEventListener('click', async () => {
           if (!confirm('Remove machine?')) return;
           try { await api.req('DELETE', `/api/admin/assessments/${aid}/machines/${b.dataset.rm}`); manageAssessmentMachines(aid); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -579,7 +587,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete lab?')) return;
           try { await api.req('DELETE', `/api/admin/pro-labs/${b.dataset.del}`); proLabs(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
       main().querySelectorAll('[data-machines]').forEach((b) =>
@@ -622,7 +630,7 @@
         if (l.id) await api.req('PATCH', `/api/admin/pro-labs/${l.id}`, body);
         else      await api.post('/api/admin/pro-labs', body);
         proLabs();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
   }
 
@@ -671,13 +679,13 @@
             hint: fd.get('hint') || null,
           });
           manageProLabMachines(lid);
-        } catch (err2) { alert(err2.message); }
+        } catch (err2) { window.toast(err2.message, 'error'); }
       });
       main().querySelectorAll('[data-rm]').forEach((b) => {
         b.addEventListener('click', async () => {
           if (!confirm('Remove machine?')) return;
           try { await api.req('DELETE', `/api/admin/pro-labs/${lid}/machines/${b.dataset.rm}`); manageProLabMachines(lid); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -716,7 +724,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete course (and all lessons + access records)?')) return;
           try { await api.req('DELETE', `/api/admin/courses/${b.dataset.del}`); courses(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
       main().querySelectorAll('[data-lessons]').forEach((b) => {
@@ -764,7 +772,7 @@
         if (c.id) await api.req('PATCH', `/api/admin/courses/${c.id}`, body);
         else      await api.post('/api/admin/courses', body);
         courses();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
   }
 
@@ -794,14 +802,14 @@
       main().querySelectorAll('[data-edit]').forEach((b) =>
         b.addEventListener('click', async () => {
           try { const r2 = await api.get(`/api/admin/posts/${b.dataset.edit}`); renderPForm(r2.post); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         })
       );
       main().querySelectorAll('[data-del]').forEach((b) => {
         b.addEventListener('click', async () => {
           if (!confirm('Delete post?')) return;
           try { await api.req('DELETE', `/api/admin/posts/${b.dataset.del}`); posts(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -839,7 +847,7 @@
         if (p.id) await api.req('PATCH', `/api/admin/posts/${p.id}`, body);
         else      await api.post('/api/admin/posts', body);
         posts();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
     wireMarkdownPreview($('#pForm'));
   }
@@ -926,14 +934,14 @@
       main().querySelectorAll('[data-edit]').forEach((b) => {
         b.addEventListener('click', async () => {
           try { const r2 = await api.get(`/api/admin/lessons/${b.dataset.edit}`); renderLesForm(r2.lesson, courseId, courseTitle); }
-          catch (e) { alert(e.message); }
+          catch (e) { window.toast(e.message, 'error'); }
         });
       });
       main().querySelectorAll('[data-del]').forEach((b) => {
         b.addEventListener('click', async () => {
           if (!confirm('Delete lesson?')) return;
           try { await api.req('DELETE', `/api/admin/lessons/${b.dataset.del}`); manageLessons(courseId, courseTitle); }
-          catch (e) { alert(e.message); }
+          catch (e) { window.toast(e.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -973,7 +981,7 @@
         if (l.id) await api.req('PATCH', `/api/admin/lessons/${l.id}`, body);
         else      await api.post(`/api/admin/courses/${courseId}/lessons`, body);
         manageLessons(courseId, courseTitle || '(course)');
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
     wireMarkdownPreview($('#lesForm'));
   }
@@ -1010,7 +1018,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete path?')) return;
           try { await api.req('DELETE', `/api/admin/tracks/${b.dataset.del}`); tracks(); }
-          catch (e) { alert(e.message); }
+          catch (e) { window.toast(e.message, 'error'); }
         });
       });
       main().querySelectorAll('[data-courses]').forEach((b) =>
@@ -1052,7 +1060,7 @@
         if (t.id) await api.req('PATCH', `/api/admin/tracks/${t.id}`, body);
         else      await api.post('/api/admin/tracks', body);
         tracks();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
     wireMarkdownPreview($('#tForm'));
   }
@@ -1094,13 +1102,13 @@
             position: Number(fd.get('position')) || 0,
           });
           manageTrackCourses(trackId);
-        } catch (err2) { alert(err2.message); }
+        } catch (err2) { window.toast(err2.message, 'error'); }
       });
       main().querySelectorAll('[data-rm]').forEach((b) => {
         b.addEventListener('click', async () => {
           if (!confirm('Remove course from path?')) return;
           try { await api.req('DELETE', `/api/admin/tracks/${trackId}/courses/${b.dataset.rm}`); manageTrackCourses(trackId); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -1136,7 +1144,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete cert prep entry?')) return;
           try { await api.req('DELETE', `/api/admin/cert-prep/${b.dataset.del}`); certPrep(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -1192,7 +1200,7 @@
         if (c.id) await api.req('PATCH', `/api/admin/cert-prep/${c.id}`, body);
         else      await api.post('/api/admin/cert-prep', body);
         certPrep();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
     wireMarkdownPreview($('#cpForm'));
   }
@@ -1223,14 +1231,14 @@
       main().querySelectorAll('[data-edit]').forEach((b) =>
         b.addEventListener('click', async () => {
           try { const r2 = await api.get(`/api/admin/cheatsheets/${b.dataset.edit}`); renderChForm(r2.cheatsheet); }
-          catch (e) { alert(e.message); }
+          catch (e) { window.toast(e.message, 'error'); }
         })
       );
       main().querySelectorAll('[data-del]').forEach((b) => {
         b.addEventListener('click', async () => {
           if (!confirm('Delete cheatsheet?')) return;
           try { await api.req('DELETE', `/api/admin/cheatsheets/${b.dataset.del}`); cheatsheets(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -1272,7 +1280,7 @@
         if (c.id) await api.req('PATCH', `/api/admin/cheatsheets/${c.id}`, body);
         else      await api.post('/api/admin/cheatsheets', body);
         cheatsheets();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
     wireMarkdownPreview($('#chForm'));
   }
@@ -1308,7 +1316,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete event?')) return;
           try { await api.req('DELETE', `/api/admin/calendar-events/${b.dataset.del}`); calendar(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -1352,7 +1360,7 @@
         if (e.id) await api.req('PATCH', `/api/admin/calendar-events/${e.id}`, body);
         else      await api.post('/api/admin/calendar-events', body);
         calendar();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
     wireMarkdownPreview($('#calForm'));
   }
@@ -1388,7 +1396,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete talk?')) return;
           try { await api.req('DELETE', `/api/admin/talks/${b.dataset.del}`); talks(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -1428,7 +1436,7 @@
         if (t.id) await api.req('PATCH', `/api/admin/talks/${t.id}`, body);
         else      await api.post('/api/admin/talks', body);
         talks();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
     wireMarkdownPreview($('#tkForm'));
   }
@@ -1464,7 +1472,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete testimonial?')) return;
           try { await api.req('DELETE', `/api/admin/testimonials/${b.dataset.del}`); testimonials(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -1507,7 +1515,7 @@
         if (t.id) await api.req('PATCH', `/api/admin/testimonials/${t.id}`, body);
         else      await api.post('/api/admin/testimonials', body);
         testimonials();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
   }
 
@@ -1541,7 +1549,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Delete FAQ?')) return;
           try { await api.req('DELETE', `/api/admin/faqs/${b.dataset.del}`); faqs(); }
-          catch (err2) { alert(err2.message); }
+          catch (err2) { window.toast(err2.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -1579,7 +1587,7 @@
         if (f.id) await api.req('PATCH', `/api/admin/faqs/${f.id}`, body);
         else      await api.post('/api/admin/faqs', body);
         faqs();
-      } catch (err2) { alert(err2.message); }
+      } catch (err2) { window.toast(err2.message, 'error'); }
     });
     wireMarkdownPreview($('#fqForm'));
   }
@@ -1607,7 +1615,7 @@
         b.addEventListener('click', async () => {
           if (!confirm('Mark unsubscribed?')) return;
           try { await api.req('DELETE', `/api/admin/newsletter/${b.dataset.rm}`); newsletter(); }
-          catch (e) { alert(e.message); }
+          catch (e) { window.toast(e.message, 'error'); }
         });
       });
     } catch (e) { main().innerHTML = err(e); }

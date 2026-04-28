@@ -793,6 +793,10 @@ const SITE_DEFAULTS = {
   compete_subtitle: 'A challenge a day, scheduled CTFs, and multi-machine Pro Labs that simulate real enterprise networks.',
   compete_cta_label: 'Today’s challenge →',
   compete_cta_href:  '/daily',
+  about_eyebrow: '// whoami',
+  about_title:   'Security engineer, educator, perpetual student.',
+  about_p1:      'I build training that respects your time. No 30-minute intros, no recycled slide decks, no "look at this scary screenshot" content. Just labs, code, and the actual mental models you need to do the job.',
+  about_p2:      'Everything here — courses, challenges, writeups — is open to feedback. If something’s wrong, broken, or could be better, tell me.',
 };
 
 router.get('/site-settings', (_req, res) => {

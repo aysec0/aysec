@@ -21,6 +21,8 @@
     document.title = p.title + ' — community — aysec';
     $('postCrumb').textContent = p.id;
     $('postEyebrow').textContent = `// /community/${p.cat_slug}`;
+    const isAdmin = me?.role === 'admin';
+    const canDelete = me && (me.username === p.username || isAdmin);
     $('postBody').innerHTML = `
       <article class="forum-post forum-post-detail" data-id="${p.id}">
         <div class="forum-vote">
@@ -32,18 +34,35 @@
           <div class="forum-meta">
             <span class="forum-cat-pill" style="--cat: ${p.cat_color || 'var(--accent)'};">/${escapeHtml(p.cat_slug)}</span>
             <span class="dim">posted by <a href="/u/${escapeHtml(p.username)}">@${escapeHtml(p.username)}</a> ${relTime(p.created_at)}</span>
-            ${(me && (me.id === p.user_id || me.role === 'admin')) ? `<button class="forum-del" data-pdel="${p.id}">delete</button>` : ''}
+            ${p.pinned ? '<span class="tag" style="background: var(--accent-soft); color: var(--accent);">📌 pinned</span>' : ''}
+            ${p.locked ? '<span class="tag">🔒 locked</span>' : ''}
+            ${canDelete ? `<button class="forum-del" data-pdel="${p.id}">delete</button>` : ''}
           </div>
           <h1 class="forum-title-detail">${escapeHtml(p.title)}</h1>
           ${p.url ? `<a class="forum-url-pill" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.url)} ↗</a>` : ''}
           ${p.body_md ? `<div class="forum-md prose">${md(p.body_md)}</div>` : ''}
+          ${isAdmin ? `
+            <div class="forum-mod-row">
+              <button class="forum-mod-btn ${p.pinned ? 'is-on' : ''}" data-mod="pinned">📌 ${p.pinned ? 'unpin' : 'pin'}</button>
+              <button class="forum-mod-btn ${p.locked ? 'is-on' : ''}" data-mod="locked">🔒 ${p.locked ? 'unlock' : 'lock'}</button>
+            </div>` : ''}
         </div>
       </article>`;
     wireVote($('postBody').querySelector('.forum-post'), `/api/forum/posts/${p.id}/vote`);
     $('postBody').querySelector('[data-pdel]')?.addEventListener('click', async () => {
       if (!confirm('Delete this post?')) return;
       try { await window.api.del(`/api/forum/posts/${p.id}`); location.href = '/community'; }
-      catch (e) { alert(e.message); }
+      catch (e) { window.toast(e.message, 'error'); }
+    });
+    $('postBody').querySelectorAll('[data-mod]').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const k = b.dataset.mod;
+        try {
+          await window.api.post(`/api/forum/posts/${p.id}/mod`, { [k]: !p[k] });
+          window.toast(k + ' updated', 'success');
+          await load();
+        } catch (e) { window.toast(e.message, 'error'); }
+      });
     });
   }
 
@@ -115,7 +134,7 @@
           await load();
         } catch (err) {
           if (err.status === 401) location.href = '/login?next=' + encodeURIComponent(location.pathname);
-          else alert(err.message);
+          else window.toast(err.message, 'error');
         }
       });
     });
@@ -144,7 +163,7 @@
         el.querySelector(':scope > .forum-vote .forum-arrow[data-v="-1"]').classList.toggle('is-down', r.my_vote === -1);
       } catch (err) {
         if (err.status === 401) location.href = '/login?next=' + encodeURIComponent(location.pathname);
-        else alert(err.message);
+        else window.toast(err.message, 'error');
       }
     });
   }
@@ -159,7 +178,7 @@
       await load();
     } catch (err) {
       if (err.status === 401) location.href = '/login?next=' + encodeURIComponent(location.pathname);
-      else alert(err.message);
+      else window.toast(err.message, 'error');
     }
   });
 
@@ -174,5 +193,13 @@
       $('postBody').innerHTML = `<div class="card" style="padding:1.5rem;"><p class="dim">${escapeHtml(e.message)}</p></div>`;
     }
   }
-  document.addEventListener('DOMContentLoaded', load);
+  document.addEventListener('DOMContentLoaded', () => {
+    load();
+    // Auto-refresh comments every 12s, but only when the tab is visible
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && !document.querySelector('.forum-reply-form:not([hidden])')) {
+        load();
+      }
+    }, 12000);
+  });
 })();

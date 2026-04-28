@@ -203,7 +203,7 @@
         <div class="footer-grid">
           <div>
             <div class="footer-brand">~$ aysec</div>
-            <p class="footer-tagline">
+            <p class="footer-tagline" data-site="footer_tagline">
               Personal site, CTF platform, and training for people who want to actually
               understand security — not just collect badges.
             </p>
@@ -405,32 +405,6 @@
     });
   }
 
-  function wireFooterNewsletter() {
-    const form = document.getElementById('footerNlForm');
-    if (!form) return;
-    const msg = document.getElementById('footer-nl-msg');
-    const btn = document.getElementById('footer-nl-submit');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('footer-nl-email').value.trim();
-      if (!email) return;
-      btn.disabled = true;
-      const idle = btn.textContent;
-      btn.innerHTML = '<span class="spinner"></span>';
-      try {
-        await window.api.post('/api/newsletter/subscribe', { email, source: 'footer' });
-        form.reset();
-        msg.textContent = '✓ Subscribed.';
-        msg.style.color = 'var(--terminal)';
-      } catch (err) {
-        msg.textContent = err.message || 'Subscribe failed.';
-        msg.style.color = 'var(--hard)';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = idle;
-      }
-    });
-  }
 
   // ---- Notifications bell ----
   const NOTIF_ICONS = {

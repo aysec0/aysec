@@ -32,8 +32,12 @@
           <input class="input mono" name="url" placeholder="https://…" />
         </label>
         <label>body (markdown, optional)
-          <textarea class="textarea" name="body_md" rows="10" placeholder="What did you find / learn / question?"></textarea>
+          <textarea class="textarea" name="body_md" id="newPostBody" rows="10" placeholder="What did you find / learn / question?"></textarea>
         </label>
+        <details>
+          <summary class="dim" style="font-size:0.85rem; cursor:pointer;">live preview</summary>
+          <div id="newPostPreview" class="forum-md prose forum-md-preview-pane"></div>
+        </details>
         <div style="display:flex; gap:0.5rem; align-items:center;">
           <button class="btn btn-primary" type="submit">Post</button>
           <a class="btn btn-ghost" href="/community">Cancel</a>
@@ -45,6 +49,7 @@
   <div id="footer-mount"></div>
   <script src="/js/api.js"></script>
   <script src="/js/layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
   <script>
     (() => {
       const $ = (id) => document.getElementById(id);
@@ -53,6 +58,13 @@
         if (!me?.user) { location.href = '/login?next=/community/submit'; return; }
         const r = await window.api.get('/api/forum/categories');
         $('newPostCat').innerHTML = r.categories.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
+        // Live markdown preview
+        const body = $('newPostBody'), prev = $('newPostPreview');
+        body.addEventListener('input', () => {
+          prev.innerHTML = window.marked
+            ? window.marked.parse(body.value || '', { gfm: true, breaks: true })
+            : '';
+        });
         $('newPostForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const fd = new FormData(e.target);
