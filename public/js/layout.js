@@ -746,6 +746,14 @@
       els.forEach((el) => el.classList.add('is-visible'));
       return;
     }
+    // Reveal anything already on screen at first paint — prevents tall sections
+    // (e.g. /tools) from being stuck invisible when their height makes 12% of
+    // the element exceed the visible portion of the viewport.
+    const vh = window.innerHeight;
+    els.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.top < vh && r.bottom > 0) el.classList.add('is-visible');
+    });
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
         if (e.isIntersecting) {
@@ -753,8 +761,10 @@
           io.unobserve(e.target);
         }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-    els.forEach((el) => io.observe(el));
+    }, { threshold: 0.01, rootMargin: '0px 0px -40px 0px' });
+    els.forEach((el) => {
+      if (!el.classList.contains('is-visible')) io.observe(el);
+    });
   }
 
   function mount() {
