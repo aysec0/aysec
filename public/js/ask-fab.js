@@ -225,10 +225,16 @@
       btn.setAttribute('aria-expanded', v ? 'true' : 'false');
       btn.classList.toggle('is-open', v);
       if (v) {
+        // close any other popover (Tools dropdown, avatar menu)
+        document.dispatchEvent(new CustomEvent('aysec:popover-open', { detail: { id: 'ask' } }));
         greet();
         setTimeout(() => input.focus(), 0);
       }
     }
+
+    document.addEventListener('aysec:popover-open', (e) => {
+      if (e.detail?.id !== 'ask' && open) setOpen(false);
+    });
 
     btn.addEventListener('click', (e) => {
       e.stopPropagation();

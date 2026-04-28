@@ -283,6 +283,8 @@
       btn.setAttribute('aria-expanded', v ? 'true' : 'false');
       btn.classList.toggle('is-open', v);
       if (v) {
+        // close any other floating popover (Ask FAB, avatar dropdown)
+        document.dispatchEvent(new CustomEvent('aysec:popover-open', { detail: { id: 'tools' } }));
         // reset filter on open
         input.value = '';
         applyFilter('');
@@ -291,6 +293,11 @@
         setTimeout(() => input.focus(), 0);
       }
     }
+
+    // Close the dropdown if another popover opens
+    document.addEventListener('aysec:popover-open', (e) => {
+      if (e.detail?.id !== 'tools' && open) setOpen(false);
+    });
 
     function clearHighlight() {
       list.querySelectorAll('.tools-dd-item.is-first').forEach((n) => n.classList.remove('is-first'));
@@ -512,6 +519,12 @@
 
   let navDdOpen = false;
 
+  // Listen for global popover-open events to close the avatar dropdown
+  // when Tools / Ask FAB / etc. open.
+  document.addEventListener('aysec:popover-open', (e) => {
+    if (e.detail?.id !== 'avatar' && navDdOpen) closeNavDd();
+  });
+
   function renderTierPill(level) {
     if (!level || !level.current) return '';
     const isRainbow = level.current.color === 'rainbow';
@@ -595,6 +608,8 @@
 
   function openNavDd(user, level) {
     if (navDdOpen) return;
+    // close any other popover
+    document.dispatchEvent(new CustomEvent('aysec:popover-open', { detail: { id: 'avatar' } }));
     const wrap = document.getElementById('navAvatarWrap');
     const btn  = document.getElementById('navAvatarBtn');
     if (!wrap) return;
