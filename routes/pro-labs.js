@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { emit as notify } from './notifications.js';
 
 const router = Router();
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
@@ -61,9 +62,18 @@ router.post('/:slug/submit', requireAuth, (req, res) => {
   const correct = sha256(flag.trim()) === target;
   if (!correct) return res.json({ correct: false });
 
-  db.prepare(
+  const ins = db.prepare(
     'INSERT OR IGNORE INTO pro_lab_solves (user_id, lab_id, machine_id, flag_kind) VALUES (?, ?, ?, ?)'
   ).run(req.user.id, lab.id, m.id, flag_kind);
+  if (ins.changes === 1) {
+    const labMeta = db.prepare('SELECT title FROM pro_labs WHERE id = ?').get(lab.id);
+    notify({
+      userId: req.user.id, kind: 'first_blood',
+      title: `${m.name} ${flag_kind} flag captured`,
+      body: `${labMeta.title} — ${flag_kind === 'root' ? 'system pwned' : 'foothold gained'}.`,
+      link: `/pro-labs/${req.params.slug}`, icon: 'medal',
+    });
+  }
   res.json({ correct: true, points: flag_kind === 'user' ? m.user_points : m.root_points });
 });
 

@@ -874,7 +874,14 @@
       const u = a.getAttribute('href');
       if (!u || u.startsWith('#') || u.startsWith('mailto:') || u.startsWith('tel:')) return null;
       if (/^https?:/i.test(u) && !u.startsWith(location.origin)) return null;
-      return new URL(u, location.href).pathname + new URL(u, location.href).search;
+      const parsed = new URL(u, location.href);
+      // Don't prefetch /api/* (would 404 the link doc + waste bandwidth)
+      // and don't prefetch endpoints whose response is large or unique-per-id
+      // (resume / card SVG / certificate verifier).
+      if (/^\/api\//.test(parsed.pathname)) return null;
+      if (/^\/(resume|cert)\//.test(parsed.pathname)) return null;
+      if (/\/card\.svg$/.test(parsed.pathname)) return null;
+      return parsed.pathname + parsed.search;
     }
     document.addEventListener('mouseover', (e) => {
       const a = e.target.closest && e.target.closest('a[href]');

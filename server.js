@@ -77,7 +77,9 @@ Sitemap: ${SITE_URL}/sitemap.xml
 
 app.get('/sitemap.xml', (_req, res) => {
   const urls = [
-    '/', '/courses', '/challenges', '/blog', '/about', '/pricing',
+    '/', '/courses', '/certifications', '/challenges', '/blog',
+    '/daily', '/live', '/pro-labs', '/assessments', '/teams',
+    '/tools', '/cheatsheets', '/events', '/about',
     '/hire', '/talks', '/newsletter', '/terms', '/privacy', '/refunds',
   ];
   const courses    = db.prepare('SELECT slug, updated_at FROM courses    WHERE published = 1').all();

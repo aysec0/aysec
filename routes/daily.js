@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { emit as notify } from './notifications.js';
 
 const router = Router();
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
@@ -150,6 +151,23 @@ router.post('/submit', requireAuth, (req, res) => {
     INSERT OR IGNORE INTO solves (user_id, challenge_id) VALUES (?, ?)
   `).run(req.user.id, ch.id);
   const streak = recomputeStreak(req.user.id);
+
+  // Solve notification (idempotent per (user, kind, link, hour))
+  notify({
+    userId: req.user.id, kind: 'achievement',
+    title: `Daily solved in ${Math.floor(seconds/60)}m ${seconds%60}s`,
+    body: 'Streak +1 — come back tomorrow to keep it going.',
+    link: '/daily', icon: 'medal',
+  });
+  // Streak milestone notifications
+  if ([3, 7, 14, 30, 60, 100, 365].includes(streak.current)) {
+    notify({
+      userId: req.user.id, kind: 'achievement',
+      title: `🔥 ${streak.current}-day streak`,
+      body: streak.current >= 30 ? 'You are on a tear.' : 'Keep going.',
+      link: '/daily', icon: 'medal',
+    });
+  }
   res.json({ correct: true, time_seconds: seconds, streak });
 });
 

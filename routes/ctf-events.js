@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { emit as notify } from './notifications.js';
 
 const router = Router();
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
@@ -116,7 +117,7 @@ router.post('/:slug/submit', requireAuth, (req, res) => {
   `).run(req.user.id, ch.id, flag.trim(), correct ? 1 : 0, req.ip);
 
   if (correct) {
-    db.prepare(
+    const ins = db.prepare(
       'INSERT OR IGNORE INTO ctf_event_solves (event_id, user_id, challenge_id) VALUES (?, ?, ?)'
     ).run(ev.id, req.user.id, ch.id);
     db.prepare(
@@ -125,6 +126,16 @@ router.post('/:slug/submit', requireAuth, (req, res) => {
     db.prepare(
       'INSERT OR IGNORE INTO solves (user_id, challenge_id) VALUES (?, ?)'
     ).run(req.user.id, ch.id);
+    if (ins.changes === 1) {
+      const evMeta = db.prepare('SELECT title FROM ctf_events WHERE id = ?').get(ev.id);
+      const chMeta = db.prepare('SELECT title FROM challenges WHERE id = ?').get(ch.id);
+      notify({
+        userId: req.user.id, kind: 'first_blood',
+        title: `Solved in ${evMeta.title}`,
+        body: `${chMeta.title} — keep climbing the event scoreboard.`,
+        link: `/live/${req.params.slug}`, icon: 'medal',
+      });
+    }
   }
   res.json({ correct });
 });

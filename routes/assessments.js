@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { emit as notify } from './notifications.js';
 
 const router = Router();
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
@@ -109,10 +110,17 @@ router.post('/:slug/attempt/:id/submit', requireAuth, (req, res) => {
   ).get(at.id).c;
   let ended = false;
   if (solvedAll === allMachines.length) {
+    const passed = fresh.points_earned >= a.passing_points ? 1 : 0;
     db.prepare(
       'UPDATE assessment_attempts SET ended_at = datetime(\'now\'), passed = ? WHERE id = ?'
-    ).run(fresh.points_earned >= a.passing_points ? 1 : 0, at.id);
+    ).run(passed, at.id);
     ended = true;
+    notify({
+      userId: req.user.id, kind: passed ? 'cert' : 'achievement',
+      title: passed ? `Passed: ${a.title}` : `Attempt complete: ${a.title}`,
+      body: `${fresh.points_earned} / ${a.passing_points} points · ${passed ? 'pass' : 'below threshold'}`,
+      link: `/assessments/${a.slug}`, icon: passed ? 'cert' : 'medal',
+    });
   }
   res.json({ correct: true, points_earned: fresh.points_earned, ended });
 });

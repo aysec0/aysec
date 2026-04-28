@@ -10,19 +10,59 @@
   // Each scenario: { title, mission, prompt, fs (path -> file-content),
   // hosts (ip -> { ports, banners }), commands (extra cmd handlers) }
   const SCENARIOS = {
-    // Default fallback when slug isn't matched: a small generic scenario.
+    // Generic fallback used when slug isn't recognised.
     'default': {
       title: 'Generic recon network',
       mission: 'A target network sits at 10.10.10.0/24. Find the live host, enumerate open ports, read a flag from the box.',
       hosts: {
         '10.10.10.1':  { up: true,  ports: { 22: 'SSH-2.0-OpenSSH_8.4', 80: 'nginx 1.18.0' } },
         '10.10.10.5':  { up: true,  ports: { 80: 'Apache httpd 2.4.46' } },
-        '10.10.10.10': { up: true,  ports: { 22: 'SSH-2.0-OpenSSH_9.3', 8080: 'WEBrick/1.6.0', 9000: 'PHP-FPM' }, hasFlag: true },
+        '10.10.10.10': { up: true,  ports: { 22: 'SSH-2.0-OpenSSH_9.3', 8080: 'WEBrick/1.6.0', 9000: 'PHP-FPM' } },
       },
       fs: {
         '/etc/motd': 'Welcome to ops-jumpbox. Authorized use only.',
         '/home/aysec/notes.txt': 'todo:\n- finish enum on 10.10.10.10:8080\n- the credentials are admin:admin (rotate me!)\n',
         '/home/aysec/loot/flag.txt': 'aysec{recon-then-pivot}',
+      },
+    },
+
+    // ===== Mirrors the seeded "ShadowCorp AD" pro lab (3 hosts) =====
+    'shadowcorp-ad': {
+      title: 'ShadowCorp AD — internal pentest',
+      mission: 'You have shell on the jumpbox. Pivot through WEB01 -> FILE01 -> DC01 and capture both flags on each host.',
+      hosts: {
+        '10.10.10.5':  { up: true, ports: { 22: 'SSH-2.0-OpenSSH_8.9', 80: 'Apache 2.4.54 / WordPress 5.7.2' } },
+        '10.10.10.6':  { up: true, ports: { 22: 'SSH-2.0-OpenSSH_8.9', 139: 'samba smbd 4.13.13', 445: 'samba smbd 4.13.13' } },
+        '10.10.10.10': { up: true, ports: { 53: 'Microsoft DNS', 88: 'Kerberos', 135: 'msrpc', 389: 'LDAP / Microsoft DS', 445: 'microsoft-ds', 3389: 'ms-wbt-server' } },
+      },
+      fs: {
+        '/etc/motd': 'jumpbox.shadowcorp.local — internal pentest box',
+        '/home/aysec/scope.txt': 'Scope: 10.10.10.0/24\nTargets: WEB01 (10.10.10.5), FILE01 (10.10.10.6), DC01 (10.10.10.10)\nGoal: domain admin on shadowcorp.local',
+        '/home/aysec/notes.txt': 'tips:\n- WP version 5.7.2 has a known authn bypass on /xmlrpc.php\n- FILE01 reuses the WEB01 db creds for the smb password\n- DC01 has a Kerberoastable SPN with weak crypto (svc_backup)',
+        '/home/aysec/loot/web01-user.flag.txt': 'aysec{web01-user}',
+        '/home/aysec/loot/web01-root.flag.txt': 'aysec{web01-root}',
+        '/home/aysec/loot/file01-user.flag.txt': 'aysec{file01-user}',
+        '/home/aysec/loot/file01-root.flag.txt': 'aysec{file01-root}',
+        '/home/aysec/loot/dc01-user.flag.txt':  'aysec{dc01-user}',
+        '/home/aysec/loot/dc01-root.flag.txt':  'aysec{dc01-root}',
+      },
+    },
+
+    // ===== Mirrors the seeded "RedRock Cloud Heist" pro lab =====
+    'redrock-cloud': {
+      title: 'RedRock Cloud Heist',
+      mission: 'A leaked AWS access key in s3://redrock-public/ leads from cloud into the corporate VPN. Pivot to build-server (10.0.5.42).',
+      hosts: {
+        '10.0.5.1':  { up: true,  ports: { 22: 'SSH-2.0-OpenSSH_9.0', 1194: 'OpenVPN' } },
+        '10.0.5.42': { up: true,  ports: { 22: 'SSH-2.0-OpenSSH_8.9', 8080: 'Jetty 11 / Jenkins 2.346.1', 50000: 'Jenkins JNLP agent' } },
+      },
+      fs: {
+        '/etc/motd': 'kali-attack — VPN connected to RedRock prod',
+        '/home/aysec/notes.txt': 'plan:\n- the leaked key has sts:AssumeRole into "build" role\n- the build role can list secrets in /redrock/ci/* (ssh keys live there)\n- jenkins on 10.0.5.42:8080 has script console exposed to "build" role',
+        '/home/aysec/loot/cloud-iam-user.flag.txt': 'aysec{cloud-iam-user}',
+        '/home/aysec/loot/cloud-iam-root.flag.txt': 'aysec{cloud-iam-root}',
+        '/home/aysec/loot/build-user.flag.txt':     'aysec{build-user}',
+        '/home/aysec/loot/build-root.flag.txt':     'aysec{build-root}',
       },
     },
   };
