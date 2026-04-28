@@ -292,7 +292,19 @@
         </a>`);
     }
 
-    if (!cards.length) return;
+    if (!cards.length) {
+      $('competeSection').hidden = false;
+      $('competeRow').innerHTML = `
+        <div class="card" style="padding:1.25rem; grid-column: 1 / -1; text-align:center;">
+          <p style="margin:0 0 0.7rem;"><strong>No active loops yet.</strong> Pick something to start a streak.</p>
+          <div style="display:flex; gap:0.4rem; justify-content:center; flex-wrap:wrap;">
+            <a class="btn btn-primary" href="/daily">Solve today’s daily</a>
+            <a class="btn btn-ghost" href="/live">See live events</a>
+            <a class="btn btn-ghost" href="/pro-labs">Browse Pro Labs</a>
+          </div>
+        </div>`;
+      return;
+    }
     $('competeSection').hidden = false;
     $('competeRow').innerHTML = cards.slice(0, 3).join('');
   }

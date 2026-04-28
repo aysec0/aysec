@@ -27,6 +27,7 @@ import ctfEventsRoutes from './routes/ctf-events.js';
 import assessmentsRoutes from './routes/assessments.js';
 import proLabsRoutes from './routes/pro-labs.js';
 import teamsRoutes from './routes/teams.js';
+import adminRoutes from './routes/admin.js';
 import { marked } from 'marked';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -62,6 +63,7 @@ app.use('/api/ctf-events',     ctfEventsRoutes);
 app.use('/api/assessments',    assessmentsRoutes);
 app.use('/api/pro-labs',       proLabsRoutes);
 app.use('/api/teams',          teamsRoutes);
+app.use('/api/admin',          adminRoutes);
 
 // SEO endpoints
 const SITE_URL = (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');

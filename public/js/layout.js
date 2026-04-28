@@ -615,6 +615,7 @@
           <a class="nav-dd-item" href="/community">${NAV_DD_ICONS.discord}<span>Community</span></a>
           <div class="nav-dd-divider"></div>
           <a class="nav-dd-item" href="/settings">${NAV_DD_ICONS.settings}<span>Settings</span></a>
+          ${user.role === 'admin' ? `<a class="nav-dd-item" href="/admin">${NAV_DD_ICONS.settings}<span>Admin panel</span></a>` : ''}
           <button class="nav-dd-toggle" id="navDdTheme" type="button">
             ${NAV_DD_ICONS.moon}
             <span>Dark mode</span>
