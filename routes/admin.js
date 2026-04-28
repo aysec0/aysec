@@ -938,15 +938,33 @@ router.get('/site-settings', (_req, res) => {
 
 router.put('/site-settings', (req, res) => {
   const b = req.body || {};
-  const stmt = db.prepare(`
+  const upsert = db.prepare(`
     INSERT INTO site_settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
   `);
+  const del = db.prepare(`DELETE FROM site_settings WHERE key = ?`);
+  // Empty / whitespace values, or values that exactly match the default,
+  // are deleted instead of stored — that keeps site_settings as a true
+  // diff over SITE_DEFAULTS and the Modified panel honest.
   const tx = db.transaction((entries) => {
-    for (const [k, v] of entries) stmt.run(k, String(v ?? ''));
+    for (const [k, raw] of entries) {
+      const v = raw == null ? '' : String(raw);
+      const trimmed = v.trim();
+      const def = SITE_DEFAULTS[k];
+      if (trimmed === '' || (def != null && String(def) === v)) {
+        del.run(k);
+      } else {
+        upsert.run(k, v);
+      }
+    }
   });
   tx(Object.entries(b));
   res.json({ ok: true });
+});
+
+router.delete('/site-settings/:key', (req, res) => {
+  const info = db.prepare('DELETE FROM site_settings WHERE key = ?').run(req.params.key);
+  res.json({ deleted: info.changes });
 });
 
 export default router;

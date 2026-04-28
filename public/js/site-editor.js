@@ -84,11 +84,18 @@
         if (!confirm(`Reset ${k} to its default value?`)) return;
         b.disabled = true;
         try {
-          await api.req('PUT', '/api/admin/site-settings', { [k]: state.defaults[k] });
+          // DELETE the stored override so the value falls back to the
+          // server-side default — keeps site_settings as a true diff.
+          await api.req('DELETE', `/api/admin/site-settings/${encodeURIComponent(k)}`);
           state.settings[k] = state.defaults[k];
+          // Drop any pending edit for the same key
+          delete state.pending[k];
+          delete state.pending[k + '__href'];
+          delete state.pending[k + '__toggle'];
+          setUnsaved(Object.keys(state.pending).length > 0);
           renderModifiedPanel();
-          // Re-apply to iframe if visible
-          sendToFrame({ type: 'aysec:edit:apply', key: k, text: state.defaults[k], href: state.defaults[k], visible: !(state.defaults[k] === '0' || state.defaults[k] === 'false') });
+          const def = state.defaults[k];
+          sendToFrame({ type: 'aysec:edit:apply', key: k, text: def, href: def, visible: !(def === '0' || def === 'false') });
         } catch (err) {
           window.toast?.(err.message || 'reset failed', 'error');
         } finally {
@@ -185,6 +192,18 @@
   }
 
   // ----- Apply edits live + queue them -----
+  // Live preview into the iframe is rate-limited per key so fast typing
+  // doesn't pile up postMessages — the visible state was lagging on long
+  // strings because each keystroke fired a DOM update inside the iframe.
+  const _frameTimers = new Map();
+  function pushToFramePreview(key, payload, delay = 80) {
+    if (_frameTimers.has(key)) clearTimeout(_frameTimers.get(key));
+    _frameTimers.set(key, setTimeout(() => {
+      _frameTimers.delete(key);
+      sendToFrame({ type: 'aysec:edit:apply', key, ...payload });
+    }, delay));
+  }
+
   function applyEdit(key, value, kind) {
     // Use a synthetic suffix so __href / __toggle pendings don't collide with text
     const pendingKey = kind === 'link' ? key + '__href'
@@ -192,12 +211,12 @@
                      : key;
     state.pending[pendingKey] = value;
     setUnsaved(true);
-    if (kind === 'link') sendToFrame({ type: 'aysec:edit:apply', key, href: value });
+    if (kind === 'link') pushToFramePreview(key, { href: value });
     else if (kind === 'toggle') {
       const visible = !(value === '0' || value === 'false' || value === false);
-      sendToFrame({ type: 'aysec:edit:apply', key, visible });
+      pushToFramePreview(key, { visible });
     }
-    else sendToFrame({ type: 'aysec:edit:apply', key, text: value });
+    else pushToFramePreview(key, { text: value });
   }
 
   function sendToFrame(msg) {
@@ -346,12 +365,15 @@
     );
     if (!modified.length) return;
     if (!confirm(`Reset all ${modified.length} modified keys to their defaults?`)) return;
-    const body = Object.fromEntries(modified.map((k) => [k, state.defaults[k]]));
     try {
-      await api.req('PUT', '/api/admin/site-settings', body);
-      Object.assign(state.settings, body);
+      // Delete each row in parallel; the in-memory state mirrors that.
+      await Promise.all(modified.map((k) =>
+        api.req('DELETE', `/api/admin/site-settings/${encodeURIComponent(k)}`)
+      ));
+      for (const k of modified) state.settings[k] = state.defaults[k];
+      state.pending = {};
+      setUnsaved(false);
       renderModifiedPanel();
-      // Reload the iframe so the page reflects everything-reset
       loadFrame();
       window.toast?.(`Reset ${modified.length} keys`, 'success');
     } catch (e) {
