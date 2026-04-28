@@ -28,10 +28,6 @@
   }
 
   // ---------- JWT decoder ----------
-  const jwtIn   = $('jwt-in');
-  const jwtOut  = $('jwt-out');
-  const jwtWarn = $('jwt-warn-host');
-
   function b64urlDecode(s) {
     s = s.replace(/-/g, '+').replace(/_/g, '/');
     while (s.length % 4) s += '=';
@@ -39,6 +35,10 @@
   }
   function tryJSON(s) { try { return JSON.parse(s); } catch { return null; } }
   function pretty(o)  { return JSON.stringify(o, null, 2); }
+
+  const jwtIn   = $('jwt-in');
+  const jwtOut  = $('jwt-out');
+  const jwtWarn = $('jwt-warn-host');
 
   function decodeJWT() {
     jwtWarn.innerHTML = '';
@@ -82,7 +82,7 @@
       ).join('');
     }
   }
-  jwtIn.addEventListener('input', debounce(decodeJWT));
+  if (jwtIn) jwtIn.addEventListener('input', debounce(decodeJWT));
 
   // ---------- Hash identifier ----------
   const hashIdIn  = $('hash-id-in');
@@ -124,7 +124,7 @@
       `<span class="tool-pill" title="${m.hint || ''}">${m.name}${m.len ? ` (${m.len} chars)` : ''}</span>`
     ).join('');
   }
-  hashIdIn.addEventListener('input', debounce(identifyHash));
+  if (hashIdIn) hashIdIn.addEventListener('input', debounce(identifyHash));
 
   // ---------- Hash generator ----------
   const hashGenIn  = $('hash-gen-in');
@@ -152,7 +152,7 @@
       withCopy(el, h);
     }
   }
-  hashGenIn.addEventListener('input', debounce(genHashes, 200));
+  if (hashGenIn) hashGenIn.addEventListener('input', debounce(genHashes, 200));
 
   // ---------- Base64 ----------
   const b64In   = $('b64-in');
@@ -174,7 +174,7 @@
     setOut(b64Enc, enc || '(failed)', !!enc);
     setOut(b64Dec, dec || '(not base64)', !!dec);
   }
-  b64In.addEventListener('input', debounce(runB64));
+  if (b64In) b64In.addEventListener('input', debounce(runB64));
 
   // ---------- URL encode/decode ----------
   const urlIn  = $('url-in');
@@ -187,7 +187,7 @@
     try { setOut(urlEnc, encodeURIComponent(v), true); } catch { setOut(urlEnc, '(failed)', false); }
     try { setOut(urlDec, decodeURIComponent(v),  true); } catch { setOut(urlDec, '(invalid encoding)', false); }
   }
-  urlIn.addEventListener('input', debounce(runURL));
+  if (urlIn) urlIn.addEventListener('input', debounce(runURL));
 
   // ---------- CIDR calculator ----------
   const cidrIn  = $('cidr-in');
@@ -250,7 +250,7 @@
 <span class="tool-out-label">total addrs</span>   ${total.toLocaleString()}
 <span class="tool-out-label">usable hosts</span>  ${usable.toLocaleString()}`;
   }
-  cidrIn.addEventListener('input', debounce(calcCIDR));
+  if (cidrIn) cidrIn.addEventListener('input', debounce(calcCIDR));
 
   // ---------- Unix timestamp ----------
   const tsIn  = $('ts-in');
@@ -295,7 +295,7 @@
     if (a < 86400 * 365) return `${future}${Math.round(a / (86400 * 30))}mo${past}`;
     return `${future}${(a / (86400 * 365)).toFixed(1)}y${past}`;
   }
-  tsIn.addEventListener('input', debounce(runTS));
+  if (tsIn) tsIn.addEventListener('input', debounce(runTS));
 
   // ---------- UUID generator ----------
   const uuidGo  = $('uuid-go');
@@ -309,5 +309,5 @@
     uuidOut.textContent = list.join('\n');
     withCopy(uuidOut, list.join('\n'));
   }
-  uuidGo.addEventListener('click', genUUIDs);
+  if (uuidGo) uuidGo.addEventListener('click', genUUIDs);
 })();

@@ -129,6 +129,7 @@ app.get('/challenges/:slug', sendDetail('challenge-detail.html'));
 app.get('/blog/:slug',       sendDetail('post-detail.html'));
 app.get('/cert/:code',       sendDetail('certificate.html'));
 app.get('/tracks/:slug',          sendDetail('track-detail.html'));
+app.get('/tools/:slug',           sendDetail('tool-detail.html'));
 app.get('/u/:username',           sendDetail('profile.html'));
 app.get('/u/:username/dna',       sendDetail('dna.html'));
 app.get('/certifications/:slug',  sendDetail('cert-detail.html'));

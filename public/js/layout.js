@@ -20,31 +20,31 @@
     {
       group: 'Featured',
       items: [
-        { name: 'Security toolbox', href: '/tools',          desc: 'All utilities in one place' },
-        { name: 'OSS projects',     href: '/tools#oss',      desc: 'jwt-fuzz, recon-pipe, …' },
+        { name: 'All tools',    href: '/tools',     desc: 'Browse the index' },
+        { name: 'OSS projects', href: '/tools#oss', desc: 'jwt-fuzz, recon-pipe, …' },
       ],
     },
     {
       group: 'Encoding & Crypto',
       items: [
-        { name: 'JWT decoder',     href: '/tools#tool-jwt' },
-        { name: 'Hash identifier', href: '/tools#tool-hash-id' },
-        { name: 'Hash generator',  href: '/tools#tool-hash-gen' },
-        { name: 'Base64',          href: '/tools#tool-b64' },
-        { name: 'URL encode / decode', href: '/tools#tool-url' },
+        { name: 'JWT decoder',     href: '/tools/jwt' },
+        { name: 'Hash identifier', href: '/tools/hash-id' },
+        { name: 'Hash generator',  href: '/tools/hash-gen' },
+        { name: 'Base64',          href: '/tools/base64' },
+        { name: 'URL encode / decode', href: '/tools/url' },
       ],
     },
     {
       group: 'Web & Network',
       items: [
-        { name: 'CIDR calculator', href: '/tools#tool-cidr' },
-        { name: 'Unix timestamp',  href: '/tools#tool-ts' },
+        { name: 'CIDR calculator', href: '/tools/cidr' },
+        { name: 'Unix timestamp',  href: '/tools/timestamp' },
       ],
     },
     {
       group: 'Generators',
       items: [
-        { name: 'UUID generator',  href: '/tools#tool-uuid' },
+        { name: 'UUID generator',  href: '/tools/uuid' },
       ],
     },
   ];
@@ -752,14 +752,18 @@
 
   function reveal() {
     const els = document.querySelectorAll('[data-reveal]');
-    if (!els.length || !('IntersectionObserver' in window)) {
+    if (!els.length) return;
+    const vh = window.innerHeight;
+    // Bail out to force-visible if IO is unsupported OR the viewport has no
+    // height (some embed contexts report 0). Either way, the fade-in isn't
+    // worth leaving the page invisible.
+    if (!('IntersectionObserver' in window) || !vh) {
       els.forEach((el) => el.classList.add('is-visible'));
       return;
     }
-    // Reveal anything already on screen at first paint — prevents tall sections
-    // (e.g. /tools) from being stuck invisible when their height makes 12% of
-    // the element exceed the visible portion of the viewport.
-    const vh = window.innerHeight;
+    // Reveal anything already on screen at first paint — prevents tall
+    // sections (e.g. /tools) from being stuck invisible when 0.01 of the
+    // element exceeds the visible portion of the viewport.
     els.forEach((el) => {
       const r = el.getBoundingClientRect();
       if (r.top < vh && r.bottom > 0) el.classList.add('is-visible');

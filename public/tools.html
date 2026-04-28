@@ -5,17 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0a0d12" />
   <title>Tools — aysec</title>
-  <meta name="description" content="The aysec toolbox — JWT decoder, hash identifier, encoders, CIDR calculator, plus open-source security projects. All client-side; nothing leaves your browser." />
+  <meta name="description" content="The aysec toolbox — JWT decoder, hash identifier, encoders, CIDR calculator, plus open-source security projects. All client-side." />
   <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="/css/styles.css" />
   <script src="/js/theme.js"></script>
-  <style>
-    /* Anchor offset so #tool-X jumps land below the sticky navbar */
-    .tool-panel, #oss { scroll-margin-top: 88px; }
-  </style>
+  <style>#oss { scroll-margin-top: 88px; }</style>
 </head>
 <body>
   <div id="navbar-mount"></div>
@@ -26,161 +23,20 @@
       <span class="page-eyebrow">// /tools</span>
       <h1 class="page-title">Tools.</h1>
       <p class="page-subtitle">
-        The little utilities you reach for daily — plus the open-source projects I've built or maintain.
-        All utilities run <strong>entirely in your browser</strong>; no input is sent to any server.
+        Click any tool to open its dedicated page. Everything runs <strong>entirely in your browser</strong> —
+        no input is sent to any server. Open-source projects live below.
       </p>
     </div>
   </header>
 
   <section class="section">
     <div class="container">
-      <div class="section-head">
+      <div class="section-head" style="margin-bottom:1.25rem;">
         <span class="section-eyebrow">// utilities</span>
-        <h2 class="section-title">Security toolbox.</h2>
-        <p class="section-subtitle">JWT decoder, hash identifier &amp; generator, encoders, CIDR calc, timestamp converter, UUID. Use the navbar <strong>Tools</strong> menu to jump straight to any one.</p>
+        <h2 class="section-title" style="font-size:1.5rem;">Security toolbox</h2>
       </div>
-
-      <div class="lab-grid" data-reveal>
-
-        <!-- JWT decoder -->
-        <div class="tool-panel" id="tool-jwt">
-          <div class="tool-panel-head">
-            <h2 class="tool-panel-title">
-              <span class="icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-              </span>
-              JWT decoder
-            </h2>
-          </div>
-          <p class="tool-panel-desc">Paste a JWT — see header, payload, and a flag if it's signed with <code>alg=none</code> or otherwise dangerous.</p>
-          <textarea class="textarea mono" id="jwt-in" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." rows="3"></textarea>
-          <div id="jwt-warn-host"></div>
-          <div class="tool-out is-empty" id="jwt-out">decoded JWT will appear here</div>
-        </div>
-
-        <!-- Hash identifier -->
-        <div class="tool-panel" id="tool-hash-id">
-          <div class="tool-panel-head">
-            <h2 class="tool-panel-title">
-              <span class="icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
-              </span>
-              Hash identifier
-            </h2>
-          </div>
-          <p class="tool-panel-desc">Paste a hash — get the most likely algorithm by length + charset. Useful before you fire up hashcat.</p>
-          <input class="input mono" id="hash-id-in" placeholder="5d41402abc4b2a76b9719d911017c592" />
-          <div class="tool-pill-row" id="hash-id-out"></div>
-        </div>
-
-        <!-- Hash generator -->
-        <div class="tool-panel" id="tool-hash-gen">
-          <div class="tool-panel-head">
-            <h2 class="tool-panel-title">
-              <span class="icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              </span>
-              Hash generator
-            </h2>
-          </div>
-          <p class="tool-panel-desc">SHA-1 / SHA-256 / SHA-384 / SHA-512 of any input. Computed via the browser's SubtleCrypto API.</p>
-          <textarea class="textarea mono" id="hash-gen-in" placeholder="anything..." rows="2"></textarea>
-          <div id="hash-gen-out"></div>
-        </div>
-
-        <!-- Base64 -->
-        <div class="tool-panel" id="tool-b64">
-          <div class="tool-panel-head">
-            <h2 class="tool-panel-title">
-              <span class="icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              </span>
-              Base64
-            </h2>
-          </div>
-          <p class="tool-panel-desc">Encode / decode. Auto-detects: empty output means it can't decode as base64.</p>
-          <textarea class="textarea mono" id="b64-in" placeholder="anything..." rows="2"></textarea>
-          <div class="tool-grid-2">
-            <div>
-              <span class="tool-out-label">Encoded</span>
-              <div class="tool-out is-empty" id="b64-encoded">—</div>
-            </div>
-            <div>
-              <span class="tool-out-label">Decoded</span>
-              <div class="tool-out is-empty" id="b64-decoded">—</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- URL encode/decode -->
-        <div class="tool-panel" id="tool-url">
-          <div class="tool-panel-head">
-            <h2 class="tool-panel-title">
-              <span class="icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              </span>
-              URL encode / decode
-            </h2>
-          </div>
-          <p class="tool-panel-desc">Standard percent-encoding. Use on URL parameters, file paths, or anywhere reserved chars matter.</p>
-          <textarea class="textarea mono" id="url-in" placeholder="hello world & friends" rows="2"></textarea>
-          <div class="tool-grid-2">
-            <div>
-              <span class="tool-out-label">Encoded</span>
-              <div class="tool-out is-empty" id="url-encoded">—</div>
-            </div>
-            <div>
-              <span class="tool-out-label">Decoded</span>
-              <div class="tool-out is-empty" id="url-decoded">—</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- CIDR calculator -->
-        <div class="tool-panel" id="tool-cidr">
-          <div class="tool-panel-head">
-            <h2 class="tool-panel-title">
-              <span class="icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-              </span>
-              CIDR calculator
-            </h2>
-          </div>
-          <p class="tool-panel-desc">Type a CIDR (IPv4 or IPv6). Get the network range, broadcast, mask, and total addresses.</p>
-          <input class="input mono" id="cidr-in" placeholder="10.10.10.0/24 — or — 2001:db8::/32" />
-          <div class="tool-out is-empty" id="cidr-out">network details will appear here</div>
-        </div>
-
-        <!-- Unix timestamp converter -->
-        <div class="tool-panel" id="tool-ts">
-          <div class="tool-panel-head">
-            <h2 class="tool-panel-title">
-              <span class="icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </span>
-              Unix timestamp
-            </h2>
-          </div>
-          <p class="tool-panel-desc">Convert seconds / milliseconds since epoch ↔ ISO datetime.</p>
-          <input class="input mono" id="ts-in" placeholder="1735689600 — or — 2026-01-01T00:00:00Z" />
-          <div class="tool-out is-empty" id="ts-out">paste a timestamp or ISO date</div>
-        </div>
-
-        <!-- UUID generator -->
-        <div class="tool-panel" id="tool-uuid">
-          <div class="tool-panel-head">
-            <h2 class="tool-panel-title">
-              <span class="icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-              </span>
-              UUID generator
-            </h2>
-            <button class="btn btn-primary" id="uuid-go">Generate ×8</button>
-          </div>
-          <p class="tool-panel-desc">RFC-4122 v4 UUIDs from <code>crypto.randomUUID()</code>. Useful for IDOR fuzzing seeds, test fixtures, etc.</p>
-          <div class="tool-out is-empty" id="uuid-out">click "Generate" to produce 8 fresh UUIDs</div>
-        </div>
-
+      <div class="tools-index-grid" id="toolsIndexGrid" data-reveal>
+        <!-- Cards rendered by tools-index.js from window.AYSEC_TOOLS -->
       </div>
     </div>
   </section>
@@ -206,12 +62,8 @@
           <p class="tool-card-desc">
             A JWT fuzzer that catches all the alg/key confusion bugs in one pass.
             Detects <code>alg=none</code>, weak HMAC keys, RSA→HMAC confusion, JKU/JWK injection.
-            Built because every existing tool only catches a subset.
           </p>
-          <div class="tool-card-foot">
-            <span>★ 1.2k</span>
-            <span>v2.1.0</span>
-          </div>
+          <div class="tool-card-foot"><span>★ 1.2k</span><span>v2.1.0</span></div>
         </a>
 
         <a class="tool-card" href="#">
@@ -221,13 +73,10 @@
           </div>
           <p class="tool-card-desc">
             A continuous-recon orchestrator. Subfinder → httpx → nuclei →
-            diff-vs-yesterday, runnable as a single binary. Outputs to JSON,
-            sqlite, or markdown reports. Built for bug-bounty automation.
+            diff-vs-yesterday, runnable as a single binary. JSON, sqlite, or
+            markdown reports.
           </p>
-          <div class="tool-card-foot">
-            <span>★ 840</span>
-            <span>v1.3.4</span>
-          </div>
+          <div class="tool-card-foot"><span>★ 840</span><span>v1.3.4</span></div>
         </a>
 
         <a class="tool-card" href="#">
@@ -237,13 +86,9 @@
           </div>
           <p class="tool-card-desc">
             Walks an AWS account looking for the 5 IAM/S3/IMDS misconfigs that
-            cause 80% of real-world breaches. Read-only. Output is a heat-map
-            you can hand to engineering on day 1.
+            cause 80% of real-world breaches. Read-only. Heat-map output.
           </p>
-          <div class="tool-card-foot">
-            <span>★ 670</span>
-            <span>v0.9.0</span>
-          </div>
+          <div class="tool-card-foot"><span>★ 670</span><span>v0.9.0</span></div>
         </a>
 
         <a class="tool-card" href="#">
@@ -254,12 +99,9 @@
           <p class="tool-card-desc">
             A red-team eval harness for LLM apps. Pluggable adversarial prompts,
             scoring across direct/indirect injection + jailbreak axes,
-            CI-friendly JSON output. Used in <a href="/courses/ai-red-teaming">AI Red Teaming</a>.
+            CI-friendly JSON output.
           </p>
-          <div class="tool-card-foot">
-            <span>★ 2.4k</span>
-            <span>v3.0.0</span>
-          </div>
+          <div class="tool-card-foot"><span>★ 2.4k</span><span>v3.0.0</span></div>
         </a>
 
         <a class="tool-card" href="#">
@@ -268,14 +110,10 @@
             <span class="tool-card-lang" data-lang="python">python</span>
           </div>
           <p class="tool-card-desc">
-            BloodHound-friendly ACL collector that handles the edge cases in
-            modern AD environments (cross-forest trusts, ADCS templates,
-            inherited rights via security groups).
+            BloodHound-friendly ACL collector for modern AD environments
+            (cross-forest trusts, ADCS templates, inherited rights).
           </p>
-          <div class="tool-card-foot">
-            <span>★ 510</span>
-            <span>v1.1.2</span>
-          </div>
+          <div class="tool-card-foot"><span>★ 510</span><span>v1.1.2</span></div>
         </a>
 
         <a class="tool-card" href="#">
@@ -285,22 +123,17 @@
           </div>
           <p class="tool-card-desc">
             Universal cert-pinning bypass scripts for Frida + Objection,
-            covering Android (OkHttp/TrustKit/native pinning) and iOS
+            covering Android (OkHttp/TrustKit/native) and iOS
             (NSURLSession/AFNetworking/TrustKit). One command.
           </p>
-          <div class="tool-card-foot">
-            <span>★ 950</span>
-            <span>v2.0.1</span>
-          </div>
+          <div class="tool-card-foot"><span>★ 950</span><span>v2.0.1</span></div>
         </a>
 
       </div>
 
       <div class="alert info" style="margin-top:2rem;">
         <svg class="alert-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <div>
-          Repo links go live when the GitHub org migration is complete. In the meantime, email me for early access.
-        </div>
+        <div>Repo links go live when the GitHub org migration is complete.</div>
       </div>
     </div>
   </section>
@@ -309,6 +142,7 @@
 
   <script src="/js/api.js"></script>
   <script src="/js/layout.js"></script>
-  <script src="/js/lab.js"></script>
+  <script src="/js/tools-manifest.js"></script>
+  <script src="/js/tools-index.js"></script>
 </body>
 </html>
