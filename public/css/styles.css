@@ -6721,6 +6721,41 @@ kbd {
 .notif-item[data-kind="level_up"]    .notif-item-icon { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
 .notif-item[data-kind="first_blood"] .notif-item-icon { background: color-mix(in srgb, var(--challenge) 14%, transparent); color: var(--challenge); }
 .notif-item[data-kind="cert"]        .notif-item-icon { background: color-mix(in srgb, var(--terminal) 14%, transparent); color: var(--terminal); }
+.notif-item[data-kind="welcome"]     .notif-item-icon { background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--text); }
+.notif-item[data-kind="tip"]         .notif-item-icon { background: color-mix(in srgb, var(--text-dim) 14%, transparent); color: var(--text-dim); }
+
+/* Coloured left rail accent so every kind is distinct at a glance even
+   before the icon is decoded. */
+.notif-item[data-kind="achievement"] { box-shadow: inset 3px 0 0 var(--medium); }
+.notif-item[data-kind="level_up"]    { box-shadow: inset 3px 0 0 var(--accent); }
+.notif-item[data-kind="first_blood"] { box-shadow: inset 3px 0 0 var(--challenge); }
+.notif-item[data-kind="cert"]        { box-shadow: inset 3px 0 0 var(--terminal); }
+.notif-item[data-kind="welcome"]     { box-shadow: inset 3px 0 0 var(--text-muted); }
+.notif-item[data-kind="tip"]         { box-shadow: inset 3px 0 0 var(--text-dim); }
+
+/* ============================================================
+   /index.html — /compete section cards
+   ============================================================ */
+.compete-card {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.compete-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 10px 24px -10px var(--accent-soft); }
+.compete-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  font-weight: 600;
+}
+.compete-title { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
+.compete-meta { color: var(--text-muted); font-size: 0.85rem; }
+.compete-cta { margin-top: auto; font-size: 0.85rem; color: var(--accent); font-weight: 500; }
 
 .notif-item-title {
   color: var(--text);

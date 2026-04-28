@@ -37,7 +37,7 @@
       certs: certificates.length,
       level: level?.level_idx || 0,
       tierColor,
-      streak: stats?.streak || 0,
+      streak: stats?.streak?.current ?? 0,
     };
     const svg = window.SkillDNA.render(dnaData, { size: 640 });
     $('dnaSvg').innerHTML = svg;
@@ -63,7 +63,8 @@
       <div class="dna-cat-row"><span class="dna-cat-name">solves</span><span class="dna-cat-count">${allSolves.length}</span></div>
       <div class="dna-cat-row"><span class="dna-cat-name">first bloods</span><span class="dna-cat-count">${allSolves.filter((s) => s.first_blood).length}</span></div>
       <div class="dna-cat-row"><span class="dna-cat-name">certificates</span><span class="dna-cat-count">${certificates.length}</span></div>
-      <div class="dna-cat-row"><span class="dna-cat-name">streak</span><span class="dna-cat-count">${stats?.streak || 0} day${stats?.streak === 1 ? '' : 's'}</span></div>
+      <div class="dna-cat-row"><span class="dna-cat-name">daily streak</span><span class="dna-cat-count">${stats?.streak?.current ?? 0} / ${stats?.streak?.longest ?? 0} d</span></div>
+      <div class="dna-cat-row"><span class="dna-cat-name">dailies solved</span><span class="dna-cat-count">${stats?.daily_solves ?? 0}</span></div>
       <div class="dna-cat-row"><span class="dna-cat-name">total xp</span><span class="dna-cat-count">${level?.xp || 0}</span></div>
     `;
 

@@ -259,6 +259,75 @@
     });
   }
 
+  // ---- Compete section: today's daily, live event, featured pro lab ----
+  function escapeHtmlCompete(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+  function relCountdown(targetMs) {
+    const diff = targetMs - Date.now();
+    const abs = Math.abs(diff) / 1000;
+    const d = Math.floor(abs / 86400);
+    const h = Math.floor((abs % 86400) / 3600);
+    const m = Math.floor((abs % 3600) / 60);
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  }
+
+  async function loadCompete() {
+    const grid = document.getElementById('competeGrid');
+    if (!grid) return;
+    let dailyHtml = '', liveHtml = '', labHtml = '';
+
+    try {
+      const r = await window.api.get('/api/daily/today');
+      if (r.challenge) {
+        dailyHtml = `
+          <a class="card compete-card" href="/daily">
+            <div class="compete-eyebrow" style="color: var(--accent);">// daily challenge</div>
+            <h3 class="compete-title">${escapeHtmlCompete(r.challenge.title)}</h3>
+            <div class="compete-meta">${r.challenge.category} · ${r.challenge.difficulty} · ${r.challenge.points}+${r.bonus_points} pts</div>
+            <div class="compete-cta">Solve today →</div>
+          </a>`;
+      }
+    } catch {}
+
+    try {
+      const r = await window.api.get('/api/ctf-events');
+      const live = r.events.find((e) => e.status === 'live') || r.events.find((e) => e.status === 'upcoming');
+      if (live) {
+        const target = live.status === 'live' ? Date.parse(live.ends_at) : Date.parse(live.starts_at);
+        const labelTop = live.status === 'live' ? '🔴 live now' : 'upcoming';
+        const labelBottom = live.status === 'live' ? `ends in ${relCountdown(target)}` : `starts in ${relCountdown(target)}`;
+        liveHtml = `
+          <a class="card compete-card" href="/live/${live.slug}">
+            <div class="compete-eyebrow" style="color: var(--terminal,#39ff7a);">// ${labelTop}</div>
+            <h3 class="compete-title">${escapeHtmlCompete(live.title)}</h3>
+            <div class="compete-meta">${live.challenge_count} challenges · ${live.participants} in</div>
+            <div class="compete-cta">${labelBottom} →</div>
+          </a>`;
+      }
+    } catch {}
+
+    try {
+      const r = await window.api.get('/api/pro-labs');
+      const lab = r.labs[0];
+      if (lab) {
+        labHtml = `
+          <a class="card compete-card" href="/pro-labs/${lab.slug}">
+            <div class="compete-eyebrow" style="color: var(--medium,#ffb74d);">// pro lab</div>
+            <h3 class="compete-title">${escapeHtmlCompete(lab.title)}</h3>
+            <div class="compete-meta">${lab.machine_count} machines · ${lab.difficulty || 'mixed'}</div>
+            <div class="compete-cta">Pwn the network →</div>
+          </a>`;
+      }
+    } catch {}
+
+    const cards = [dailyHtml, liveHtml, labHtml].filter(Boolean);
+    grid.innerHTML = cards.length ? cards.join('') :
+      '<div class="card" style="padding:1.25rem;"><p class="dim">Nothing to compete in right now.</p></div>';
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     loadCourses();
     loadChallenges();
@@ -266,6 +335,7 @@
     loadLeaderboard();
     loadStats();
     loadTestimonials();
+    loadCompete();
     startRotator();
     wireHeroNewsletter();
   });

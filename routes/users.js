@@ -118,6 +118,12 @@ router.get('/:username', (req, res) => {
       rank: rankRow.rank,
       firstBloods,
       certificates: certificates.length,
+      streak: db.prepare(
+        'SELECT COALESCE(current, 0) AS current, COALESCE(longest, 0) AS longest FROM daily_streaks WHERE user_id = ?'
+      ).get(user.id) || { current: 0, longest: 0 },
+      daily_solves: db.prepare(
+        'SELECT COUNT(*) AS c FROM daily_solves WHERE user_id = ?'
+      ).get(user.id).c,
     },
     level: { ...level, xp_breakdown: xpBreakdown },
     categories: byCategory,

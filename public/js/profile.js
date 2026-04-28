@@ -149,6 +149,14 @@
         <div class="stat-card-label">First bloods</div>
         <div class="stat-card-value counter" id="pfFb">0</div>
         <div class="stat-card-foot">Challenges led</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Daily streak</div>
+        <div class="stat-card-value">
+          <span style="color: var(--accent);">${(stats.streak?.current ?? 0)}</span>
+          <span class="dim" style="font-size:1rem; font-weight:500;">d</span>
+        </div>
+        <div class="stat-card-foot">Longest ${stats.streak?.longest ?? 0}d · ${stats.daily_solves ?? 0} dailies solved</div>
       </div>`;
     animateNum(document.getElementById('pfScore'),  stats.score);
     animateNum(document.getElementById('pfSolves'), stats.solves);
@@ -168,7 +176,7 @@
         certs: certificates.length,
         level: level?.level_idx || 0,
         tierColor: level?.current?.color || '#4d9aff',
-        streak: stats?.streak || 0,
+        streak: stats?.streak?.current ?? 0,
       }, { size: 220, preview: true });
     }
 
