@@ -198,28 +198,6 @@
       });
     });
 
-    // ---- Notification prefs (newsletter) ----
-    // Best-effort: we simply allow subscribing via the existing /api/newsletter/subscribe endpoint
-    $('notifForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      $('notifAlert').hidden = true;
-      if (!$('notif-newsletter').checked) {
-        alertOn('notifAlert', 'info', 'No changes — you can re-check the box and save to subscribe.');
-        return;
-      }
-      const btn = $('notifSubmit');
-      const idle = btn.textContent;
-      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving…';
-      try {
-        await window.api.post('/api/newsletter/subscribe', { email: user.email, source: 'settings' });
-        alertOn('notifAlert', 'ok', '✓ Subscribed to the newsletter.');
-      } catch (err) {
-        alertOn('notifAlert', 'error', err.message || 'Could not subscribe');
-      } finally {
-        btn.disabled = false; btn.textContent = idle;
-      }
-    });
-
     // ---- Delete account (placeholder — needs backend endpoint to actually fire) ----
     $('deleteBtn').addEventListener('click', () => {
       const confirmed = confirm("Permanently delete your account, all progress, and all certificates? This cannot be undone.");

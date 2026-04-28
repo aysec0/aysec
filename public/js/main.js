@@ -232,33 +232,6 @@
       </div>`).join('');
   }
 
-  function wireHeroNewsletter() {
-    const form = document.getElementById('heroNlForm');
-    if (!form) return;
-    const msg = document.getElementById('hero-nl-msg');
-    const btn = document.getElementById('hero-nl-submit');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('hero-nl-email').value.trim();
-      if (!email) return;
-      btn.disabled = true;
-      const idle = btn.textContent;
-      btn.innerHTML = '<span class="spinner"></span>';
-      try {
-        await window.api.post('/api/newsletter/subscribe', { email, source: 'landing' });
-        form.reset();
-        msg.textContent = '✓ Subscribed. Check your inbox in a moment.';
-        msg.style.color = 'var(--terminal)';
-      } catch (err) {
-        msg.textContent = err.message || 'Subscribe failed.';
-        msg.style.color = 'var(--hard)';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = idle;
-      }
-    });
-  }
-
   // ---- Compete section: today's daily, live event, featured pro lab ----
   function escapeHtmlCompete(s) {
     return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -340,6 +313,5 @@
     loadTestimonials();
     loadCompete();
     startRotator();
-    wireHeroNewsletter();
   });
 })();

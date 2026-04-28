@@ -16,7 +16,6 @@
     { type: 'page', title: 'About',          url: '/about' },
     { type: 'page', title: 'Talks',          url: '/talks' },
     { type: 'page', title: 'Hire me',        url: '/hire' },
-    { type: 'page', title: 'Newsletter',     url: '/newsletter' },
     { type: 'page', title: 'Dashboard',      url: '/dashboard' },
     { type: 'page', title: 'Sign in',        url: '/login' },
     { type: 'page', title: 'Create account', url: '/signup' },

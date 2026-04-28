@@ -64,8 +64,6 @@
       messages: ["Take the **[CTF Placement quiz](/challenges)** — picks the right starter."] },
     { patterns: [/(hire|engagement|consulting|workshop|train.*team|advisory)/i],
       messages: ["Take the **[Service Picker quiz](/hire)** — matches you to web pentest / AI red team / training / advisory."] },
-    { patterns: [/(newsletter|email|subscribe)/i],
-      messages: ["**[/newsletter](/newsletter)** — one email a month. No spam."] },
     { patterns: [/(event|conference|defcon|black hat|bsides)/i],
       messages: ["**[/events](/events)** — curated CTF + conference + bug-bounty calendar with `.ics` exports."] },
     { patterns: [/(level|xp|tier|rank.*up|leaderboard)/i],

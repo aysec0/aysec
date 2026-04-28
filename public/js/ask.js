@@ -229,15 +229,6 @@
       ],
     },
 
-    // ---- Newsletter ----
-    {
-      patterns: [/(newsletter|email|subscribe|monthly digest)/i],
-      messages: [
-        "Monthly newsletter — five things I read, one deep dive, what's new on the platform. No spam.",
-        "**[Subscribe at /newsletter](/newsletter)**.",
-      ],
-    },
-
     // ---- Events ----
     {
       patterns: [/(event|conference|defcon|black hat|bsides|ctftime)/i],

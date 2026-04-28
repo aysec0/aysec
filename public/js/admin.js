@@ -90,9 +90,10 @@
       preview.className = 'admin-md-preview prose';
       wrap.appendChild(preview);
       const render = () => {
-        preview.innerHTML = window.marked
+        const raw = window.marked
           ? window.marked.parse(ta.value || '*nothing yet*', { gfm: true, breaks: true })
           : escapeHtml(ta.value);
+        preview.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(raw) : raw;
       };
       ta.addEventListener('input', render);
       render();

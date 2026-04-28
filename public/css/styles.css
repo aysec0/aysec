@@ -9215,7 +9215,11 @@ button.admin-stat-card { width: 100%; }
 .ask-fab-panel[hidden],
 .nav-stat-chip[hidden],
 .nav-stat-divider[hidden],
-.empty[hidden] { display: none !important; }
+.empty[hidden],
+.admin-row[hidden],
+.admin-bulk-bar[hidden],
+.admin-table-search[hidden],
+.forum-comment-sort[hidden] { display: none !important; }
 
 /* ============================================================
    Smoothness pass — page-wide polish
