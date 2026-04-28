@@ -7469,6 +7469,12 @@ kbd {
 .forum-comment .forum-meta { gap: 0.4rem; }
 .forum-comment .forum-user { white-space: nowrap; }
 
+/* Nested comments are children of their parent's CSS grid (which is
+   "32px 1fr"), so without an explicit span they get auto-placed into
+   the 32px vote column and get squeezed to a sliver. Force them to
+   span the full row width. */
+.forum-comment > .forum-comment { grid-column: 1 / -1; }
+
 /* Forum image upload UI */
 .forum-textarea-toolbar {
   display: flex; align-items: center; gap: 0.5rem;
