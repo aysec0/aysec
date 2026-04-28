@@ -7658,16 +7658,146 @@ kbd {
 .admin-stat-grid {
   display: grid; gap: 0.6rem;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  margin-top: 1rem;
+  margin-top: 0.7rem;
 }
 .admin-stat-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 0.7rem 0.9rem;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  cursor: default;
+  transition: border-color 0.12s, transform 0.12s, background 0.12s;
+}
+button.admin-stat-card { width: 100%; }
+.admin-stat-card.is-clickable { cursor: pointer; }
+.admin-stat-card.is-clickable:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface));
 }
 .admin-stat-label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim); letter-spacing: 0.05em; text-transform: lowercase; }
-.admin-stat-value { font-size: 1.4rem; font-weight: 700; margin-top: 0.2rem; }
+.admin-stat-value { font-size: 1.4rem; font-weight: 700; margin-top: 0.2rem; line-height: 1.1; }
+.admin-stat-delta {
+  font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim); margin-top: 0.25rem;
+}
+.admin-stat-delta.is-up { color: var(--success, #4ade80); }
+
+/* ============================================================
+   Admin overview — hero KPIs, quick actions, stat groups, feeds
+   ============================================================ */
+.admin-overview-hero {
+  display: grid; gap: 0.8rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 1rem;
+}
+.admin-overview-hero .admin-stat-card {
+  padding: 1rem 1.1rem;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) 10%, var(--surface)),
+    var(--surface) 70%);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+.admin-overview-hero .admin-stat-value { font-size: 2rem; }
+.admin-overview-hero .admin-stat-label { font-size: 0.78rem; }
+
+.admin-quick-actions {
+  display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+  background: var(--bg-elev); border: 1px dashed var(--border);
+  border-radius: var(--radius-sm); padding: 0.6rem 0.8rem; margin-bottom: 1rem;
+}
+.admin-quick-eyebrow {
+  font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);
+  letter-spacing: 0.06em; text-transform: lowercase; margin-right: 0.3rem;
+}
+
+.admin-stat-groups {
+  display: flex; flex-direction: column; gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.admin-stat-group {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.85rem 1rem 1rem;
+}
+.admin-stat-group-head {
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.admin-stat-group-icon {
+  display: inline-grid; place-items: center; width: 22px; height: 22px;
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: 6px;
+  font-size: 0.85rem;
+}
+.admin-stat-group-title {
+  font-size: 0.92rem; font-weight: 600; margin: 0; letter-spacing: -0.01em;
+}
+.admin-stat-group .admin-stat-card {
+  background: var(--bg-elev);
+}
+
+.admin-activity-feeds {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.admin-activity-col {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.85rem 1rem;
+}
+.admin-activity-head {
+  margin: 0 0 0.6rem; font-size: 0.86rem; font-weight: 600;
+}
+.admin-feed { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.admin-feed-item {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.82rem; line-height: 1.35;
+  padding-bottom: 0.4rem; border-bottom: 1px solid var(--border);
+}
+.admin-feed-item:last-child { border-bottom: 0; padding-bottom: 0; }
+.admin-feed-link {
+  color: var(--text); text-decoration: none; font-weight: 500;
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.admin-feed-link:hover { color: var(--accent); }
+.admin-feed-tag {
+  font-family: var(--font-mono); font-size: 0.68rem;
+  background: color-mix(in srgb, var(--cat, var(--accent)) 14%, var(--bg-elev));
+  color: var(--cat, var(--accent));
+  border: 1px solid color-mix(in srgb, var(--cat, var(--accent)) 28%, var(--border));
+  padding: 0.05rem 0.4rem; border-radius: 4px; flex-shrink: 0;
+}
+.admin-feed-time {
+  font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-dim); flex-shrink: 0;
+}
+.admin-feed-empty {
+  font-size: 0.82rem; color: var(--text-dim); padding: 0.4rem 0;
+  list-style: none;
+}
+
+/* Table search */
+.admin-table-search {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.4rem 0.6rem;
+  margin-top: 1rem;
+}
+.admin-table-search-ico { color: var(--text-dim); flex-shrink: 0; }
+.admin-table-search .input {
+  border: 0; background: transparent; padding: 0.25rem 0;
+  font-size: 0.86rem; flex: 1; min-width: 0;
+}
+.admin-table-search .input:focus { outline: none; box-shadow: none; }
+.admin-table-count {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim);
+  white-space: nowrap;
+}
+.admin-table-search + .admin-table { margin-top: 0.4rem; border-top-left-radius: 0; border-top-right-radius: 0; }
+
+@media (max-width: 900px) {
+  .admin-overview-hero { grid-template-columns: 1fr; }
+  .admin-activity-feeds { grid-template-columns: 1fr; }
+}
 
 .admin-table {
   background: var(--surface);

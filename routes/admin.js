@@ -17,12 +17,52 @@ router.get('/overview', (_req, res) => {
     'daily_challenges', 'daily_solves', 'ctf_events', 'ctf_event_solves',
     'assessments', 'assessment_attempts', 'pro_labs', 'pro_lab_solves',
     'teams', 'newsletter_subscribers', 'certificates', 'notifications',
+    'forum_posts', 'forum_comments', 'vault_solves',
   ];
   for (const t of tables) {
     try { counts[t] = db.prepare(`SELECT COUNT(*) AS c FROM ${t}`).get().c; }
     catch { counts[t] = null; }
   }
-  res.json({ counts });
+
+  const recent_users = db.prepare(
+    `SELECT id, username, display_name, role, created_at
+     FROM users ORDER BY created_at DESC LIMIT 5`
+  ).all();
+
+  let recent_posts = [];
+  try {
+    recent_posts = db.prepare(
+      `SELECT p.id, p.title, p.created_at, u.username, c.slug AS cat_slug, c.color AS cat_color
+       FROM forum_posts p
+       JOIN users u ON u.id = p.user_id
+       JOIN forum_categories c ON c.id = p.category_id
+       ORDER BY p.created_at DESC LIMIT 5`
+    ).all();
+  } catch {}
+
+  let recent_solves = [];
+  try {
+    recent_solves = db.prepare(
+      `SELECT s.solved_at, u.username, ch.title AS challenge_title, ch.slug AS challenge_slug, ch.points
+       FROM solves s
+       JOIN users u ON u.id = s.user_id
+       JOIN challenges ch ON ch.id = s.challenge_id
+       ORDER BY s.solved_at DESC LIMIT 5`
+    ).all();
+  } catch {}
+
+  let recent_signups_7d = 0, recent_solves_7d = 0, recent_posts_7d = 0;
+  try { recent_signups_7d = db.prepare(`SELECT COUNT(*) AS c FROM users WHERE created_at >= datetime('now','-7 days')`).get().c; } catch {}
+  try { recent_solves_7d  = db.prepare(`SELECT COUNT(*) AS c FROM solves WHERE solved_at >= datetime('now','-7 days')`).get().c; } catch {}
+  try { recent_posts_7d   = db.prepare(`SELECT COUNT(*) AS c FROM forum_posts WHERE created_at >= datetime('now','-7 days')`).get().c; } catch {}
+
+  res.json({
+    counts,
+    recent_users,
+    recent_posts,
+    recent_solves,
+    deltas_7d: { signups: recent_signups_7d, solves: recent_solves_7d, forum_posts: recent_posts_7d },
+  });
 });
 
 // ===== Users =====

@@ -103,28 +103,185 @@
     return `<div class="alert error" style="margin-top:0.7rem;">${escapeHtml(e.message || 'Request failed')}</div>`;
   }
 
-  function table(headers, rows) {
+  function table(headers, rows, opts = {}) {
+    const showSearch = opts.search !== false && rows.length >= 5;
+    const search = showSearch ? `
+      <div class="admin-table-search">
+        <svg class="admin-table-search-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="input" data-table-filter placeholder="${escapeHtml(opts.placeholder || `Filter ${rows.length} rows…`)}" />
+        <span class="admin-table-count" data-table-count>${rows.length} rows</span>
+      </div>` : '';
     return `
-      <div class="admin-table">
+      ${search}
+      <div class="admin-table" data-table>
         <div class="admin-row admin-head">${headers.map((h) => `<div>${h}</div>`).join('')}</div>
         ${rows.length ? rows.join('') : '<div class="admin-empty-state"><strong>No rows yet</strong>Use the button above to create the first one.</div>'}
       </div>`;
   }
 
+  // Live filter for any [data-table] right after a [data-table-filter] input.
+  document.addEventListener('input', (e) => {
+    const input = e.target.closest('[data-table-filter]');
+    if (!input) return;
+    const wrap = input.closest('.admin-table-search');
+    const tbl = wrap?.nextElementSibling?.matches('[data-table]') ? wrap.nextElementSibling : null;
+    if (!tbl) return;
+    const q = input.value.trim().toLowerCase();
+    let shown = 0, total = 0;
+    tbl.querySelectorAll('.admin-row:not(.admin-head)').forEach((row) => {
+      total++;
+      const hit = !q || row.textContent.toLowerCase().includes(q);
+      row.hidden = !hit;
+      if (hit) shown++;
+    });
+    const counter = wrap.querySelector('[data-table-count]');
+    if (counter) counter.textContent = q ? `${shown} of ${total}` : `${total} rows`;
+  });
+
   // ----------------------- Overview -----------------------
+  // Stat groups — every admin-tracked table in /api/admin/overview.counts
+  // belongs to a domain so the overview reads like a dashboard.
+  const STAT_GROUPS = [
+    { title: 'Site',    icon: '◎', keys: ['users', 'newsletter_subscribers', 'notifications', 'certificates'] },
+    { title: 'Learn',   icon: '📚', keys: ['courses', 'lessons', 'tracks', 'cert_prep', 'cheatsheets'] },
+    { title: 'Compete', icon: '⚔', keys: ['challenges', 'solves', 'submissions', 'daily_challenges', 'daily_solves', 'ctf_events', 'ctf_event_solves', 'assessments', 'assessment_attempts', 'pro_labs', 'pro_lab_solves', 'teams', 'vault_solves'] },
+    { title: 'Content', icon: '✎', keys: ['posts', 'events', 'forum_posts', 'forum_comments'] },
+  ];
+  const STAT_LABEL = {
+    users: 'Users', courses: 'Courses', lessons: 'Lessons', challenges: 'Challenges',
+    solves: 'Solves', submissions: 'Submissions', posts: 'Blog posts', cheatsheets: 'Cheatsheets',
+    events: 'Cal. events', tracks: 'Paths', cert_prep: 'Cert prep', certificates: 'Certificates',
+    daily_challenges: 'Daily', daily_solves: 'Daily solves',
+    ctf_events: 'CTF events', ctf_event_solves: 'Event solves',
+    assessments: 'Assessments', assessment_attempts: 'Attempts',
+    pro_labs: 'Pro Labs', pro_lab_solves: 'Pro Lab solves',
+    teams: 'Teams', newsletter_subscribers: 'Newsletter',
+    forum_posts: 'Forum posts', forum_comments: 'Forum comments',
+    vault_solves: 'Vault solves', notifications: 'Notifications',
+  };
+  const STAT_TAB = {
+    users: 'users', courses: 'courses', lessons: 'courses', challenges: 'challenges',
+    solves: 'challenges', submissions: 'challenges', posts: 'posts', cheatsheets: 'cheatsheets',
+    events: 'calendar', tracks: 'tracks', cert_prep: 'cert-prep', certificates: 'users',
+    daily_challenges: 'daily', daily_solves: 'daily',
+    ctf_events: 'ctf-events', ctf_event_solves: 'ctf-events',
+    assessments: 'assessments', assessment_attempts: 'assessments',
+    pro_labs: 'pro-labs', pro_lab_solves: 'pro-labs',
+    teams: 'forum',
+    forum_posts: 'forum', forum_comments: 'forum',
+  };
+
+  function relTime(s) {
+    if (!s) return '';
+    const t = new Date(s.replace(' ', 'T') + 'Z').getTime();
+    const diff = (Date.now() - t) / 1000;
+    if (diff < 60)        return 'just now';
+    if (diff < 3600)      return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400)     return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 86400 * 7) return Math.floor(diff / 86400) + 'd ago';
+    return new Date(s.replace(' ', 'T') + 'Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  function statCard(k, v, opts = {}) {
+    const tab = STAT_TAB[k];
+    const label = STAT_LABEL[k] || k;
+    const tag = tab ? 'button' : 'div';
+    const tabAttr = tab ? `data-go-tab="${tab}"` : '';
+    return `<${tag} class="admin-stat-card${tab ? ' is-clickable' : ''}" ${tabAttr}>
+      <div class="admin-stat-label">${escapeHtml(label)}</div>
+      <div class="admin-stat-value">${v ?? '—'}</div>
+      ${opts.delta != null ? `<div class="admin-stat-delta ${opts.delta > 0 ? 'is-up' : ''}">${opts.delta > 0 ? '+' : ''}${opts.delta} 7d</div>` : ''}
+    </${tag}>`;
+  }
+
   async function overview() {
     try {
       const r = await api.get('/api/admin/overview');
-      const items = Object.entries(r.counts).map(([k, v]) =>
-        `<div class="admin-stat-card">
-          <div class="admin-stat-label">${k}</div>
-          <div class="admin-stat-value">${v ?? '—'}</div>
-        </div>`).join('');
+      const counts = r.counts || {};
+      const d = r.deltas_7d || {};
+
+      const hero = `
+        <div class="admin-overview-hero">
+          ${statCard('users', counts.users, { delta: d.signups })}
+          ${statCard('solves', counts.solves, { delta: d.solves })}
+          ${statCard('forum_posts', counts.forum_posts, { delta: d.forum_posts })}
+        </div>`;
+
+      const quickActions = `
+        <div class="admin-quick-actions">
+          <span class="admin-quick-eyebrow">Quick actions</span>
+          <button class="btn btn-primary btn-sm" data-go-tab="challenges">+ Challenge</button>
+          <button class="btn btn-ghost btn-sm" data-go-tab="posts">+ Post</button>
+          <button class="btn btn-ghost btn-sm" data-go-tab="courses">+ Course</button>
+          <button class="btn btn-ghost btn-sm" data-go-tab="daily">+ Daily</button>
+          <a class="btn btn-ghost btn-sm" href="/site-editor">✎ Visual editor</a>
+        </div>`;
+
+      const groups = STAT_GROUPS.map((g) => `
+        <section class="admin-stat-group">
+          <div class="admin-stat-group-head">
+            <span class="admin-stat-group-icon">${g.icon}</span>
+            <h3 class="admin-stat-group-title">${g.title}</h3>
+          </div>
+          <div class="admin-stat-grid">
+            ${g.keys.map((k) => statCard(k, counts[k])).join('')}
+          </div>
+        </section>`).join('');
+
+      const userItems = (r.recent_users || []).map((u) => `
+        <li class="admin-feed-item">
+          <a class="admin-feed-link" href="/u/${escapeHtml(u.username)}" target="_blank">@${escapeHtml(u.username)}</a>
+          ${u.role === 'admin' ? '<span class="admin-feed-tag">admin</span>' : ''}
+          <span class="admin-feed-time">${relTime(u.created_at)}</span>
+        </li>`).join('') || '<li class="admin-feed-empty">No signups yet.</li>';
+
+      const postItems = (r.recent_posts || []).map((p) => `
+        <li class="admin-feed-item">
+          <a class="admin-feed-link" href="/community/post/${p.id}" target="_blank">${escapeHtml(p.title)}</a>
+          <span class="admin-feed-tag" style="--cat:${p.cat_color || 'var(--accent)'};">/${escapeHtml(p.cat_slug)}</span>
+          <span class="admin-feed-time">@${escapeHtml(p.username)} · ${relTime(p.created_at)}</span>
+        </li>`).join('') || '<li class="admin-feed-empty">No posts yet.</li>';
+
+      const solveItems = (r.recent_solves || []).map((s) => `
+        <li class="admin-feed-item">
+          <a class="admin-feed-link" href="/challenges/${escapeHtml(s.challenge_slug)}" target="_blank">${escapeHtml(s.challenge_title)}</a>
+          <span class="admin-feed-tag">+${s.points}</span>
+          <span class="admin-feed-time">@${escapeHtml(s.username)} · ${relTime(s.solved_at)}</span>
+        </li>`).join('') || '<li class="admin-feed-empty">No solves yet.</li>';
+
       main().innerHTML = `
-        <h2 style="margin-top:0;">Overview</h2>
-        <div class="admin-stat-grid">${items}</div>`;
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:1rem; margin-bottom:1rem;">
+          <h2 style="margin:0;">Overview</h2>
+          <span class="dim mono" style="font-size:0.78rem;">last 7 days</span>
+        </div>
+        ${hero}
+        ${quickActions}
+        <div class="admin-stat-groups">${groups}</div>
+        <div class="admin-activity-feeds">
+          <section class="admin-activity-col">
+            <h3 class="admin-activity-head">Recent users</h3>
+            <ul class="admin-feed">${userItems}</ul>
+          </section>
+          <section class="admin-activity-col">
+            <h3 class="admin-activity-head">Recent forum posts</h3>
+            <ul class="admin-feed">${postItems}</ul>
+          </section>
+          <section class="admin-activity-col">
+            <h3 class="admin-activity-head">Recent solves</h3>
+            <ul class="admin-feed">${solveItems}</ul>
+          </section>
+        </div>`;
     } catch (e) { main().innerHTML = err(e); }
   }
+
+  // Click a [data-go-tab="..."] anywhere to switch tabs (used in overview).
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('[data-go-tab]');
+    if (!target) return;
+    const tabName = target.dataset.goTab;
+    const btn = document.querySelector(`.admin-tab[data-tab="${tabName}"]`);
+    if (btn) btn.click();
+  });
 
   // ----------------------- Users -----------------------
   async function users() {
