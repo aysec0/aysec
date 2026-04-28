@@ -65,6 +65,87 @@ router.get('/overview', (_req, res) => {
   });
 });
 
+// ===== Daily timeline for the overview sparklines =====
+// Returns last N days of {date, signups, solves, forum_posts} including zero days
+router.get('/timeline', (req, res) => {
+  const days = Math.max(1, Math.min(30, Number(req.query.days) || 7));
+  const buckets = Array.from({ length: days }, (_, i) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - (days - 1 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  const dayMap = (rows) => Object.fromEntries(rows.map((r) => [r.day, r.c]));
+  let signupRows = [], solveRows = [], postRows = [];
+  try {
+    signupRows = db.prepare(
+      `SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS c
+       FROM users WHERE created_at >= datetime('now', ?)
+       GROUP BY day`
+    ).all(`-${days - 1} days`);
+  } catch {}
+  try {
+    solveRows = db.prepare(
+      `SELECT substr(solved_at, 1, 10) AS day, COUNT(*) AS c
+       FROM solves WHERE solved_at >= datetime('now', ?)
+       GROUP BY day`
+    ).all(`-${days - 1} days`);
+  } catch {}
+  try {
+    postRows = db.prepare(
+      `SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS c
+       FROM forum_posts WHERE created_at >= datetime('now', ?)
+       GROUP BY day`
+    ).all(`-${days - 1} days`);
+  } catch {}
+  const signupsByDay = dayMap(signupRows);
+  const solvesByDay  = dayMap(solveRows);
+  const postsByDay   = dayMap(postRows);
+  res.json({
+    days: buckets,
+    series: {
+      signups:     buckets.map((d) => signupsByDay[d] || 0),
+      solves:      buckets.map((d) => solvesByDay[d]  || 0),
+      forum_posts: buckets.map((d) => postsByDay[d]   || 0),
+    },
+  });
+});
+
+// ===== Bulk delete (used by table bulk-select) =====
+// Body: { table: 'challenges'|'posts'|'cheatsheets'|..., ids: number[] }
+router.post('/bulk-delete', (req, res) => {
+  const ALLOWED = {
+    challenges: 'challenges',
+    posts: 'posts',
+    cheatsheets: 'cheatsheets',
+    courses: 'courses',
+    cert_prep: 'cert_prep',
+    daily_challenges: 'daily_challenges',
+    ctf_events: 'ctf_events',
+    assessments: 'assessments',
+    pro_labs: 'pro_labs',
+    events: 'events',
+    talks: 'talks',
+    testimonials: 'testimonials',
+    faqs: 'faqs',
+    forum_posts: 'forum_posts',
+  };
+  const { table, ids } = req.body || {};
+  const tbl = ALLOWED[table];
+  if (!tbl) return res.status(400).json({ error: 'unsupported table' });
+  if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'no ids' });
+  const cleanIds = ids.map((n) => Number(n)).filter((n) => Number.isInteger(n) && n > 0);
+  if (!cleanIds.length) return res.status(400).json({ error: 'invalid ids' });
+
+  // daily_challenges uses date as PK, not id — special-cased below
+  if (tbl === 'daily_challenges') {
+    return res.status(400).json({ error: 'use /api/admin/daily/:date instead' });
+  }
+
+  const placeholders = cleanIds.map(() => '?').join(',');
+  const info = db.prepare(`DELETE FROM ${tbl} WHERE id IN (${placeholders})`).run(...cleanIds);
+  res.json({ deleted: info.changes });
+});
+
 // ===== Users =====
 router.get('/users', (_req, res) => {
   const rows = db.prepare(`

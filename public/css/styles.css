@@ -7893,6 +7893,50 @@ button.admin-stat-card { width: 100%; }
   .admin-activity-feeds { grid-template-columns: 1fr; }
 }
 
+/* Sparkline inside hero KPI cards */
+.admin-sparkline {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin-top: 0.4rem;
+  color: var(--accent);
+}
+
+/* Bulk-select: action bar above the table + checkbox prepended on rows */
+.admin-bulk-bar {
+  display: flex; align-items: center; gap: 0.6rem;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+  margin-top: 0.5rem;
+  font-size: 0.86rem;
+}
+.admin-bulk-bar [data-bulk-count] {
+  font-weight: 600; flex: 1; min-width: 0;
+}
+
+.admin-table.has-bulk + * { margin-top: 1rem; }
+.admin-table.has-bulk .admin-row { position: relative; padding-left: 2.2rem; }
+.admin-bulk-checkbox {
+  position: absolute; left: 0.55rem; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.admin-table.has-bulk .admin-row.admin-head { padding-left: 2.2rem; }
+
+.btn.btn-danger {
+  background: color-mix(in srgb, var(--hard, #ff6b6b) 90%, transparent);
+  color: var(--bg);
+  border-color: var(--hard, #ff6b6b);
+}
+.btn.btn-danger:hover {
+  background: var(--hard, #ff6b6b);
+}
+.btn.btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .admin-table {
   background: var(--surface);
   border: 1px solid var(--border);

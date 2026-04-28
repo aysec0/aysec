@@ -111,11 +111,28 @@
         <input class="input" data-table-filter placeholder="${escapeHtml(opts.placeholder || `Filter ${rows.length} rows…`)}" />
         <span class="admin-table-count" data-table-count>${rows.length} rows</span>
       </div>` : '';
+    const bulk = opts.bulk;
+    const bulkBar = bulk ? `
+      <div class="admin-bulk-bar" data-bulk-bar data-bulk-table="${escapeHtml(bulk.table)}" hidden>
+        <span data-bulk-count>0 selected</span>
+        <button class="btn btn-sm" data-bulk-clear>Clear</button>
+        <button class="btn btn-sm btn-danger" data-bulk-delete>🗑 Delete selected</button>
+      </div>` : '';
+    let renderedRows = rows;
+    if (bulk && Array.isArray(bulk.ids) && bulk.ids.length === rows.length) {
+      renderedRows = rows.map((r, i) => {
+        const id = bulk.ids[i];
+        // Inject the checkbox right after the opening <div class="admin-row...">
+        const checkbox = `<input type="checkbox" class="admin-bulk-checkbox" data-bulk-id="${id}" aria-label="Select row" />`;
+        return r.replace(/(<div class="admin-row[^>]*>)/, `$1${checkbox}`);
+      });
+    }
     return `
       ${search}
-      <div class="admin-table" data-table>
+      ${bulkBar}
+      <div class="admin-table${bulk ? ' has-bulk' : ''}" data-table>
         <div class="admin-row admin-head">${headers.map((h) => `<div>${h}</div>`).join('')}</div>
-        ${rows.length ? rows.join('') : '<div class="admin-empty-state"><strong>No rows yet</strong>Use the button above to create the first one.</div>'}
+        ${renderedRows.length ? renderedRows.join('') : '<div class="admin-empty-state"><strong>No rows yet</strong>Use the button above to create the first one.</div>'}
       </div>`;
   }
 
@@ -124,7 +141,10 @@
     const input = e.target.closest('[data-table-filter]');
     if (!input) return;
     const wrap = input.closest('.admin-table-search');
-    const tbl = wrap?.nextElementSibling?.matches('[data-table]') ? wrap.nextElementSibling : null;
+    // Skip past optional bulk bar to find the next .admin-table sibling
+    let cursor = wrap?.nextElementSibling;
+    while (cursor && !cursor.matches('[data-table]')) cursor = cursor.nextElementSibling;
+    const tbl = cursor;
     if (!tbl) return;
     const q = input.value.trim().toLowerCase();
     let shown = 0, total = 0;
@@ -137,6 +157,57 @@
     const counter = wrap.querySelector('[data-table-count]');
     if (counter) counter.textContent = q ? `${shown} of ${total}` : `${total} rows`;
   });
+
+  // Bulk-select handlers: track checked rows, show/hide the floating bar,
+  // wire Clear + Delete buttons.
+  document.addEventListener('change', (e) => {
+    if (!e.target.matches('.admin-bulk-checkbox')) return;
+    refreshBulkBar(e.target);
+  });
+
+  document.addEventListener('click', async (e) => {
+    const clearBtn = e.target.closest('[data-bulk-clear]');
+    if (clearBtn) {
+      const bar = clearBtn.closest('[data-bulk-bar]');
+      const tbl = bar?.nextElementSibling;
+      tbl?.querySelectorAll('.admin-bulk-checkbox:checked').forEach((cb) => { cb.checked = false; });
+      refreshBulkBar(tbl?.querySelector('.admin-bulk-checkbox'));
+      return;
+    }
+    const delBtn = e.target.closest('[data-bulk-delete]');
+    if (delBtn) {
+      const bar = delBtn.closest('[data-bulk-bar]');
+      const tbl = bar?.nextElementSibling;
+      const tableName = bar.dataset.bulkTable;
+      const ids = [...(tbl?.querySelectorAll('.admin-bulk-checkbox:checked') || [])].map((cb) => Number(cb.dataset.bulkId)).filter(Boolean);
+      if (!ids.length) return;
+      if (!confirm(`Delete ${ids.length} ${tableName}? This can't be undone.`)) return;
+      delBtn.disabled = true;
+      try {
+        const r = await api.post('/api/admin/bulk-delete', { table: tableName, ids });
+        window.toast?.(`Deleted ${r.deleted}`, 'success');
+        // Refresh the active tab
+        document.querySelector('.admin-tab.is-active')?.click();
+      } catch (err) {
+        window.toast?.(err.message || 'bulk delete failed', 'error');
+      } finally {
+        delBtn.disabled = false;
+      }
+    }
+  });
+
+  function refreshBulkBar(anyCheckbox) {
+    const tbl = anyCheckbox?.closest('[data-table]');
+    if (!tbl) return;
+    const bar = tbl.previousElementSibling?.matches('[data-bulk-bar]') ? tbl.previousElementSibling : null;
+    if (!bar) return;
+    const checked = tbl.querySelectorAll('.admin-bulk-checkbox:checked').length;
+    bar.hidden = checked === 0;
+    const counter = bar.querySelector('[data-bulk-count]');
+    if (counter) counter.textContent = `${checked} selected`;
+    const delBtn = bar.querySelector('[data-bulk-delete]');
+    if (delBtn) delBtn.textContent = `🗑 Delete ${checked}`;
+  }
 
   // ----------------------- Overview -----------------------
   // Stat groups — every admin-tracked table in /api/admin/overview.counts
@@ -190,21 +261,49 @@
     return `<${tag} class="admin-stat-card${tab ? ' is-clickable' : ''}" ${tabAttr}>
       <div class="admin-stat-label">${escapeHtml(label)}</div>
       <div class="admin-stat-value">${v ?? '—'}</div>
+      ${opts.spark ? sparklineSvg(opts.spark) : ''}
       ${opts.delta != null ? `<div class="admin-stat-delta ${opts.delta > 0 ? 'is-up' : ''}">${opts.delta > 0 ? '+' : ''}${opts.delta} 7d</div>` : ''}
     </${tag}>`;
   }
 
+  // Render a tiny inline SVG sparkline from a number[] series.
+  // Stretches to 100% width; height is fixed at 28px.
+  function sparklineSvg(values) {
+    if (!Array.isArray(values) || values.length < 2) return '';
+    const w = 100, h = 28, pad = 2;
+    const max = Math.max(1, ...values);
+    const stepX = (w - pad * 2) / (values.length - 1);
+    const points = values.map((v, i) => {
+      const x = pad + i * stepX;
+      const y = h - pad - (v / max) * (h - pad * 2);
+      return [x, y];
+    });
+    const line = points.map((p, i) => (i === 0 ? `M${p[0].toFixed(1)} ${p[1].toFixed(1)}` : `L${p[0].toFixed(1)} ${p[1].toFixed(1)}`)).join(' ');
+    const fill = `${line} L${(w - pad).toFixed(1)} ${(h - pad).toFixed(1)} L${pad} ${(h - pad).toFixed(1)} Z`;
+    const last = points[points.length - 1];
+    return `
+      <svg class="admin-sparkline" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+        <path d="${fill}" fill="currentColor" fill-opacity="0.13"/>
+        <path d="${line}" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="1.6" fill="currentColor"/>
+      </svg>`;
+  }
+
   async function overview() {
     try {
-      const r = await api.get('/api/admin/overview');
+      const [r, t] = await Promise.all([
+        api.get('/api/admin/overview'),
+        api.get('/api/admin/timeline?days=7').catch(() => ({ series: {} })),
+      ]);
       const counts = r.counts || {};
       const d = r.deltas_7d || {};
+      const series = t.series || {};
 
       const hero = `
         <div class="admin-overview-hero">
-          ${statCard('users', counts.users, { delta: d.signups })}
-          ${statCard('solves', counts.solves, { delta: d.solves })}
-          ${statCard('forum_posts', counts.forum_posts, { delta: d.forum_posts })}
+          ${statCard('users',       counts.users,       { delta: d.signups,     spark: series.signups })}
+          ${statCard('solves',      counts.solves,      { delta: d.solves,      spark: series.solves })}
+          ${statCard('forum_posts', counts.forum_posts, { delta: d.forum_posts, spark: series.forum_posts })}
         </div>`;
 
       const quickActions = `
@@ -337,7 +436,7 @@
           <h2 style="margin:0;">Challenges (${r.challenges.length})</h2>
           <button class="btn btn-primary" id="newChalBtn">+ New challenge</button>
         </div>
-        ${table(['title / slug','cat·diff','pts','solves','pub','actions'], rows)}
+        ${table(['title / slug','cat·diff','pts','solves','pub','actions'], rows, { bulk: { table: 'challenges', ids: r.challenges.map((c) => c.id) } })}
         <div id="chalForm"></div>`;
       $('#newChalBtn').addEventListener('click', () => renderChalForm({}));
       main().querySelectorAll('[data-edit]').forEach((b) => {
@@ -953,7 +1052,7 @@
           <h2 style="margin:0;">Posts (${r.posts.length})</h2>
           <button class="btn btn-primary" id="newPBtn">+ New post</button>
         </div>
-        ${table(['title / slug','kind','pub','created','actions'], rows)}
+        ${table(['title / slug','kind','pub','created','actions'], rows, { bulk: { table: 'posts', ids: r.posts.map((p) => p.id) } })}
         <div id="pForm"></div>`;
       $('#newPBtn').addEventListener('click', () => renderPForm({}));
       main().querySelectorAll('[data-edit]').forEach((b) =>
@@ -1382,7 +1481,7 @@
           <h2 style="margin:0;">Cheatsheets (${r.cheatsheets.length})</h2>
           <button class="btn btn-primary" id="newChBtn">+ New cheatsheet</button>
         </div>
-        ${table(['title / slug','category','pos','pub','actions'], rows)}
+        ${table(['title / slug','category','pos','pub','actions'], rows, { bulk: { table: 'cheatsheets', ids: r.cheatsheets.map((c) => c.id) } })}
         <div id="chForm"></div>`;
       $('#newChBtn').addEventListener('click', () => renderChForm({}));
       main().querySelectorAll('[data-edit]').forEach((b) =>
