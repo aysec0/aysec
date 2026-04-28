@@ -11,10 +11,72 @@
     { href: '/courses',        label: 'Courses' },
     { href: '/certifications', label: 'Certs' },
     { href: '/challenges',     label: 'CTF' },
+    { type: 'tools',           label: 'Tools' },
     { href: '/blog',           label: 'Blog' },
-    { href: '/ask',            label: 'Ask' },
-    { href: '/pricing',        label: 'Pricing' },
   ];
+
+  // Catalog used by the navbar Tools dropdown. Each item links to a panel
+  // anchor on /tools (which is the merged lab + OSS-tools page).
+  const TOOLS_CATALOG = [
+    {
+      group: 'Featured',
+      items: [
+        { name: 'Security toolbox', href: '/tools',          desc: 'All utilities in one place' },
+        { name: 'OSS projects',     href: '/tools#oss',      desc: 'jwt-fuzz, recon-pipe, …' },
+      ],
+    },
+    {
+      group: 'Encoding & Crypto',
+      items: [
+        { name: 'JWT decoder',     href: '/tools#tool-jwt' },
+        { name: 'Hash identifier', href: '/tools#tool-hash-id' },
+        { name: 'Hash generator',  href: '/tools#tool-hash-gen' },
+        { name: 'Base64',          href: '/tools#tool-b64' },
+        { name: 'URL encode / decode', href: '/tools#tool-url' },
+      ],
+    },
+    {
+      group: 'Web & Network',
+      items: [
+        { name: 'CIDR calculator', href: '/tools#tool-cidr' },
+        { name: 'Unix timestamp',  href: '/tools#tool-ts' },
+      ],
+    },
+    {
+      group: 'Generators',
+      items: [
+        { name: 'UUID generator',  href: '/tools#tool-uuid' },
+      ],
+    },
+  ];
+
+  function toolsNavHTML() {
+    const groups = TOOLS_CATALOG.map((g) => `
+      <div class="tools-dd-group">
+        <div class="tools-dd-group-title">${g.group}</div>
+        ${g.items.map((it) => `
+          <a class="tools-dd-item" href="${it.href}" data-search="${(it.name + ' ' + (it.desc || '')).toLowerCase()}">
+            <div class="tools-dd-name">${it.name}</div>
+            ${it.desc ? `<div class="tools-dd-desc">${it.desc}</div>` : ''}
+          </a>`).join('')}
+      </div>
+    `).join('');
+    return `
+      <li class="tools-nav-wrap">
+        <button type="button" class="nav-link tools-nav-trigger" id="toolsNavBtn" aria-haspopup="true" aria-expanded="false">
+          Tools
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="tools-dd" id="toolsDd" hidden role="menu" aria-label="Tools">
+          <div class="tools-dd-search-wrap">
+            <svg class="tools-dd-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="tools-dd-search" id="toolsDdSearch" type="text" placeholder="Search tools…" autocomplete="off" />
+          </div>
+          <div class="tools-dd-list" id="toolsDdList">${groups}</div>
+          <div class="tools-dd-empty" id="toolsDdEmpty" hidden>No tools match.</div>
+        </div>
+      </li>`;
+  }
 
   const navbarHTML = () => `
     <header class="navbar">
@@ -27,9 +89,10 @@
 
         <nav aria-label="Primary">
           <ul class="nav-links">
-            ${NAV_ITEMS.map(({ href, label }) =>
-              `<li><a class="nav-link" href="${href}" data-href="${href}">${label}</a></li>`
-            ).join('')}
+            ${NAV_ITEMS.map((item) => {
+              if (item.type === 'tools') return toolsNavHTML();
+              return `<li><a class="nav-link" href="${item.href}" data-href="${item.href}">${item.label}</a></li>`;
+            }).join('')}
           </ul>
         </nav>
 
@@ -76,17 +139,16 @@
         <a class="nav-link" href="/challenges" data-href="/challenges">CTF</a>
         <a class="nav-link" href="/blog" data-href="/blog">Blog</a>
 
-        <div class="mobile-section-title">Resources</div>
-        <a class="nav-link" href="/lab" data-href="/lab">Security toolbox</a>
+        <div class="mobile-section-title">Tools</div>
+        <a class="nav-link" href="/tools" data-href="/tools">Security toolbox</a>
+        <a class="nav-link" href="/tools#oss" data-href="/tools">OSS projects</a>
         <a class="nav-link" href="/cheatsheets" data-href="/cheatsheets">Cheatsheets</a>
         <a class="nav-link" href="/events" data-href="/events">Events</a>
-        <a class="nav-link" href="/ask" data-href="/ask">Ask aysec</a>
 
         <div class="mobile-section-title">Account</div>
         <a class="nav-link" href="/dashboard" data-href="/dashboard">Dashboard</a>
         <a class="nav-link" href="/levels" data-href="/levels">Levels</a>
         <a class="nav-link" href="/settings" data-href="/settings">Settings</a>
-        <a class="nav-link" href="/pricing" data-href="/pricing">Pricing</a>
 
         <div class="mobile-section-title">More</div>
         <a class="nav-link" href="/about" data-href="/about">About</a>
@@ -119,7 +181,6 @@
               <li><a href="/certifications">Cert prep</a></li>
               <li><a href="/challenges">CTF challenges</a></li>
               <li><a href="/blog">Writeups</a></li>
-              <li><a href="/pricing">Pricing</a></li>
             </ul>
           </div>
           <div>
@@ -136,11 +197,10 @@
           <div>
             <div class="footer-col-title">Resources</div>
             <ul class="footer-links">
-              <li><a href="/lab">Security toolbox</a></li>
+              <li><a href="/tools">Security toolbox</a></li>
+              <li><a href="/tools#oss">OSS projects</a></li>
               <li><a href="/cheatsheets">Cheatsheets</a></li>
               <li><a href="/events">Events calendar</a></li>
-              <li><a href="/ask">Ask aysec</a></li>
-              <li><a href="/tools">OSS tools</a></li>
               <li><a href="/talks">Talks</a></li>
             </ul>
           </div>
@@ -207,6 +267,91 @@
     bd.addEventListener('click', close);
     nav.addEventListener('click', (e) => { if (e.target.tagName === 'A') close(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav.classList.contains('open')) close(); });
+  }
+
+  // ---- Tools dropdown (navbar) ----
+  function wireToolsDropdown() {
+    const btn   = document.getElementById('toolsNavBtn');
+    const panel = document.getElementById('toolsDd');
+    const input = document.getElementById('toolsDdSearch');
+    const list  = document.getElementById('toolsDdList');
+    const empty = document.getElementById('toolsDdEmpty');
+    if (!btn || !panel || !input || !list) return;
+
+    let open = false;
+    function setOpen(v) {
+      open = v;
+      panel.hidden = !v;
+      btn.setAttribute('aria-expanded', v ? 'true' : 'false');
+      btn.classList.toggle('is-open', v);
+      if (v) {
+        // reset filter on open
+        input.value = '';
+        applyFilter('');
+        // first match highlight cleared
+        clearHighlight();
+        setTimeout(() => input.focus(), 0);
+      }
+    }
+
+    function clearHighlight() {
+      list.querySelectorAll('.tools-dd-item.is-first').forEach((n) => n.classList.remove('is-first'));
+    }
+
+    function applyFilter(qRaw) {
+      const q = qRaw.trim().toLowerCase();
+      const items  = list.querySelectorAll('.tools-dd-item');
+      const groups = list.querySelectorAll('.tools-dd-group');
+      let firstMatch = null;
+      let visibleCount = 0;
+      items.forEach((it) => {
+        const hay = it.dataset.search || '';
+        const match = !q || hay.includes(q);
+        it.hidden = !match;
+        if (match) {
+          visibleCount++;
+          if (!firstMatch) firstMatch = it;
+        }
+      });
+      // Hide a group header if all its items are hidden
+      groups.forEach((g) => {
+        const visible = g.querySelectorAll('.tools-dd-item:not([hidden])').length;
+        g.hidden = visible === 0;
+      });
+      clearHighlight();
+      if (q && firstMatch) firstMatch.classList.add('is-first');
+      empty.hidden = visibleCount > 0;
+    }
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setOpen(!open);
+    });
+
+    input.addEventListener('input', () => applyFilter(input.value));
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const first = list.querySelector('.tools-dd-item:not([hidden])');
+        if (first) {
+          window.location.href = first.getAttribute('href');
+        }
+      } else if (e.key === 'Escape') {
+        setOpen(false);
+        btn.focus();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!open) return;
+      if (panel.contains(e.target) || btn.contains(e.target)) return;
+      setOpen(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && open) setOpen(false);
+    });
   }
 
   function wireFooterNewsletter() {
@@ -621,6 +766,7 @@
     setActiveLink();
     wireThemeToggle();
     wireMobileDrawer();
+    wireToolsDropdown();
     wireFooterNewsletter();
     setYear();
     syncAuthNav();

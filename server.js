@@ -135,6 +135,11 @@ app.get('/certifications/:slug',  sendDetail('cert-detail.html'));
 app.get('/cheatsheets/:slug',     sendDetail('cheatsheet-detail.html'));
 app.get('/events/:slug',          sendDetail('event-detail.html'));
 
+// Permanent redirects for routes that have been merged elsewhere.
+app.get(['/pricing', '/pricing/'], (_req, res) => res.redirect(301, '/courses'));
+app.get(['/lab',     '/lab/'],     (_req, res) => res.redirect(301, '/tools'));
+app.get(['/tracks',  '/tracks/'],  (_req, res) => res.redirect(301, '/courses#paths'));
+
 app.use(express.static(join(__dirname, 'public'), { extensions: ['html'] }));
 
 app.use((req, res) => {
