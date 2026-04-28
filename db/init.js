@@ -2024,6 +2024,88 @@ Pipe directly. Don't write to disk if you can avoid it.
     'Big regional conference with academic + industry crossover. Lots of nation-state-relevant talks.',
     'Tel Aviv University', 18);
 
+  // ===== Live CTF events (recurring + a fixed live + upcoming) =====
+  const insCtfEvent = db.prepare(`
+    INSERT OR IGNORE INTO ctf_events (slug, title, description, starts_at, ends_at, prize)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  const insCtfEventChal = db.prepare(`
+    INSERT OR IGNORE INTO ctf_event_challenges (event_id, challenge_id, points, position) VALUES (?, ?, ?, ?)
+  `);
+  const now = new Date();
+  const isoOffset = (mins) => new Date(now.getTime() + mins * 60000).toISOString();
+  // Live now (started 2h ago, ends in 6h)
+  insCtfEvent.run('aysec-spring-bash-2026', 'aysec Spring Bash 2026',
+    "A 24-hour jeopardy CTF — fresh challenges across web, crypto, pwn, rev, forensics. Free entry. Top 10 win swag.",
+    isoOffset(-120), isoOffset(360), 'platform credit');
+  // Upcoming (starts in 7 days)
+  insCtfEvent.run('aysec-summer-cup-2026', 'aysec Summer Cup 2026',
+    "Mid-summer team CTF, 48-hour scoring window. Pre-register your team here once it opens.",
+    isoOffset(60 * 24 * 7), isoOffset(60 * 24 * 9), 'cash + courses');
+  // Past (ended 30 days ago)
+  insCtfEvent.run('aysec-winter-warmup-2026', 'aysec Winter Warmup 2026',
+    "Past beginner-friendly CTF. Scoreboard frozen.",
+    isoOffset(-60 * 24 * 31), isoOffset(-60 * 24 * 30), 'platform credit');
+
+  const liveEvent = db.prepare("SELECT id FROM ctf_events WHERE slug = 'aysec-spring-bash-2026'").get();
+  if (liveEvent) {
+    const someChals = db.prepare("SELECT id FROM challenges WHERE published = 1 LIMIT 6").all();
+    someChals.forEach((c, i) => insCtfEventChal.run(liveEvent.id, c.id, null, i));
+  }
+
+  // ===== Skill assessments =====
+  const insAssess = db.prepare(`
+    INSERT OR IGNORE INTO assessments (slug, title, cert_code, difficulty, time_limit_minutes, passing_points, description)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  const insAssessMachine = db.prepare(`
+    INSERT INTO assessment_machines (assessment_id, position, name, ip, role, points, flag_hash, hint)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const sha = (s) => createHash('sha256').update(s).digest('hex');
+  const r1 = insAssess.run('oscp-style-warmup', 'OSCP-style Warm-up Exam', 'OSCP', 'medium', 720, 60,
+    'A 12-hour mini-exam shaped like the OSCP — three machines, partial credit per flag.');
+  if (r1.changes) {
+    insAssessMachine.run(r1.lastInsertRowid, 1, 'WEB01',  '10.10.10.5',  'web app', 20, sha('aysec{web01-popped}'),  'Look at the upload endpoint.');
+    insAssessMachine.run(r1.lastInsertRowid, 2, 'FILE01', '10.10.10.6',  'samba',   20, sha('aysec{file01-pwned}'),   'Anonymous SMB session?');
+    insAssessMachine.run(r1.lastInsertRowid, 3, 'DC01',   '10.10.10.10', 'AD DC',   30, sha('aysec{dc01-rooted}'),    'Kerberoast a SPN with weak crypto.');
+  }
+  const r2 = insAssess.run('ejpt-style-quick', 'eJPT-style Quick Test', 'eJPT', 'easy', 240, 50,
+    'Four-hour entry-level exam. Two boxes, one flag each.');
+  if (r2.changes) {
+    insAssessMachine.run(r2.lastInsertRowid, 1, 'TARGET01', '10.10.10.20', 'web', 25, sha('aysec{ejpt-target01}'), 'Look at robots.txt');
+    insAssessMachine.run(r2.lastInsertRowid, 2, 'TARGET02', '10.10.10.21', 'ftp', 25, sha('aysec{ejpt-target02}'), 'Anonymous FTP login.');
+  }
+
+  // ===== Pro Labs =====
+  const insLab = db.prepare(`
+    INSERT OR IGNORE INTO pro_labs (slug, title, difficulty, scenario, description, network_diagram)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  const insLabMachine = db.prepare(`
+    INSERT INTO pro_lab_machines (lab_id, position, name, ip, role, user_flag_hash, root_flag_hash, user_points, root_points, hint)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const lab1 = insLab.run('shadowcorp-ad', 'ShadowCorp AD', 'medium',
+    'A small finance company has hired you. Internal pentest scope: the 10.10.10.0/24 segment. The DC is at 10.10.10.10.',
+    'Active Directory forest with a flat user network. Find creds, escalate privileges, capture domain admin.',
+    `[ jumpbox ] -> [ WEB01 (10.10.10.5) ] -> [ FILE01 (10.10.10.6) ]\n                                       \\-> [ DC01 (10.10.10.10) ]`);
+  if (lab1.changes) {
+    const lid = lab1.lastInsertRowid;
+    insLabMachine.run(lid, 1, 'WEB01',  '10.10.10.5',  'public web',     sha('aysec{web01-user}'),  sha('aysec{web01-root}'),  10, 20, 'Outdated WordPress on /blog.');
+    insLabMachine.run(lid, 2, 'FILE01', '10.10.10.6',  'file server',    sha('aysec{file01-user}'), sha('aysec{file01-root}'), 10, 20, 'Reused credentials from WEB01.');
+    insLabMachine.run(lid, 3, 'DC01',   '10.10.10.10', 'domain controller', sha('aysec{dc01-user}'), sha('aysec{dc01-root}'),  15, 30, 'AS-REP roastable user; weak crypto.');
+  }
+  const lab2 = insLab.run('redrock-cloud', 'RedRock Cloud Heist', 'hard',
+    'A SaaS startup leaks an AWS access key in a public S3 bucket. Pivot from the cloud into the corporate VPN and compromise the build server.',
+    'Cloud-to-on-prem pivot scenario.',
+    `[ public S3 ] -> [ AWS account ] -> [ VPN gateway ] -> [ build-server (10.0.5.42) ]`);
+  if (lab2.changes) {
+    const lid = lab2.lastInsertRowid;
+    insLabMachine.run(lid, 1, 'aws-account', '—',         'IAM',      sha('aysec{cloud-iam-user}'),  sha('aysec{cloud-iam-root}'), 15, 30, 'AssumeRole into the build role.');
+    insLabMachine.run(lid, 2, 'build-server', '10.0.5.42', 'CI/CD',   sha('aysec{build-user}'),      sha('aysec{build-root}'),     20, 40, 'Jenkins script console.');
+  }
+
   const cnt = (t) => db.prepare(`SELECT COUNT(*) c FROM ${t}`).get().c;
   console.log(
     `Seeded admin (id=${admin.lastInsertRowid}) + ${cnt('courses')} courses · ${cnt('lessons')} lessons · ` +

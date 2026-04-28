@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join team — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+  <header class="page-header"><div class="container">
+    <h1 class="page-title">Accept team invite</h1>
+  </div></header>
+  <section class="section"><div class="container" id="joinBody"></div></section>
+  <div id="footer-mount"></div>
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script>
+    (() => {
+      const token = location.pathname.replace(/\/+$/, '').split('/').pop();
+      const $ = (id) => document.getElementById(id);
+      async function go() {
+        const me = await window.api.get('/api/auth/me').catch(() => null);
+        if (!me?.user) {
+          $('joinBody').innerHTML = `<div class="card" style="padding:1.5rem; max-width:520px; margin:0 auto;">
+            <p>Sign in to accept this invite.</p>
+            <a class="btn btn-primary" href="/login?next=${encodeURIComponent(location.pathname)}">Sign in</a></div>`;
+          return;
+        }
+        $('joinBody').innerHTML = `<div class="card" style="padding:1.5rem; max-width:520px; margin:0 auto;">
+          <p>You're about to join a team. Continue?</p>
+          <button class="btn btn-primary" id="acceptBtn">Accept invite</button>
+          <div id="joinFeedback" style="margin-top:0.6rem;"></div></div>`;
+        $('acceptBtn').addEventListener('click', async () => {
+          try {
+            const r = await window.api.post('/api/teams/invites/accept', { token });
+            location.href = '/teams/' + r.slug;
+          } catch (e) {
+            $('joinFeedback').textContent = e.message;
+            $('joinFeedback').style.color = 'var(--hard,#ff6b6b)';
+          }
+        });
+      }
+      document.addEventListener('DOMContentLoaded', go);
+    })();
+  </script>
+</body>
+</html>

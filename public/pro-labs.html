@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Pro Labs — aysec</title>
+  <meta name="description" content="Multi-machine, chained scenarios that simulate real enterprise networks." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>pro-labs</span></div>
+      <span class="page-eyebrow">// /pro-labs</span>
+      <h1 class="page-title">Pro Labs.</h1>
+      <p class="page-subtitle">
+        Multi-machine scenarios — Active Directory networks, segmented DMZs, lateral movement.
+        Each lab has user + root flags per host. Capture all to clear the network.
+      </p>
+    </div>
+  </header>
+  <section class="section"><div class="container">
+    <div id="plGrid" class="tools-index-grid" data-reveal></div>
+    <div id="plEmpty" hidden class="empty"><h3>No labs yet</h3><p>Coming soon.</p></div>
+  </div></section>
+  <div id="footer-mount"></div>
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/pro-labs-list.js"></script>
+</body>
+</html>

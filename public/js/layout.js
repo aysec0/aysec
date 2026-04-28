@@ -10,6 +10,7 @@
     { href: '/courses',        label: 'Courses' },
     { href: '/certifications', label: 'Certs' },
     { href: '/challenges',     label: 'CTF' },
+    { href: '/daily',          label: 'Daily' },
     { type: 'tools',           label: 'Tools' },
     { href: '/blog',           label: 'Blog' },
   ];
@@ -170,6 +171,13 @@
         <a class="nav-link" href="/challenges" data-href="/challenges">CTF</a>
         <a class="nav-link" href="/blog" data-href="/blog">Blog</a>
 
+        <div class="mobile-section-title">Compete</div>
+        <a class="nav-link" href="/daily" data-href="/daily">Daily challenge</a>
+        <a class="nav-link" href="/live" data-href="/live">Live events</a>
+        <a class="nav-link" href="/pro-labs" data-href="/pro-labs">Pro Labs</a>
+        <a class="nav-link" href="/assessments" data-href="/assessments">Skill assessments</a>
+        <a class="nav-link" href="/teams" data-href="/teams">Teams</a>
+
         <div class="mobile-section-title">Tools</div>
         <a class="nav-link" href="/tools" data-href="/tools">Security toolbox</a>
         <a class="nav-link" href="/tools#oss" data-href="/tools">OSS projects</a>
@@ -212,6 +220,16 @@
               <li><a href="/certifications">Cert prep</a></li>
               <li><a href="/challenges">CTF challenges</a></li>
               <li><a href="/blog">Writeups</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="footer-col-title">Compete</div>
+            <ul class="footer-links">
+              <li><a href="/daily">Daily challenge</a></li>
+              <li><a href="/live">Live events</a></li>
+              <li><a href="/pro-labs">Pro Labs</a></li>
+              <li><a href="/assessments">Skill assessments</a></li>
+              <li><a href="/teams">Teams</a></li>
             </ul>
           </div>
           <div>

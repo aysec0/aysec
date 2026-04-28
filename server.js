@@ -22,6 +22,11 @@ import levelsRoutes from './routes/levels.js';
 import notificationsRoutes from './routes/notifications.js';
 import bookmarksRoutes from './routes/bookmarks.js';
 import communityRoutes from './routes/community.js';
+import dailyRoutes from './routes/daily.js';
+import ctfEventsRoutes from './routes/ctf-events.js';
+import assessmentsRoutes from './routes/assessments.js';
+import proLabsRoutes from './routes/pro-labs.js';
+import teamsRoutes from './routes/teams.js';
 import { marked } from 'marked';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -52,6 +57,11 @@ app.use('/api/levels',         levelsRoutes);
 app.use('/api/notifications',  notificationsRoutes);
 app.use('/api/bookmarks',      bookmarksRoutes);
 app.use('/api/community',      communityRoutes);
+app.use('/api/daily',          dailyRoutes);
+app.use('/api/ctf-events',     ctfEventsRoutes);
+app.use('/api/assessments',    assessmentsRoutes);
+app.use('/api/pro-labs',       proLabsRoutes);
+app.use('/api/teams',          teamsRoutes);
 
 // SEO endpoints
 const SITE_URL = (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -130,6 +140,13 @@ app.get('/blog/:slug',       sendDetail('post-detail.html'));
 app.get('/cert/:code',       sendDetail('certificate.html'));
 app.get('/tracks/:slug',          sendDetail('track-detail.html'));
 app.get('/tools/:slug',           sendDetail('tool-detail.html'));
+app.get('/live/:slug',            sendDetail('live-detail.html'));
+app.get('/assessments/:slug',     sendDetail('assessment-detail.html'));
+app.get('/assessments/:slug/take/:attemptId', sendDetail('assessment-detail.html'));
+app.get('/pro-labs/:slug',        sendDetail('pro-lab-detail.html'));
+app.get('/lab-term/:slug',        sendDetail('lab-term.html'));
+app.get('/teams/:slug',           sendDetail('team-detail.html'));
+app.get('/teams/join/:token',     sendDetail('team-join.html'));
 app.get('/u/:username',           sendDetail('profile.html'));
 app.get('/u/:username/dna',       sendDetail('dna.html'));
 app.get('/certifications/:slug',  sendDetail('cert-detail.html'));

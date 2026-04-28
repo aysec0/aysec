@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Skill assessments — aysec</title>
+  <meta name="description" content="Cert-aligned, multi-machine skill assessments with a hard time limit." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>assessments</span></div>
+      <span class="page-eyebrow">// /assessments</span>
+      <h1 class="page-title">Skill assessments.</h1>
+      <p class="page-subtitle">
+        Cert-aligned exams with a hard timer. Compromise multiple machines, capture flags,
+        meet the passing threshold to mint a verifiable badge.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div id="aGrid" class="tools-index-grid" data-reveal></div>
+      <div id="aEmpty" hidden class="empty"><h3>No assessments yet</h3><p>Check back soon.</p></div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/assessments-list.js"></script>
+</body>
+</html>

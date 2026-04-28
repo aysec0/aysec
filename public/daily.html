@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Daily Challenge — aysec</title>
+  <meta name="description" content="One rotating CTF challenge per day. Race the clock, build a streak, climb the daily leaderboard." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>daily</span></div>
+      <span class="page-eyebrow">// /daily</span>
+      <h1 class="page-title">Daily challenge.</h1>
+      <p class="page-subtitle">
+        One rotating CTF every 24 hours. Solve it once, lock in your time, build a streak.
+        Resets at <span class="mono" id="resetUTC">00:00 UTC</span> — countdown: <strong id="resetCountdown">…</strong>
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container" style="display:grid; gap:1.5rem; grid-template-columns: minmax(0, 1fr) minmax(0, 360px);">
+      <!-- Today's challenge -->
+      <div>
+        <div id="dailyShell">
+          <div class="card" style="padding:1.5rem;">
+            <div class="skeleton" style="height:18px;width:50%; margin-bottom:0.6rem;"></div>
+            <div class="skeleton" style="height:14px;width:90%;"></div>
+            <div class="skeleton" style="height:14px;width:70%; margin-top:0.4rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar: streak + leaderboard -->
+      <aside style="display:flex; flex-direction:column; gap:1rem;">
+        <div class="card" id="streakCard" style="padding:1.1rem 1.2rem;">
+          <div class="tool-out-label">Your streak</div>
+          <div style="display:flex; align-items:baseline; gap:0.6rem; margin-top:0.4rem;">
+            <div style="font-size:2.4rem; font-weight:700; line-height:1; color: var(--accent);" id="streakCurrent">—</div>
+            <div class="dim" style="font-size:0.85rem;">days · longest <span id="streakLongest">—</span></div>
+          </div>
+          <div class="dim" style="font-size:0.78rem; margin-top:0.5rem;" id="streakNote">sign in to track your streak</div>
+        </div>
+
+        <div class="card" style="padding:1.1rem 1.2rem;">
+          <div class="tool-out-label">Today’s leaderboard — fastest solves</div>
+          <ol id="dailyLeaderboard" style="margin-top:0.5rem; padding-left:1.1rem; font-size:0.9rem;"><li class="dim">no solves yet</li></ol>
+        </div>
+
+        <div class="card" style="padding:1.1rem 1.2rem;">
+          <div class="tool-out-label">All-time streak champs</div>
+          <ol id="streakLeaderboard" style="margin-top:0.5rem; padding-left:1.1rem; font-size:0.9rem;"><li class="dim">loading…</li></ol>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/daily.js"></script>
+</body>
+</html>

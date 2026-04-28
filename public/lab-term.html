@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Lab terminal — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
+  <script src="/js/theme.js"></script>
+  <style>
+    .lab-term-shell { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) minmax(0, 320px); }
+    .lab-term-frame {
+      background: #0a0d12; border: 1px solid var(--border); border-radius: var(--radius-md);
+      overflow: hidden; box-shadow: 0 8px 24px -12px rgba(0,0,0,0.6);
+    }
+    .lab-term-bar {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.7rem; background: #11151c; border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim);
+    }
+    .lab-term-bar .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .lab-term-bar .red { background: #ff5f57; } .lab-term-bar .am { background: #febc2e; } .lab-term-bar .gr { background: #28c840; }
+    .lab-term-bar .title { margin-left: 0.5rem; }
+    #termHost { height: 540px; }
+    @media (max-width: 900px) { .lab-term-shell { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><a href="/pro-labs">pro-labs</a><span class="sep">/</span><span id="ltSlug">…</span><span class="sep">/</span><span>terminal</span></div>
+      <span class="page-eyebrow" id="ltEyebrow">// /lab-term</span>
+      <h1 class="page-title" id="ltTitle">Simulated lab terminal</h1>
+      <p class="page-subtitle">In-browser shell for guided lab walkthroughs. <strong>Simulated</strong> — commands return canned output for the scenario. Type <code>help</code> to see what works.</p>
+    </div>
+  </header>
+  <section class="section"><div class="container">
+    <div class="lab-term-shell">
+      <div>
+        <div class="lab-term-frame">
+          <div class="lab-term-bar">
+            <span class="dot red"></span><span class="dot am"></span><span class="dot gr"></span>
+            <span class="title" id="ltBarTitle">aysec@lab — bash</span>
+          </div>
+          <div id="termHost"></div>
+        </div>
+      </div>
+      <aside>
+        <div class="card" style="padding:1.1rem 1.2rem;">
+          <div class="tool-out-label">Mission</div>
+          <div id="ltMission" style="font-size:0.9rem; margin-top:0.3rem;">loading…</div>
+        </div>
+        <div class="card" style="padding:1.1rem 1.2rem; margin-top:1rem;">
+          <div class="tool-out-label">Available commands</div>
+          <pre class="mono" id="ltCommands" style="font-size:0.78rem; margin:0.4rem 0 0; white-space:pre-wrap;">…</pre>
+        </div>
+        <div class="card" style="padding:1.1rem 1.2rem; margin-top:1rem;">
+          <div class="tool-out-label">Reality check</div>
+          <p class="dim" style="font-size:0.8rem; margin:0.3rem 0 0;">This is a scripted terminal. It is <em>not</em> a real VM. Commands return pre-baked output that lets you walk through the scenario. Real VM provisioning would need a separate ops layer.</p>
+        </div>
+      </aside>
+    </div>
+  </div></section>
+  <div id="footer-mount"></div>
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="/js/lab-term.js"></script>
+</body>
+</html>

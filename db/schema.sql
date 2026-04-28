@@ -333,3 +333,196 @@ CREATE TABLE IF NOT EXISTS bookmarks (
 );
 
 CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id, created_at DESC);
+
+-- ============================================================
+-- Daily Challenge — one rotating challenge per day, fastest-time
+-- leaderboard, persistent streak per user.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS daily_challenges (
+  date          TEXT PRIMARY KEY,                          -- YYYY-MM-DD
+  challenge_id  INTEGER NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+  bonus_points  INTEGER NOT NULL DEFAULT 50,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS daily_solves (
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  date          TEXT    NOT NULL,
+  time_seconds  INTEGER NOT NULL,
+  solved_at     TEXT    NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_solves_date ON daily_solves(date, time_seconds);
+
+CREATE TABLE IF NOT EXISTS daily_streaks (
+  user_id       INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  current       INTEGER NOT NULL DEFAULT 0,
+  longest       INTEGER NOT NULL DEFAULT 0,
+  last_date     TEXT
+);
+
+-- ============================================================
+-- Live CTF events — scheduled, time-bounded, with their own
+-- challenge set + scoreboard separate from the global one.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS ctf_events (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug        TEXT NOT NULL UNIQUE,
+  title       TEXT NOT NULL,
+  description TEXT,
+  starts_at   TEXT NOT NULL,                              -- ISO datetime UTC
+  ends_at     TEXT NOT NULL,
+  banner_url  TEXT,
+  prize       TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_ctf_events_starts ON ctf_events(starts_at);
+
+CREATE TABLE IF NOT EXISTS ctf_event_challenges (
+  event_id     INTEGER NOT NULL REFERENCES ctf_events(id) ON DELETE CASCADE,
+  challenge_id INTEGER NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+  points       INTEGER,                                   -- override; null = use challenge default
+  position     INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (event_id, challenge_id)
+);
+
+CREATE TABLE IF NOT EXISTS ctf_event_participants (
+  event_id     INTEGER NOT NULL REFERENCES ctf_events(id) ON DELETE CASCADE,
+  user_id      INTEGER NOT NULL REFERENCES users(id)      ON DELETE CASCADE,
+  joined_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (event_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS ctf_event_solves (
+  event_id     INTEGER NOT NULL REFERENCES ctf_events(id) ON DELETE CASCADE,
+  user_id      INTEGER NOT NULL REFERENCES users(id)      ON DELETE CASCADE,
+  challenge_id INTEGER NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+  solved_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (event_id, user_id, challenge_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ctf_event_solves_event ON ctf_event_solves(event_id, solved_at);
+
+-- ============================================================
+-- Skill assessments — proctored multi-machine cert-prep exams.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS assessments (
+  id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug               TEXT NOT NULL UNIQUE,
+  title              TEXT NOT NULL,
+  cert_code          TEXT,                                -- e.g. OSCP, eJPT
+  difficulty         TEXT,                                -- easy | medium | hard | insane
+  time_limit_minutes INTEGER NOT NULL DEFAULT 1440,
+  passing_points     INTEGER NOT NULL DEFAULT 70,
+  description        TEXT,
+  published          INTEGER NOT NULL DEFAULT 1,
+  created_at         TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS assessment_machines (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  assessment_id INTEGER NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+  position      INTEGER NOT NULL DEFAULT 0,
+  name          TEXT NOT NULL,                            -- "DC01", "WEB01"
+  ip            TEXT,                                     -- decorative, e.g. 10.10.10.5
+  role          TEXT,                                     -- "domain controller", "web app"
+  points        INTEGER NOT NULL DEFAULT 20,
+  flag_hash     TEXT NOT NULL,                            -- sha256(flag)
+  hint          TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_assessment_machines ON assessment_machines(assessment_id, position);
+
+CREATE TABLE IF NOT EXISTS assessment_attempts (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id       INTEGER NOT NULL REFERENCES users(id)        ON DELETE CASCADE,
+  assessment_id INTEGER NOT NULL REFERENCES assessments(id)  ON DELETE CASCADE,
+  started_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  ended_at      TEXT,
+  points_earned INTEGER NOT NULL DEFAULT 0,
+  passed        INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_assessment_attempts_user ON assessment_attempts(user_id, started_at DESC);
+
+CREATE TABLE IF NOT EXISTS assessment_machine_solves (
+  attempt_id INTEGER NOT NULL REFERENCES assessment_attempts(id) ON DELETE CASCADE,
+  machine_id INTEGER NOT NULL REFERENCES assessment_machines(id) ON DELETE CASCADE,
+  solved_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (attempt_id, machine_id)
+);
+
+-- ============================================================
+-- Pro Labs — chained, multi-machine "enterprise" scenarios.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS pro_labs (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug          TEXT NOT NULL UNIQUE,
+  title         TEXT NOT NULL,
+  difficulty    TEXT,                                    -- easy | medium | hard | insane
+  scenario      TEXT,                                    -- short markdown narrative
+  description   TEXT,
+  network_diagram TEXT,                                  -- ASCII / markdown of the network
+  published     INTEGER NOT NULL DEFAULT 1,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS pro_lab_machines (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  lab_id        INTEGER NOT NULL REFERENCES pro_labs(id) ON DELETE CASCADE,
+  position      INTEGER NOT NULL DEFAULT 0,
+  name          TEXT NOT NULL,
+  ip            TEXT,
+  role          TEXT,
+  user_flag_hash TEXT,                                   -- sha256(flag)
+  root_flag_hash TEXT,
+  user_points   INTEGER NOT NULL DEFAULT 10,
+  root_points   INTEGER NOT NULL DEFAULT 20,
+  hint          TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_pro_lab_machines ON pro_lab_machines(lab_id, position);
+
+CREATE TABLE IF NOT EXISTS pro_lab_solves (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id   INTEGER NOT NULL REFERENCES users(id)            ON DELETE CASCADE,
+  lab_id    INTEGER NOT NULL REFERENCES pro_labs(id)         ON DELETE CASCADE,
+  machine_id INTEGER NOT NULL REFERENCES pro_lab_machines(id) ON DELETE CASCADE,
+  flag_kind TEXT NOT NULL,                              -- 'user' | 'root'
+  solved_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (user_id, machine_id, flag_kind)
+);
+
+-- ============================================================
+-- Teams — multi-seat plans for org subscriptions.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS teams (
+  id                       INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug                     TEXT NOT NULL UNIQUE,
+  name                     TEXT NOT NULL,
+  owner_id                 INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  seats                    INTEGER NOT NULL DEFAULT 5,
+  plan                     TEXT NOT NULL DEFAULT 'team-monthly', -- team-monthly | team-annual
+  stripe_subscription_id   TEXT,
+  created_at               TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS team_members (
+  team_id   INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role      TEXT NOT NULL DEFAULT 'member',       -- owner | admin | member
+  joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (team_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS team_invites (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  team_id    INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  email      TEXT NOT NULL,
+  token      TEXT NOT NULL UNIQUE,
+  invited_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  accepted_at TEXT
+);
