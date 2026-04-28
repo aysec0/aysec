@@ -6799,12 +6799,53 @@ kbd {
 @media (max-width: 800px) { .admin-shell { grid-template-columns: 1fr; } }
 
 .admin-side {
-  display: flex; flex-direction: column; gap: 0.25rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
   position: sticky; top: 88px; align-self: start;
 }
 @media (max-width: 800px) {
-  .admin-side { position: static; flex-direction: row; flex-wrap: wrap; }
+  .admin-side { position: static; }
 }
+.admin-side-group { display: flex; flex-direction: column; gap: 0.2rem; }
+.admin-side-title {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  padding: 0.4rem 0.2rem 0.15rem;
+}
+@media (max-width: 800px) {
+  .admin-side-group { flex-direction: row; flex-wrap: wrap; }
+  .admin-side-title { width: 100%; }
+}
+
+/* Markdown live-preview side-by-side */
+.admin-md-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  align-items: start;
+}
+.admin-md-wrap textarea { min-height: 240px; }
+.admin-md-preview {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
+  font-size: 0.88rem;
+  max-height: 480px;
+  overflow-y: auto;
+}
+.admin-md-preview h1, .admin-md-preview h2, .admin-md-preview h3 { margin-top: 0.4rem; margin-bottom: 0.4rem; }
+.admin-md-preview pre { background: var(--bg); padding: 0.5rem; border-radius: var(--radius-sm); overflow-x: auto; font-size: 0.78rem; }
+.admin-md-preview code { font-family: var(--font-mono); font-size: 0.85em; }
+.admin-md-preview a { color: var(--accent); }
+@media (max-width: 800px) {
+  .admin-md-wrap { grid-template-columns: 1fr; }
+  .admin-md-preview { max-height: 300px; }
+}
+
+.admin-key { display: flex; align-items: baseline; gap: 0.4rem; }
 
 .admin-tab {
   background: transparent;

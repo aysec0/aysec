@@ -398,4 +398,417 @@ router.delete('/courses/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ===== Lessons (per course) =====
+router.get('/courses/:id/lessons', (req, res) => {
+  const rows = db.prepare(`
+    SELECT id, slug, title, position, is_preview, estimated_minutes, video_url
+    FROM lessons WHERE course_id = ? ORDER BY position, id
+  `).all(req.params.id);
+  res.json({ lessons: rows });
+});
+
+router.post('/courses/:id/lessons', (req, res) => {
+  const b = req.body || {};
+  if (!b.slug || !b.title) return res.status(400).json({ error: 'Need slug + title' });
+  const info = db.prepare(`
+    INSERT INTO lessons (course_id, slug, title, content_md, video_url, position, is_preview, estimated_minutes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(req.params.id, b.slug, b.title, b.content_md || '', b.video_url || null,
+         b.position || 0, b.is_preview ? 1 : 0, b.estimated_minutes || 10);
+  res.json({ id: info.lastInsertRowid });
+});
+
+router.get('/lessons/:id', (req, res) => {
+  const row = db.prepare('SELECT * FROM lessons WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'not found' });
+  res.json({ lesson: row });
+});
+
+router.patch('/lessons/:id', (req, res) => {
+  const b = req.body || {};
+  const cur = db.prepare('SELECT * FROM lessons WHERE id = ?').get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'not found' });
+  db.prepare(`
+    UPDATE lessons SET slug=?, title=?, content_md=?, video_url=?, position=?, is_preview=?, estimated_minutes=?, updated_at=datetime('now') WHERE id=?
+  `).run(
+    b.slug ?? cur.slug, b.title ?? cur.title, b.content_md ?? cur.content_md,
+    b.video_url ?? cur.video_url, b.position ?? cur.position,
+    b.is_preview == null ? cur.is_preview : (b.is_preview ? 1 : 0),
+    b.estimated_minutes ?? cur.estimated_minutes, req.params.id
+  );
+  res.json({ ok: true });
+});
+
+router.delete('/lessons/:id', (req, res) => {
+  db.prepare('DELETE FROM lessons WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ===== Tracks (learning paths) =====
+router.get('/tracks', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT t.*, (SELECT COUNT(*) FROM track_courses WHERE track_id = t.id) AS course_count
+    FROM tracks t ORDER BY position, id
+  `).all();
+  res.json({ tracks: rows });
+});
+
+router.post('/tracks', (req, res) => {
+  const b = req.body || {};
+  if (!b.slug || !b.title) return res.status(400).json({ error: 'Need slug + title' });
+  const info = db.prepare(`
+    INSERT INTO tracks (slug, title, subtitle, description, bundle_price_cents, position, published)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(b.slug, b.title, b.subtitle || null, b.description || null,
+         b.bundle_price_cents || 0, b.position || 0, b.published ? 1 : 0);
+  res.json({ id: info.lastInsertRowid });
+});
+
+router.patch('/tracks/:id', (req, res) => {
+  const b = req.body || {};
+  const cur = db.prepare('SELECT * FROM tracks WHERE id = ?').get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'not found' });
+  db.prepare(`
+    UPDATE tracks SET slug=?, title=?, subtitle=?, description=?, bundle_price_cents=?, position=?, published=? WHERE id=?
+  `).run(b.slug ?? cur.slug, b.title ?? cur.title, b.subtitle ?? cur.subtitle,
+         b.description ?? cur.description, b.bundle_price_cents ?? cur.bundle_price_cents,
+         b.position ?? cur.position,
+         b.published == null ? cur.published : (b.published ? 1 : 0), req.params.id);
+  res.json({ ok: true });
+});
+
+router.delete('/tracks/:id', (req, res) => {
+  db.prepare('DELETE FROM tracks WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+router.get('/tracks/:id/courses', (req, res) => {
+  const rows = db.prepare(`
+    SELECT c.id, c.slug, c.title, tc.position
+    FROM track_courses tc JOIN courses c ON c.id = tc.course_id
+    WHERE tc.track_id = ? ORDER BY tc.position, c.id
+  `).all(req.params.id);
+  res.json({ courses: rows });
+});
+
+router.post('/tracks/:id/courses', (req, res) => {
+  const { course_id, position } = req.body || {};
+  if (!course_id) return res.status(400).json({ error: 'Need course_id' });
+  db.prepare(`
+    INSERT OR REPLACE INTO track_courses (track_id, course_id, position) VALUES (?, ?, ?)
+  `).run(req.params.id, course_id, position ?? 0);
+  res.json({ ok: true });
+});
+
+router.delete('/tracks/:id/courses/:cid', (req, res) => {
+  db.prepare('DELETE FROM track_courses WHERE track_id = ? AND course_id = ?').run(req.params.id, req.params.cid);
+  res.json({ ok: true });
+});
+
+// ===== Cert prep paths =====
+router.get('/cert-prep', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT cp.*,
+      (SELECT COUNT(*) FROM cert_prep_courses    WHERE cert_id = cp.id) AS course_count,
+      (SELECT COUNT(*) FROM cert_prep_challenges WHERE cert_id = cp.id) AS chal_count
+    FROM cert_prep cp ORDER BY position, id
+  `).all();
+  res.json({ certs: rows });
+});
+
+router.post('/cert-prep', (req, res) => {
+  const b = req.body || {};
+  if (!b.slug || !b.cert_name) return res.status(400).json({ error: 'Need slug + cert_name' });
+  const info = db.prepare(`
+    INSERT INTO cert_prep (slug, cert_name, cert_full_name, cert_issuer, exam_cost_cents, exam_currency, exam_url, difficulty, duration_estimate, tagline, description, what_covered, what_not_covered, exam_tips, position, published)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(b.slug, b.cert_name, b.cert_full_name || null, b.cert_issuer || 'Unknown',
+         b.exam_cost_cents || null, b.exam_currency || 'USD', b.exam_url || null,
+         b.difficulty || null, b.duration_estimate || null, b.tagline || null,
+         b.description || null, b.what_covered || null, b.what_not_covered || null,
+         b.exam_tips || null, b.position || 0, b.published ? 1 : 0);
+  res.json({ id: info.lastInsertRowid });
+});
+
+router.patch('/cert-prep/:id', (req, res) => {
+  const b = req.body || {};
+  const cur = db.prepare('SELECT * FROM cert_prep WHERE id = ?').get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'not found' });
+  db.prepare(`
+    UPDATE cert_prep SET slug=?, cert_name=?, cert_full_name=?, cert_issuer=?, exam_cost_cents=?, exam_currency=?, exam_url=?, difficulty=?, duration_estimate=?, tagline=?, description=?, what_covered=?, what_not_covered=?, exam_tips=?, position=?, published=? WHERE id=?
+  `).run(
+    b.slug ?? cur.slug, b.cert_name ?? cur.cert_name, b.cert_full_name ?? cur.cert_full_name,
+    b.cert_issuer ?? cur.cert_issuer, b.exam_cost_cents ?? cur.exam_cost_cents,
+    b.exam_currency ?? cur.exam_currency, b.exam_url ?? cur.exam_url,
+    b.difficulty ?? cur.difficulty, b.duration_estimate ?? cur.duration_estimate,
+    b.tagline ?? cur.tagline, b.description ?? cur.description,
+    b.what_covered ?? cur.what_covered, b.what_not_covered ?? cur.what_not_covered,
+    b.exam_tips ?? cur.exam_tips, b.position ?? cur.position,
+    b.published == null ? cur.published : (b.published ? 1 : 0), req.params.id
+  );
+  res.json({ ok: true });
+});
+
+router.delete('/cert-prep/:id', (req, res) => {
+  db.prepare('DELETE FROM cert_prep WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ===== Cheatsheets =====
+router.get('/cheatsheets', (_req, res) => {
+  const rows = db.prepare(
+    'SELECT id, slug, title, subtitle, category, position, published, created_at FROM cheatsheets ORDER BY category, position, id'
+  ).all();
+  res.json({ cheatsheets: rows });
+});
+
+router.get('/cheatsheets/:id', (req, res) => {
+  const row = db.prepare('SELECT * FROM cheatsheets WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'not found' });
+  res.json({ cheatsheet: row });
+});
+
+router.post('/cheatsheets', (req, res) => {
+  const b = req.body || {};
+  if (!b.slug || !b.title) return res.status(400).json({ error: 'Need slug + title' });
+  const info = db.prepare(`
+    INSERT INTO cheatsheets (slug, title, subtitle, category, tool_url, content_md, position, published)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(b.slug, b.title, b.subtitle || null, b.category || null,
+         b.tool_url || null, b.content_md || '', b.position || 0, b.published ? 1 : 0);
+  res.json({ id: info.lastInsertRowid });
+});
+
+router.patch('/cheatsheets/:id', (req, res) => {
+  const b = req.body || {};
+  const cur = db.prepare('SELECT * FROM cheatsheets WHERE id = ?').get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'not found' });
+  db.prepare(`
+    UPDATE cheatsheets SET slug=?, title=?, subtitle=?, category=?, tool_url=?, content_md=?, position=?, published=?, updated_at=datetime('now') WHERE id=?
+  `).run(b.slug ?? cur.slug, b.title ?? cur.title, b.subtitle ?? cur.subtitle,
+         b.category ?? cur.category, b.tool_url ?? cur.tool_url,
+         b.content_md ?? cur.content_md, b.position ?? cur.position,
+         b.published == null ? cur.published : (b.published ? 1 : 0), req.params.id);
+  res.json({ ok: true });
+});
+
+router.delete('/cheatsheets/:id', (req, res) => {
+  db.prepare('DELETE FROM cheatsheets WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ===== Events (calendar) — distinct from CTF events above =====
+router.get('/calendar-events', (_req, res) => {
+  const rows = db.prepare(
+    'SELECT * FROM events ORDER BY start_date DESC, id DESC'
+  ).all();
+  res.json({ events: rows });
+});
+
+router.post('/calendar-events', (req, res) => {
+  const b = req.body || {};
+  if (!b.slug || !b.name || !b.kind || !b.start_date) return res.status(400).json({ error: 'Need slug + name + kind + start_date' });
+  const info = db.prepare(`
+    INSERT INTO events (slug, name, kind, format, start_date, end_date, registration_deadline, url, location, region, prize_pool, difficulty, description, organizer, position, published)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    b.slug, b.name, b.kind, b.format || null, b.start_date, b.end_date || null,
+    b.registration_deadline || null, b.url || null, b.location || null,
+    b.region || null, b.prize_pool || null, b.difficulty || null,
+    b.description || null, b.organizer || null, b.position || 0, b.published ? 1 : 0
+  );
+  res.json({ id: info.lastInsertRowid });
+});
+
+router.patch('/calendar-events/:id', (req, res) => {
+  const b = req.body || {};
+  const cur = db.prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'not found' });
+  db.prepare(`
+    UPDATE events SET slug=?, name=?, kind=?, format=?, start_date=?, end_date=?, registration_deadline=?, url=?, location=?, region=?, prize_pool=?, difficulty=?, description=?, organizer=?, position=?, published=? WHERE id=?
+  `).run(
+    b.slug ?? cur.slug, b.name ?? cur.name, b.kind ?? cur.kind, b.format ?? cur.format,
+    b.start_date ?? cur.start_date, b.end_date ?? cur.end_date,
+    b.registration_deadline ?? cur.registration_deadline, b.url ?? cur.url,
+    b.location ?? cur.location, b.region ?? cur.region, b.prize_pool ?? cur.prize_pool,
+    b.difficulty ?? cur.difficulty, b.description ?? cur.description,
+    b.organizer ?? cur.organizer, b.position ?? cur.position,
+    b.published == null ? cur.published : (b.published ? 1 : 0), req.params.id
+  );
+  res.json({ ok: true });
+});
+
+router.delete('/calendar-events/:id', (req, res) => {
+  db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ===== Newsletter subscribers (read-only + CSV export + remove) =====
+router.get('/newsletter', (_req, res) => {
+  const rows = db.prepare(
+    'SELECT id, email, source, confirmed, subscribed_at, unsubscribed_at FROM newsletter_subscribers ORDER BY subscribed_at DESC'
+  ).all();
+  res.json({ subscribers: rows });
+});
+
+router.get('/newsletter.csv', (_req, res) => {
+  const rows = db.prepare(
+    'SELECT email, source, confirmed, subscribed_at, unsubscribed_at FROM newsletter_subscribers ORDER BY subscribed_at DESC'
+  ).all();
+  const lines = ['email,source,confirmed,subscribed_at,unsubscribed_at'];
+  for (const r of rows) {
+    lines.push([r.email, r.source || '', r.confirmed, r.subscribed_at || '', r.unsubscribed_at || '']
+      .map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','));
+  }
+  res.type('text/csv').attachment('aysec-newsletter.csv').send(lines.join('\n'));
+});
+
+router.delete('/newsletter/:id', (req, res) => {
+  db.prepare(
+    'UPDATE newsletter_subscribers SET unsubscribed_at = datetime(\'now\') WHERE id = ?'
+  ).run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ===== Talks =====
+router.get('/talks', (_req, res) => {
+  const rows = db.prepare('SELECT * FROM talks ORDER BY position, date DESC').all();
+  res.json({ talks: rows });
+});
+router.post('/talks', (req, res) => {
+  const b = req.body || {};
+  if (!b.title || !b.venue || !b.date) return res.status(400).json({ error: 'Need title + venue + date' });
+  const info = db.prepare(`
+    INSERT INTO talks (title, venue, date, url, description, kind, position, published)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(b.title, b.venue, b.date, b.url || null, b.description || null,
+         b.kind || 'talk', b.position || 0, b.published ? 1 : 0);
+  res.json({ id: info.lastInsertRowid });
+});
+router.patch('/talks/:id', (req, res) => {
+  const b = req.body || {};
+  const cur = db.prepare('SELECT * FROM talks WHERE id = ?').get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'not found' });
+  db.prepare(`
+    UPDATE talks SET title=?, venue=?, date=?, url=?, description=?, kind=?, position=?, published=? WHERE id=?
+  `).run(b.title ?? cur.title, b.venue ?? cur.venue, b.date ?? cur.date,
+         b.url ?? cur.url, b.description ?? cur.description, b.kind ?? cur.kind,
+         b.position ?? cur.position,
+         b.published == null ? cur.published : (b.published ? 1 : 0), req.params.id);
+  res.json({ ok: true });
+});
+router.delete('/talks/:id', (req, res) => {
+  db.prepare('DELETE FROM talks WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ===== Testimonials =====
+router.get('/testimonials', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT t.*, c.title AS course_title FROM testimonials t
+    LEFT JOIN courses c ON c.id = t.course_id ORDER BY t.position, t.id
+  `).all();
+  res.json({ testimonials: rows });
+});
+router.post('/testimonials', (req, res) => {
+  const b = req.body || {};
+  if (!b.author_name || !b.quote) return res.status(400).json({ error: 'Need author_name + quote' });
+  const info = db.prepare(`
+    INSERT INTO testimonials (course_id, author_name, author_title, author_company, quote, rating, position, published)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(b.course_id || null, b.author_name, b.author_title || null,
+         b.author_company || null, b.quote, b.rating || null,
+         b.position || 0, b.published ? 1 : 0);
+  res.json({ id: info.lastInsertRowid });
+});
+router.patch('/testimonials/:id', (req, res) => {
+  const b = req.body || {};
+  const cur = db.prepare('SELECT * FROM testimonials WHERE id = ?').get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'not found' });
+  db.prepare(`
+    UPDATE testimonials SET course_id=?, author_name=?, author_title=?, author_company=?, quote=?, rating=?, position=?, published=? WHERE id=?
+  `).run(b.course_id ?? cur.course_id, b.author_name ?? cur.author_name,
+         b.author_title ?? cur.author_title, b.author_company ?? cur.author_company,
+         b.quote ?? cur.quote, b.rating ?? cur.rating, b.position ?? cur.position,
+         b.published == null ? cur.published : (b.published ? 1 : 0), req.params.id);
+  res.json({ ok: true });
+});
+router.delete('/testimonials/:id', (req, res) => {
+  db.prepare('DELETE FROM testimonials WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ===== FAQs =====
+router.get('/faqs', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT f.*, c.title AS course_title FROM faqs f
+    LEFT JOIN courses c ON c.id = f.course_id ORDER BY f.scope, f.position, f.id
+  `).all();
+  res.json({ faqs: rows });
+});
+router.post('/faqs', (req, res) => {
+  const b = req.body || {};
+  if (!b.question || !b.answer) return res.status(400).json({ error: 'Need question + answer' });
+  const info = db.prepare(`
+    INSERT INTO faqs (scope, course_id, question, answer, position, published)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(b.scope || 'general', b.course_id || null, b.question, b.answer,
+         b.position || 0, b.published ? 1 : 0);
+  res.json({ id: info.lastInsertRowid });
+});
+router.patch('/faqs/:id', (req, res) => {
+  const b = req.body || {};
+  const cur = db.prepare('SELECT * FROM faqs WHERE id = ?').get(req.params.id);
+  if (!cur) return res.status(404).json({ error: 'not found' });
+  db.prepare(`
+    UPDATE faqs SET scope=?, course_id=?, question=?, answer=?, position=?, published=? WHERE id=?
+  `).run(b.scope ?? cur.scope, b.course_id ?? cur.course_id,
+         b.question ?? cur.question, b.answer ?? cur.answer,
+         b.position ?? cur.position,
+         b.published == null ? cur.published : (b.published ? 1 : 0), req.params.id);
+  res.json({ ok: true });
+});
+router.delete('/faqs/:id', (req, res) => {
+  db.prepare('DELETE FROM faqs WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ===== Site settings (key/value) =====
+const SITE_DEFAULTS = {
+  hero_eyebrow:  'Now teaching: red-team operations',
+  hero_title:    'Hack to learn.',
+  hero_subtitle: "Don't learn to hack.",
+  hero_tagline:  'Hands-on cybersecurity training by Ammar Yasser — courses, CTF challenges, and writeups built from real engagements, not slideware.',
+  cta_primary_label: 'Browse courses',
+  cta_primary_href:  '/courses',
+  cta_secondary_label: '$ ./play_ctf',
+  cta_secondary_href:  '/challenges',
+  footer_tagline: 'Personal site, CTF platform, and training for people who want to actually understand security — not just collect badges.',
+  about_short:   "I'm Ammar — a red-team operator and instructor.",
+  social_github:   'https://github.com/aysec0',
+  social_twitter:  '',
+  social_discord:  '',
+};
+
+router.get('/site-settings', (_req, res) => {
+  const rows = db.prepare('SELECT key, value FROM site_settings').all();
+  const stored = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  // Merge defaults for keys that don't exist yet
+  const settings = { ...SITE_DEFAULTS, ...stored };
+  res.json({ settings, defaults: SITE_DEFAULTS });
+});
+
+router.put('/site-settings', (req, res) => {
+  const b = req.body || {};
+  const stmt = db.prepare(`
+    INSERT INTO site_settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+  `);
+  const tx = db.transaction((entries) => {
+    for (const [k, v] of entries) stmt.run(k, String(v ?? ''));
+  });
+  tx(Object.entries(b));
+  res.json({ ok: true });
+});
+
 export default router;

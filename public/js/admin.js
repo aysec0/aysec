@@ -31,15 +31,45 @@
   function loadTab(tab, btn) {
     document.querySelectorAll('.admin-tab').forEach((b) => b.classList.toggle('is-active', b === btn));
     main().innerHTML = '<div class="card" style="padding:1.5rem;">loading…</div>';
-    if (tab === 'overview')   return overview();
-    if (tab === 'users')      return users();
-    if (tab === 'challenges') return challenges();
-    if (tab === 'daily')      return daily();
-    if (tab === 'ctf-events') return ctfEvents();
-    if (tab === 'assessments')return assessments();
-    if (tab === 'pro-labs')   return proLabs();
-    if (tab === 'courses')    return courses();
-    if (tab === 'posts')      return posts();
+    if (tab === 'overview')     return overview();
+    if (tab === 'site')         return siteSettings();
+    if (tab === 'users')        return users();
+    if (tab === 'challenges')   return challenges();
+    if (tab === 'daily')        return daily();
+    if (tab === 'ctf-events')   return ctfEvents();
+    if (tab === 'assessments')  return assessments();
+    if (tab === 'pro-labs')     return proLabs();
+    if (tab === 'courses')      return courses();
+    if (tab === 'tracks')       return tracks();
+    if (tab === 'cert-prep')    return certPrep();
+    if (tab === 'cheatsheets')  return cheatsheets();
+    if (tab === 'posts')        return posts();
+    if (tab === 'calendar')     return calendar();
+    if (tab === 'talks')        return talks();
+    if (tab === 'testimonials') return testimonials();
+    if (tab === 'faqs')         return faqs();
+    if (tab === 'newsletter')   return newsletter();
+  }
+
+  // Markdown live-preview: turn a textarea[data-md] into editor + preview
+  function wireMarkdownPreview(scope = document) {
+    scope.querySelectorAll('textarea[data-md]:not([data-md-wired])').forEach((ta) => {
+      ta.dataset.mdWired = '1';
+      const wrap = document.createElement('div');
+      wrap.className = 'admin-md-wrap';
+      ta.parentNode.insertBefore(wrap, ta);
+      wrap.appendChild(ta);
+      const preview = document.createElement('div');
+      preview.className = 'admin-md-preview prose';
+      wrap.appendChild(preview);
+      const render = () => {
+        preview.innerHTML = window.marked
+          ? window.marked.parse(ta.value || '*nothing yet*', { gfm: true, breaks: true })
+          : escapeHtml(ta.value);
+      };
+      ta.addEventListener('input', render);
+      render();
+    });
   }
 
   function err(e) {
@@ -646,6 +676,7 @@
           <div>${c.lesson_count} lessons</div>
           <div>${c.published ? '✓' : '—'}</div>
           <div class="admin-actions">
+            <button class="btn btn-ghost btn-sm" data-lessons='${c.id}|${escapeHtml(c.title)}'>lessons</button>
             <button class="btn btn-ghost btn-sm" data-edit='${JSON.stringify(c).replace(/'/g, "&apos;")}'>edit</button>
             <button class="btn btn-ghost btn-sm" data-del="${c.id}">delete</button>
           </div>
@@ -667,6 +698,12 @@
           if (!confirm('Delete course (and all lessons + access records)?')) return;
           try { await api.req('DELETE', `/api/admin/courses/${b.dataset.del}`); courses(); }
           catch (err2) { alert(err2.message); }
+        });
+      });
+      main().querySelectorAll('[data-lessons]').forEach((b) => {
+        b.addEventListener('click', () => {
+          const [id, title] = b.dataset.lessons.split('|');
+          manageLessons(Number(id), title);
         });
       });
     } catch (e) { main().innerHTML = err(e); }
@@ -762,7 +799,7 @@
           <label>tags      <input class="input mono" name="tags" value="${escapeHtml(p.tags || '')}" placeholder="comma,separated" /></label>
           <label>published <input type="checkbox" name="published" ${p.published ? 'checked' : ''} /></label>
           <label class="full">excerpt <textarea class="textarea" name="excerpt" rows="2">${escapeHtml(p.excerpt || '')}</textarea></label>
-          <label class="full">content (markdown) <textarea class="textarea mono" name="content_md" rows="10">${escapeHtml(p.content_md || '')}</textarea></label>
+          <label class="full">content (markdown) <textarea class="textarea mono" name="content_md" rows="10" data-md>${escapeHtml(p.content_md || '')}</textarea></label>
           <div class="full" style="display:flex; gap:0.4rem;">
             <button class="btn btn-primary" type="submit">${p.id ? 'Save' : 'Create'}</button>
             <button class="btn btn-ghost" type="button" id="pCancel">Cancel</button>
@@ -785,5 +822,775 @@
         posts();
       } catch (err2) { alert(err2.message); }
     });
+    wireMarkdownPreview($('#pForm'));
+  }
+
+  // ----------------------- Site settings -----------------------
+  async function siteSettings() {
+    try {
+      const r = await api.get('/api/admin/site-settings');
+      const s = r.settings;
+      const field = (k, label, type = 'input') => `
+        <label class="full"><span class="admin-key">${label} <span class="dim mono" style="font-size:0.7rem;">${k}</span></span>
+          ${type === 'textarea'
+            ? `<textarea class="textarea" name="${k}" rows="2">${escapeHtml(s[k] || '')}</textarea>`
+            : `<input class="input" name="${k}" value="${escapeHtml(s[k] || '')}" />`}
+        </label>`;
+      main().innerHTML = `
+        <h2 style="margin-top:0;">Site settings</h2>
+        <p class="dim">Live values surface on the homepage hero, footer, and About snippets. Saved instantly.</p>
+        <form id="siteForm" class="card" style="padding:1.25rem; display:grid; gap:0.7rem;">
+          ${field('hero_eyebrow', 'Hero eyebrow')}
+          ${field('hero_title',   'Hero title (line 1)')}
+          ${field('hero_subtitle','Hero subtitle (line 2)')}
+          ${field('hero_tagline', 'Hero tagline (paragraph)', 'textarea')}
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+            ${field('cta_primary_label',   'Primary CTA label')}
+            ${field('cta_primary_href',    'Primary CTA href')}
+            ${field('cta_secondary_label', 'Secondary CTA label')}
+            ${field('cta_secondary_href',  'Secondary CTA href')}
+          </div>
+          ${field('about_short',     'About snippet', 'textarea')}
+          ${field('footer_tagline',  'Footer tagline', 'textarea')}
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0.5rem;">
+            ${field('social_github',  'GitHub URL')}
+            ${field('social_twitter', 'X / Twitter URL')}
+            ${field('social_discord', 'Discord URL')}
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button class="btn btn-primary" type="submit">Save changes</button>
+            <span id="siteFeedback" class="dim" style="font-size:0.85rem; align-self:center;"></span>
+          </div>
+        </form>`;
+      $('#siteForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const body = Object.fromEntries(fd.entries());
+        try {
+          await api.req('PUT', '/api/admin/site-settings', body);
+          $('#siteFeedback').textContent = '✓ saved';
+          $('#siteFeedback').style.color = 'var(--terminal,#39ff7a)';
+        } catch (err2) {
+          $('#siteFeedback').textContent = err2.message;
+          $('#siteFeedback').style.color = 'var(--hard,#ff6b6b)';
+        }
+      });
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  // ----------------------- Lessons editor (sub-view of a course) -----------------------
+  // Hook: extend courses() to add a "lessons" button per row.
+  // We hijack the courses() output by adding a Manage-lessons link.
+  // Already done via the renderCForm section flow; add a sub-handler here.
+  async function manageLessons(courseId, courseTitle) {
+    try {
+      const r = await api.get(`/api/admin/courses/${courseId}/lessons`);
+      const rows = r.lessons.map((l) => `
+        <div class="admin-row">
+          <div>${l.position}</div>
+          <div><strong>${escapeHtml(l.title)}</strong> <span class="dim mono" style="font-size:0.75rem;">/${escapeHtml(l.slug)}</span></div>
+          <div>${l.estimated_minutes}m</div>
+          <div>${l.is_preview ? '✓ free preview' : ''}</div>
+          <div class="admin-actions">
+            <button class="btn btn-ghost btn-sm" data-edit="${l.id}">edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${l.id}">delete</button>
+          </div>
+        </div>`);
+      main().innerHTML = `
+        <button class="btn btn-ghost" id="lBackC">← back to courses</button>
+        <h2 style="margin-top:0.7rem;">${escapeHtml(courseTitle)} — lessons (${r.lessons.length})</h2>
+        <button class="btn btn-primary" id="newLesBtn" style="margin-bottom:0.7rem;">+ New lesson</button>
+        ${table(['#','title / slug','min','preview','actions'], rows)}
+        <div id="lesForm"></div>`;
+      $('#lBackC').addEventListener('click', courses);
+      $('#newLesBtn').addEventListener('click', () => renderLesForm({ course_id: courseId }, courseId));
+      main().querySelectorAll('[data-edit]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          try { const r2 = await api.get(`/api/admin/lessons/${b.dataset.edit}`); renderLesForm(r2.lesson, courseId, courseTitle); }
+          catch (e) { alert(e.message); }
+        });
+      });
+      main().querySelectorAll('[data-del]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete lesson?')) return;
+          try { await api.req('DELETE', `/api/admin/lessons/${b.dataset.del}`); manageLessons(courseId, courseTitle); }
+          catch (e) { alert(e.message); }
+        });
+      });
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  function renderLesForm(l, courseId, courseTitle) {
+    $('#lesForm').innerHTML = `
+      <div class="card" style="padding:1.25rem; margin-top:1rem;">
+        <h3 style="margin-top:0;">${l.id ? 'Edit' : 'New'} lesson</h3>
+        <form id="lesSubForm" class="admin-form">
+          <label>slug      <input class="input mono" name="slug" value="${escapeHtml(l.slug || '')}" required /></label>
+          <label>title     <input class="input" name="title" value="${escapeHtml(l.title || '')}" required /></label>
+          <label>position  <input class="input mono" type="number" name="position" value="${l.position || 0}" /></label>
+          <label>estimated min <input class="input mono" type="number" name="estimated_minutes" value="${l.estimated_minutes || 10}" /></label>
+          <label>video url <input class="input mono" name="video_url" value="${escapeHtml(l.video_url || '')}" /></label>
+          <label>free preview <input type="checkbox" name="is_preview" ${l.is_preview ? 'checked' : ''} /></label>
+          <label class="full">content (markdown) <textarea class="textarea mono" name="content_md" rows="14" data-md>${escapeHtml(l.content_md || '')}</textarea></label>
+          <div class="full" style="display:flex; gap:0.4rem;">
+            <button class="btn btn-primary" type="submit">${l.id ? 'Save' : 'Create'}</button>
+            <button class="btn btn-ghost" type="button" id="lesCancel">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+    $('#lesCancel').addEventListener('click', () => { $('#lesForm').innerHTML = ''; });
+    $('#lesSubForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = {
+        slug: fd.get('slug'), title: fd.get('title'),
+        position: Number(fd.get('position')) || 0,
+        estimated_minutes: Number(fd.get('estimated_minutes')) || 10,
+        video_url: fd.get('video_url') || null,
+        is_preview: fd.get('is_preview') === 'on',
+        content_md: fd.get('content_md') || '',
+      };
+      try {
+        if (l.id) await api.req('PATCH', `/api/admin/lessons/${l.id}`, body);
+        else      await api.post(`/api/admin/courses/${courseId}/lessons`, body);
+        manageLessons(courseId, courseTitle || '(course)');
+      } catch (err2) { alert(err2.message); }
+    });
+    wireMarkdownPreview($('#lesForm'));
+  }
+
+
+  // ----------------------- Tracks (paths) -----------------------
+  async function tracks() {
+    try {
+      const r = await api.get('/api/admin/tracks');
+      const rows = r.tracks.map((t) => `
+        <div class="admin-row">
+          <div><strong>${escapeHtml(t.title)}</strong><br><span class="dim mono" style="font-size:0.75rem;">/${escapeHtml(t.slug)}</span></div>
+          <div>${t.course_count} courses</div>
+          <div>${t.bundle_price_cents ? '$' + (t.bundle_price_cents/100).toFixed(2) : 'à la carte'}</div>
+          <div>${t.published ? '✓' : '—'}</div>
+          <div class="admin-actions">
+            <button class="btn btn-ghost btn-sm" data-courses="${t.id}">courses</button>
+            <button class="btn btn-ghost btn-sm" data-edit='${JSON.stringify(t).replace(/'/g, "&apos;")}'>edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${t.id}">delete</button>
+          </div>
+        </div>`);
+      main().innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">Paths / tracks (${r.tracks.length})</h2>
+          <button class="btn btn-primary" id="newTBtn">+ New path</button>
+        </div>
+        ${table(['title / slug','courses','price','pub','actions'], rows)}
+        <div id="tForm"></div>`;
+      $('#newTBtn').addEventListener('click', () => renderTForm({}));
+      main().querySelectorAll('[data-edit]').forEach((b) =>
+        b.addEventListener('click', () => renderTForm(JSON.parse(b.dataset.edit.replace(/&apos;/g, "'"))))
+      );
+      main().querySelectorAll('[data-del]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete path?')) return;
+          try { await api.req('DELETE', `/api/admin/tracks/${b.dataset.del}`); tracks(); }
+          catch (e) { alert(e.message); }
+        });
+      });
+      main().querySelectorAll('[data-courses]').forEach((b) =>
+        b.addEventListener('click', () => manageTrackCourses(Number(b.dataset.courses)))
+      );
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  function renderTForm(t) {
+    $('#tForm').innerHTML = `
+      <div class="card" style="padding:1.25rem; margin-top:1rem;">
+        <h3 style="margin-top:0;">${t.id ? 'Edit' : 'New'} path</h3>
+        <form id="tSubForm" class="admin-form">
+          <label>slug     <input class="input mono" name="slug" value="${escapeHtml(t.slug || '')}" required /></label>
+          <label>title    <input class="input" name="title" value="${escapeHtml(t.title || '')}" required /></label>
+          <label>subtitle <input class="input" name="subtitle" value="${escapeHtml(t.subtitle || '')}" /></label>
+          <label>bundle price (¢) <input class="input mono" type="number" name="bundle_price_cents" value="${t.bundle_price_cents || 0}" /></label>
+          <label>position <input class="input mono" type="number" name="position" value="${t.position || 0}" /></label>
+          <label>published <input type="checkbox" name="published" ${t.published ? 'checked' : ''} /></label>
+          <label class="full">description <textarea class="textarea" name="description" rows="3" data-md>${escapeHtml(t.description || '')}</textarea></label>
+          <div class="full" style="display:flex; gap:0.4rem;">
+            <button class="btn btn-primary" type="submit">${t.id ? 'Save' : 'Create'}</button>
+            <button class="btn btn-ghost" type="button" id="tCancel">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+    $('#tCancel').addEventListener('click', () => { $('#tForm').innerHTML = ''; });
+    $('#tSubForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = {
+        slug: fd.get('slug'), title: fd.get('title'), subtitle: fd.get('subtitle') || null,
+        description: fd.get('description') || null,
+        bundle_price_cents: Number(fd.get('bundle_price_cents')) || 0,
+        position: Number(fd.get('position')) || 0,
+        published: fd.get('published') === 'on',
+      };
+      try {
+        if (t.id) await api.req('PATCH', `/api/admin/tracks/${t.id}`, body);
+        else      await api.post('/api/admin/tracks', body);
+        tracks();
+      } catch (err2) { alert(err2.message); }
+    });
+    wireMarkdownPreview($('#tForm'));
+  }
+
+  async function manageTrackCourses(trackId) {
+    try {
+      const [cur, all] = await Promise.all([
+        api.get(`/api/admin/tracks/${trackId}/courses`),
+        api.get('/api/admin/courses'),
+      ]);
+      const inSet = new Set(cur.courses.map((c) => c.id));
+      const opts = all.courses.filter((c) => !inSet.has(c.id))
+        .map((c) => `<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('');
+      const rows = cur.courses.map((c) => `
+        <div class="admin-row">
+          <div>${c.position}</div>
+          <div>${escapeHtml(c.title)} <span class="dim mono" style="font-size:0.75rem;">/${escapeHtml(c.slug)}</span></div>
+          <div><button class="btn btn-ghost btn-sm" data-rm="${c.id}">remove</button></div>
+        </div>`);
+      main().innerHTML = `
+        <button class="btn btn-ghost" id="tBack">← back to paths</button>
+        <h2 style="margin-top:0.7rem;">Path #${trackId} courses (${cur.courses.length})</h2>
+        <div class="card" style="padding:1.25rem; margin-bottom:1rem;">
+          <h3 style="margin-top:0;">Add course</h3>
+          <form id="addTC" class="admin-form">
+            <label>course <select class="input" name="course_id" required>${opts}</select></label>
+            <label>position <input class="input mono" type="number" name="position" value="${cur.courses.length}" /></label>
+            <div class="full"><button class="btn btn-primary" type="submit">Add</button></div>
+          </form>
+        </div>
+        ${table(['#','course','actions'], rows)}`;
+      $('#tBack').addEventListener('click', tracks);
+      $('#addTC').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        try {
+          await api.post(`/api/admin/tracks/${trackId}/courses`, {
+            course_id: Number(fd.get('course_id')),
+            position: Number(fd.get('position')) || 0,
+          });
+          manageTrackCourses(trackId);
+        } catch (err2) { alert(err2.message); }
+      });
+      main().querySelectorAll('[data-rm]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Remove course from path?')) return;
+          try { await api.req('DELETE', `/api/admin/tracks/${trackId}/courses/${b.dataset.rm}`); manageTrackCourses(trackId); }
+          catch (err2) { alert(err2.message); }
+        });
+      });
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  // ----------------------- Cert prep -----------------------
+  async function certPrep() {
+    try {
+      const r = await api.get('/api/admin/cert-prep');
+      const rows = r.certs.map((c) => `
+        <div class="admin-row">
+          <div><strong>${escapeHtml(c.cert_name)}</strong> <span class="dim mono" style="font-size:0.75rem;">/${escapeHtml(c.slug)}</span><br><span class="dim" style="font-size:0.78rem;">${escapeHtml(c.cert_issuer)}</span></div>
+          <div>${escapeHtml(c.difficulty || '')}</div>
+          <div>${c.course_count} courses · ${c.chal_count} chals</div>
+          <div>${c.published ? '✓' : '—'}</div>
+          <div class="admin-actions">
+            <button class="btn btn-ghost btn-sm" data-edit='${JSON.stringify(c).replace(/'/g, "&apos;")}'>edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${c.id}">delete</button>
+          </div>
+        </div>`);
+      main().innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">Cert prep (${r.certs.length})</h2>
+          <button class="btn btn-primary" id="newCpBtn">+ New cert</button>
+        </div>
+        ${table(['cert','diff','content','pub','actions'], rows)}
+        <div id="cpForm"></div>`;
+      $('#newCpBtn').addEventListener('click', () => renderCpForm({}));
+      main().querySelectorAll('[data-edit]').forEach((b) =>
+        b.addEventListener('click', () => renderCpForm(JSON.parse(b.dataset.edit.replace(/&apos;/g, "'"))))
+      );
+      main().querySelectorAll('[data-del]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete cert prep entry?')) return;
+          try { await api.req('DELETE', `/api/admin/cert-prep/${b.dataset.del}`); certPrep(); }
+          catch (err2) { alert(err2.message); }
+        });
+      });
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  function renderCpForm(c) {
+    $('#cpForm').innerHTML = `
+      <div class="card" style="padding:1.25rem; margin-top:1rem;">
+        <h3 style="margin-top:0;">${c.id ? 'Edit' : 'New'} cert prep</h3>
+        <form id="cpSubForm" class="admin-form">
+          <label>slug      <input class="input mono" name="slug" value="${escapeHtml(c.slug || '')}" required /></label>
+          <label>cert name <input class="input" name="cert_name" value="${escapeHtml(c.cert_name || '')}" placeholder="OSCP" required /></label>
+          <label>full name <input class="input" name="cert_full_name" value="${escapeHtml(c.cert_full_name || '')}" /></label>
+          <label>issuer    <input class="input" name="cert_issuer" value="${escapeHtml(c.cert_issuer || '')}" placeholder="Offensive Security" required /></label>
+          <label>difficulty<select class="input" name="difficulty">${['','entry','intermediate','advanced','expert'].map((x) => `<option value="${x}" ${x===(c.difficulty||'')?'selected':''}>${x||'—'}</option>`).join('')}</select></label>
+          <label>duration  <input class="input" name="duration_estimate" value="${escapeHtml(c.duration_estimate || '')}" placeholder="3-4 months" /></label>
+          <label>exam cost (¢) <input class="input mono" type="number" name="exam_cost_cents" value="${c.exam_cost_cents || ''}" /></label>
+          <label>exam URL  <input class="input mono" name="exam_url" value="${escapeHtml(c.exam_url || '')}" /></label>
+          <label>position  <input class="input mono" type="number" name="position" value="${c.position || 0}" /></label>
+          <label>published <input type="checkbox" name="published" ${c.published ? 'checked' : ''} /></label>
+          <label class="full">tagline <input class="input" name="tagline" value="${escapeHtml(c.tagline || '')}" /></label>
+          <label class="full">description <textarea class="textarea" name="description" rows="3" data-md>${escapeHtml(c.description || '')}</textarea></label>
+          <label class="full">what covered <textarea class="textarea" name="what_covered" rows="3" data-md>${escapeHtml(c.what_covered || '')}</textarea></label>
+          <label class="full">what NOT covered <textarea class="textarea" name="what_not_covered" rows="2" data-md>${escapeHtml(c.what_not_covered || '')}</textarea></label>
+          <label class="full">exam tips <textarea class="textarea" name="exam_tips" rows="3" data-md>${escapeHtml(c.exam_tips || '')}</textarea></label>
+          <div class="full" style="display:flex; gap:0.4rem;">
+            <button class="btn btn-primary" type="submit">${c.id ? 'Save' : 'Create'}</button>
+            <button class="btn btn-ghost" type="button" id="cpCancel">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+    $('#cpCancel').addEventListener('click', () => { $('#cpForm').innerHTML = ''; });
+    $('#cpSubForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = {
+        slug: fd.get('slug'), cert_name: fd.get('cert_name'),
+        cert_full_name: fd.get('cert_full_name') || null,
+        cert_issuer: fd.get('cert_issuer'),
+        difficulty: fd.get('difficulty') || null,
+        duration_estimate: fd.get('duration_estimate') || null,
+        exam_cost_cents: fd.get('exam_cost_cents') ? Number(fd.get('exam_cost_cents')) : null,
+        exam_url: fd.get('exam_url') || null,
+        position: Number(fd.get('position')) || 0,
+        published: fd.get('published') === 'on',
+        tagline: fd.get('tagline') || null,
+        description: fd.get('description') || null,
+        what_covered: fd.get('what_covered') || null,
+        what_not_covered: fd.get('what_not_covered') || null,
+        exam_tips: fd.get('exam_tips') || null,
+      };
+      try {
+        if (c.id) await api.req('PATCH', `/api/admin/cert-prep/${c.id}`, body);
+        else      await api.post('/api/admin/cert-prep', body);
+        certPrep();
+      } catch (err2) { alert(err2.message); }
+    });
+    wireMarkdownPreview($('#cpForm'));
+  }
+
+  // ----------------------- Cheatsheets -----------------------
+  async function cheatsheets() {
+    try {
+      const r = await api.get('/api/admin/cheatsheets');
+      const rows = r.cheatsheets.map((c) => `
+        <div class="admin-row">
+          <div><strong>${escapeHtml(c.title)}</strong><br><span class="dim mono" style="font-size:0.75rem;">/${escapeHtml(c.slug)}</span></div>
+          <div>${escapeHtml(c.category || '')}</div>
+          <div>${c.position}</div>
+          <div>${c.published ? '✓' : '—'}</div>
+          <div class="admin-actions">
+            <button class="btn btn-ghost btn-sm" data-edit="${c.id}">edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${c.id}">delete</button>
+          </div>
+        </div>`);
+      main().innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">Cheatsheets (${r.cheatsheets.length})</h2>
+          <button class="btn btn-primary" id="newChBtn">+ New cheatsheet</button>
+        </div>
+        ${table(['title / slug','category','pos','pub','actions'], rows)}
+        <div id="chForm"></div>`;
+      $('#newChBtn').addEventListener('click', () => renderChForm({}));
+      main().querySelectorAll('[data-edit]').forEach((b) =>
+        b.addEventListener('click', async () => {
+          try { const r2 = await api.get(`/api/admin/cheatsheets/${b.dataset.edit}`); renderChForm(r2.cheatsheet); }
+          catch (e) { alert(e.message); }
+        })
+      );
+      main().querySelectorAll('[data-del]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete cheatsheet?')) return;
+          try { await api.req('DELETE', `/api/admin/cheatsheets/${b.dataset.del}`); cheatsheets(); }
+          catch (err2) { alert(err2.message); }
+        });
+      });
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  function renderChForm(c) {
+    $('#chForm').innerHTML = `
+      <div class="card" style="padding:1.25rem; margin-top:1rem;">
+        <h3 style="margin-top:0;">${c.id ? 'Edit' : 'New'} cheatsheet</h3>
+        <form id="chSubForm" class="admin-form">
+          <label>slug      <input class="input mono" name="slug" value="${escapeHtml(c.slug || '')}" required /></label>
+          <label>title     <input class="input" name="title" value="${escapeHtml(c.title || '')}" required /></label>
+          <label>subtitle  <input class="input" name="subtitle" value="${escapeHtml(c.subtitle || '')}" /></label>
+          <label>category  <select class="input" name="category">${['','recon','exploitation','post-ex','crypto','reversing','forensics','cloud','web','tools'].map((x) => `<option value="${x}" ${x===(c.category||'')?'selected':''}>${x||'—'}</option>`).join('')}</select></label>
+          <label>tool URL  <input class="input mono" name="tool_url" value="${escapeHtml(c.tool_url || '')}" /></label>
+          <label>position  <input class="input mono" type="number" name="position" value="${c.position || 0}" /></label>
+          <label>published <input type="checkbox" name="published" ${c.published ? 'checked' : ''} /></label>
+          <label class="full">content (markdown) <textarea class="textarea mono" name="content_md" rows="14" data-md>${escapeHtml(c.content_md || '')}</textarea></label>
+          <div class="full" style="display:flex; gap:0.4rem;">
+            <button class="btn btn-primary" type="submit">${c.id ? 'Save' : 'Create'}</button>
+            <button class="btn btn-ghost" type="button" id="chCancel2">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+    $('#chCancel2').addEventListener('click', () => { $('#chForm').innerHTML = ''; });
+    $('#chSubForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = {
+        slug: fd.get('slug'), title: fd.get('title'),
+        subtitle: fd.get('subtitle') || null,
+        category: fd.get('category') || null,
+        tool_url: fd.get('tool_url') || null,
+        content_md: fd.get('content_md') || '',
+        position: Number(fd.get('position')) || 0,
+        published: fd.get('published') === 'on',
+      };
+      try {
+        if (c.id) await api.req('PATCH', `/api/admin/cheatsheets/${c.id}`, body);
+        else      await api.post('/api/admin/cheatsheets', body);
+        cheatsheets();
+      } catch (err2) { alert(err2.message); }
+    });
+    wireMarkdownPreview($('#chForm'));
+  }
+
+  // ----------------------- Calendar events (community-listing kind) -----------------------
+  async function calendar() {
+    try {
+      const r = await api.get('/api/admin/calendar-events');
+      const rows = r.events.map((e) => `
+        <div class="admin-row">
+          <div><strong>${escapeHtml(e.name)}</strong><br><span class="dim mono" style="font-size:0.75rem;">/${escapeHtml(e.slug)}</span></div>
+          <div>${escapeHtml(e.kind)} · ${escapeHtml(e.format || '')}</div>
+          <div>${escapeHtml(e.start_date)}</div>
+          <div>${escapeHtml(e.region || '')}</div>
+          <div>${e.published ? '✓' : '—'}</div>
+          <div class="admin-actions">
+            <button class="btn btn-ghost btn-sm" data-edit='${JSON.stringify(e).replace(/'/g, "&apos;")}'>edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${e.id}">delete</button>
+          </div>
+        </div>`);
+      main().innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">Calendar events (${r.events.length})</h2>
+          <button class="btn btn-primary" id="newCalBtn">+ New event</button>
+        </div>
+        ${table(['name / slug','kind','date','region','pub','actions'], rows)}
+        <div id="calForm"></div>`;
+      $('#newCalBtn').addEventListener('click', () => renderCalForm({}));
+      main().querySelectorAll('[data-edit]').forEach((b) =>
+        b.addEventListener('click', () => renderCalForm(JSON.parse(b.dataset.edit.replace(/&apos;/g, "'"))))
+      );
+      main().querySelectorAll('[data-del]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete event?')) return;
+          try { await api.req('DELETE', `/api/admin/calendar-events/${b.dataset.del}`); calendar(); }
+          catch (err2) { alert(err2.message); }
+        });
+      });
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  function renderCalForm(e) {
+    $('#calForm').innerHTML = `
+      <div class="card" style="padding:1.25rem; margin-top:1rem;">
+        <h3 style="margin-top:0;">${e.id ? 'Edit' : 'New'} calendar event</h3>
+        <form id="calSubForm" class="admin-form">
+          <label>slug    <input class="input mono" name="slug" value="${escapeHtml(e.slug || '')}" required /></label>
+          <label>name    <input class="input" name="name" value="${escapeHtml(e.name || '')}" required /></label>
+          <label>kind    <select class="input" name="kind">${['ctf','conference','bugbounty','awareness','workshop'].map((x) => `<option ${x===e.kind?'selected':''}>${x}</option>`).join('')}</select></label>
+          <label>format  <select class="input" name="format">${['','jeopardy','attack-defense','in-person','virtual','hybrid'].map((x) => `<option value="${x}" ${x===(e.format||'')?'selected':''}>${x||'—'}</option>`).join('')}</select></label>
+          <label>start   <input class="input mono" type="date" name="start_date" value="${escapeHtml(e.start_date || '')}" required /></label>
+          <label>end     <input class="input mono" type="date" name="end_date"   value="${escapeHtml(e.end_date || '')}" /></label>
+          <label>region  <select class="input" name="region">${['','global','mena','us','eu','apac'].map((x) => `<option value="${x}" ${x===(e.region||'')?'selected':''}>${x||'—'}</option>`).join('')}</select></label>
+          <label>difficulty<select class="input" name="difficulty">${['','beginner','intermediate','advanced','mixed'].map((x) => `<option value="${x}" ${x===(e.difficulty||'')?'selected':''}>${x||'—'}</option>`).join('')}</select></label>
+          <label>location<input class="input" name="location" value="${escapeHtml(e.location || '')}" /></label>
+          <label>URL     <input class="input mono" name="url" value="${escapeHtml(e.url || '')}" /></label>
+          <label>prize   <input class="input" name="prize_pool" value="${escapeHtml(e.prize_pool || '')}" /></label>
+          <label>organizer <input class="input" name="organizer" value="${escapeHtml(e.organizer || '')}" /></label>
+          <label>position <input class="input mono" type="number" name="position" value="${e.position || 0}" /></label>
+          <label>published <input type="checkbox" name="published" ${e.published ? 'checked' : ''} /></label>
+          <label class="full">description <textarea class="textarea" name="description" rows="3" data-md>${escapeHtml(e.description || '')}</textarea></label>
+          <div class="full" style="display:flex; gap:0.4rem;">
+            <button class="btn btn-primary" type="submit">${e.id ? 'Save' : 'Create'}</button>
+            <button class="btn btn-ghost" type="button" id="calCancel">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+    $('#calCancel').addEventListener('click', () => { $('#calForm').innerHTML = ''; });
+    $('#calSubForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const fd = new FormData(ev.target);
+      const body = {};
+      for (const [k, v] of fd.entries()) body[k] = v || null;
+      body.published = fd.get('published') === 'on';
+      body.position = Number(body.position) || 0;
+      try {
+        if (e.id) await api.req('PATCH', `/api/admin/calendar-events/${e.id}`, body);
+        else      await api.post('/api/admin/calendar-events', body);
+        calendar();
+      } catch (err2) { alert(err2.message); }
+    });
+    wireMarkdownPreview($('#calForm'));
+  }
+
+  // ----------------------- Talks -----------------------
+  async function talks() {
+    try {
+      const r = await api.get('/api/admin/talks');
+      const rows = r.talks.map((t) => `
+        <div class="admin-row">
+          <div><strong>${escapeHtml(t.title)}</strong></div>
+          <div>${escapeHtml(t.venue)}</div>
+          <div>${escapeHtml(t.date)}</div>
+          <div>${escapeHtml(t.kind)}</div>
+          <div>${t.published ? '✓' : '—'}</div>
+          <div class="admin-actions">
+            <button class="btn btn-ghost btn-sm" data-edit='${JSON.stringify(t).replace(/'/g, "&apos;")}'>edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${t.id}">delete</button>
+          </div>
+        </div>`);
+      main().innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">Talks (${r.talks.length})</h2>
+          <button class="btn btn-primary" id="newTkBtn">+ New talk</button>
+        </div>
+        ${table(['title','venue','date','kind','pub','actions'], rows)}
+        <div id="tkForm"></div>`;
+      $('#newTkBtn').addEventListener('click', () => renderTkForm({}));
+      main().querySelectorAll('[data-edit]').forEach((b) =>
+        b.addEventListener('click', () => renderTkForm(JSON.parse(b.dataset.edit.replace(/&apos;/g, "'"))))
+      );
+      main().querySelectorAll('[data-del]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete talk?')) return;
+          try { await api.req('DELETE', `/api/admin/talks/${b.dataset.del}`); talks(); }
+          catch (err2) { alert(err2.message); }
+        });
+      });
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  function renderTkForm(t) {
+    $('#tkForm').innerHTML = `
+      <div class="card" style="padding:1.25rem; margin-top:1rem;">
+        <h3 style="margin-top:0;">${t.id ? 'Edit' : 'New'} talk</h3>
+        <form id="tkSubForm" class="admin-form">
+          <label>title    <input class="input" name="title" value="${escapeHtml(t.title || '')}" required /></label>
+          <label>venue    <input class="input" name="venue" value="${escapeHtml(t.venue || '')}" required /></label>
+          <label>date     <input class="input mono" type="date" name="date" value="${escapeHtml(t.date || '')}" required /></label>
+          <label>kind     <select class="input" name="kind">${['talk','keynote','workshop','podcast'].map((x) => `<option ${x===(t.kind||'talk')?'selected':''}>${x}</option>`).join('')}</select></label>
+          <label>URL      <input class="input mono" name="url" value="${escapeHtml(t.url || '')}" /></label>
+          <label>position <input class="input mono" type="number" name="position" value="${t.position || 0}" /></label>
+          <label>published <input type="checkbox" name="published" ${t.published ? 'checked' : ''} /></label>
+          <label class="full">description <textarea class="textarea" name="description" rows="3" data-md>${escapeHtml(t.description || '')}</textarea></label>
+          <div class="full" style="display:flex; gap:0.4rem;">
+            <button class="btn btn-primary" type="submit">${t.id ? 'Save' : 'Create'}</button>
+            <button class="btn btn-ghost" type="button" id="tkCancel">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+    $('#tkCancel').addEventListener('click', () => { $('#tkForm').innerHTML = ''; });
+    $('#tkSubForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = {
+        title: fd.get('title'), venue: fd.get('venue'), date: fd.get('date'),
+        kind: fd.get('kind'), url: fd.get('url') || null,
+        description: fd.get('description') || null,
+        position: Number(fd.get('position')) || 0,
+        published: fd.get('published') === 'on',
+      };
+      try {
+        if (t.id) await api.req('PATCH', `/api/admin/talks/${t.id}`, body);
+        else      await api.post('/api/admin/talks', body);
+        talks();
+      } catch (err2) { alert(err2.message); }
+    });
+    wireMarkdownPreview($('#tkForm'));
+  }
+
+  // ----------------------- Testimonials -----------------------
+  async function testimonials() {
+    try {
+      const r = await api.get('/api/admin/testimonials');
+      const rows = r.testimonials.map((t) => `
+        <div class="admin-row">
+          <div><strong>${escapeHtml(t.author_name)}</strong><br><span class="dim" style="font-size:0.78rem;">${escapeHtml(t.author_title || '')} ${t.author_company ? '· ' + escapeHtml(t.author_company) : ''}</span></div>
+          <div>${escapeHtml((t.quote || '').slice(0, 100))}…</div>
+          <div>${t.rating ? '★'.repeat(t.rating) : ''}</div>
+          <div>${escapeHtml(t.course_title || '(generic)')}</div>
+          <div>${t.published ? '✓' : '—'}</div>
+          <div class="admin-actions">
+            <button class="btn btn-ghost btn-sm" data-edit='${JSON.stringify(t).replace(/'/g, "&apos;")}'>edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${t.id}">delete</button>
+          </div>
+        </div>`);
+      main().innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">Testimonials (${r.testimonials.length})</h2>
+          <button class="btn btn-primary" id="newTmBtn">+ New testimonial</button>
+        </div>
+        ${table(['author','quote','rating','course','pub','actions'], rows)}
+        <div id="tmForm"></div>`;
+      $('#newTmBtn').addEventListener('click', () => renderTmForm({}));
+      main().querySelectorAll('[data-edit]').forEach((b) =>
+        b.addEventListener('click', () => renderTmForm(JSON.parse(b.dataset.edit.replace(/&apos;/g, "'"))))
+      );
+      main().querySelectorAll('[data-del]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete testimonial?')) return;
+          try { await api.req('DELETE', `/api/admin/testimonials/${b.dataset.del}`); testimonials(); }
+          catch (err2) { alert(err2.message); }
+        });
+      });
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  function renderTmForm(t) {
+    $('#tmForm').innerHTML = `
+      <div class="card" style="padding:1.25rem; margin-top:1rem;">
+        <h3 style="margin-top:0;">${t.id ? 'Edit' : 'New'} testimonial</h3>
+        <form id="tmSubForm" class="admin-form">
+          <label>author name    <input class="input" name="author_name" value="${escapeHtml(t.author_name || '')}" required /></label>
+          <label>author title   <input class="input" name="author_title" value="${escapeHtml(t.author_title || '')}" /></label>
+          <label>author company <input class="input" name="author_company" value="${escapeHtml(t.author_company || '')}" /></label>
+          <label>rating         <input class="input mono" type="number" name="rating" min="1" max="5" value="${t.rating || ''}" /></label>
+          <label>course id (optional) <input class="input mono" type="number" name="course_id" value="${t.course_id || ''}" /></label>
+          <label>position       <input class="input mono" type="number" name="position" value="${t.position || 0}" /></label>
+          <label>published      <input type="checkbox" name="published" ${t.published ? 'checked' : ''} /></label>
+          <label class="full">quote <textarea class="textarea" name="quote" rows="4" required>${escapeHtml(t.quote || '')}</textarea></label>
+          <div class="full" style="display:flex; gap:0.4rem;">
+            <button class="btn btn-primary" type="submit">${t.id ? 'Save' : 'Create'}</button>
+            <button class="btn btn-ghost" type="button" id="tmCancel">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+    $('#tmCancel').addEventListener('click', () => { $('#tmForm').innerHTML = ''; });
+    $('#tmSubForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = {
+        author_name: fd.get('author_name'),
+        author_title: fd.get('author_title') || null,
+        author_company: fd.get('author_company') || null,
+        rating: fd.get('rating') ? Number(fd.get('rating')) : null,
+        course_id: fd.get('course_id') ? Number(fd.get('course_id')) : null,
+        quote: fd.get('quote'),
+        position: Number(fd.get('position')) || 0,
+        published: fd.get('published') === 'on',
+      };
+      try {
+        if (t.id) await api.req('PATCH', `/api/admin/testimonials/${t.id}`, body);
+        else      await api.post('/api/admin/testimonials', body);
+        testimonials();
+      } catch (err2) { alert(err2.message); }
+    });
+  }
+
+  // ----------------------- FAQs -----------------------
+  async function faqs() {
+    try {
+      const r = await api.get('/api/admin/faqs');
+      const rows = r.faqs.map((f) => `
+        <div class="admin-row">
+          <div>${escapeHtml(f.scope)}${f.course_title ? ' · ' + escapeHtml(f.course_title) : ''}</div>
+          <div><strong>${escapeHtml(f.question)}</strong></div>
+          <div>${f.position}</div>
+          <div>${f.published ? '✓' : '—'}</div>
+          <div class="admin-actions">
+            <button class="btn btn-ghost btn-sm" data-edit='${JSON.stringify(f).replace(/'/g, "&apos;")}'>edit</button>
+            <button class="btn btn-ghost btn-sm" data-del="${f.id}">delete</button>
+          </div>
+        </div>`);
+      main().innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">FAQs (${r.faqs.length})</h2>
+          <button class="btn btn-primary" id="newFqBtn">+ New FAQ</button>
+        </div>
+        ${table(['scope','question','pos','pub','actions'], rows)}
+        <div id="fqForm"></div>`;
+      $('#newFqBtn').addEventListener('click', () => renderFqForm({}));
+      main().querySelectorAll('[data-edit]').forEach((b) =>
+        b.addEventListener('click', () => renderFqForm(JSON.parse(b.dataset.edit.replace(/&apos;/g, "'"))))
+      );
+      main().querySelectorAll('[data-del]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Delete FAQ?')) return;
+          try { await api.req('DELETE', `/api/admin/faqs/${b.dataset.del}`); faqs(); }
+          catch (err2) { alert(err2.message); }
+        });
+      });
+    } catch (e) { main().innerHTML = err(e); }
+  }
+
+  function renderFqForm(f) {
+    $('#fqForm').innerHTML = `
+      <div class="card" style="padding:1.25rem; margin-top:1rem;">
+        <h3 style="margin-top:0;">${f.id ? 'Edit' : 'New'} FAQ</h3>
+        <form id="fqSubForm" class="admin-form">
+          <label>scope     <select class="input" name="scope">${['general','course','pricing','hire'].map((x) => `<option ${x===(f.scope||'general')?'selected':''}>${x}</option>`).join('')}</select></label>
+          <label>course id <input class="input mono" type="number" name="course_id" value="${f.course_id || ''}" /></label>
+          <label>position  <input class="input mono" type="number" name="position" value="${f.position || 0}" /></label>
+          <label>published <input type="checkbox" name="published" ${f.published ? 'checked' : ''} /></label>
+          <label class="full">question <input class="input" name="question" value="${escapeHtml(f.question || '')}" required /></label>
+          <label class="full">answer   <textarea class="textarea" name="answer" rows="4" required data-md>${escapeHtml(f.answer || '')}</textarea></label>
+          <div class="full" style="display:flex; gap:0.4rem;">
+            <button class="btn btn-primary" type="submit">${f.id ? 'Save' : 'Create'}</button>
+            <button class="btn btn-ghost" type="button" id="fqCancel">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+    $('#fqCancel').addEventListener('click', () => { $('#fqForm').innerHTML = ''; });
+    $('#fqSubForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const body = {
+        scope: fd.get('scope'),
+        course_id: fd.get('course_id') ? Number(fd.get('course_id')) : null,
+        question: fd.get('question'), answer: fd.get('answer'),
+        position: Number(fd.get('position')) || 0,
+        published: fd.get('published') === 'on',
+      };
+      try {
+        if (f.id) await api.req('PATCH', `/api/admin/faqs/${f.id}`, body);
+        else      await api.post('/api/admin/faqs', body);
+        faqs();
+      } catch (err2) { alert(err2.message); }
+    });
+    wireMarkdownPreview($('#fqForm'));
+  }
+
+  // ----------------------- Newsletter (read-only + CSV) -----------------------
+  async function newsletter() {
+    try {
+      const r = await api.get('/api/admin/newsletter');
+      const rows = r.subscribers.map((s) => `
+        <div class="admin-row">
+          <div class="mono">${escapeHtml(s.email)}</div>
+          <div>${escapeHtml(s.source || '')}</div>
+          <div>${s.confirmed ? '✓' : '—'}</div>
+          <div class="dim mono" style="font-size:0.78rem;">${fmtDate(s.subscribed_at)}</div>
+          <div>${s.unsubscribed_at ? '✗ unsubbed' : ''}</div>
+          <div><button class="btn btn-ghost btn-sm" data-rm="${s.id}" ${s.unsubscribed_at ? 'disabled' : ''}>unsub</button></div>
+        </div>`);
+      main().innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="margin:0;">Newsletter (${r.subscribers.length})</h2>
+          <a class="btn btn-ghost" href="/api/admin/newsletter.csv" download>Export CSV</a>
+        </div>
+        ${table(['email','source','conf','subbed','unsubbed','actions'], rows)}`;
+      main().querySelectorAll('[data-rm]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Mark unsubscribed?')) return;
+          try { await api.req('DELETE', `/api/admin/newsletter/${b.dataset.rm}`); newsletter(); }
+          catch (e) { alert(e.message); }
+        });
+      });
+    } catch (e) { main().innerHTML = err(e); }
   }
 })();

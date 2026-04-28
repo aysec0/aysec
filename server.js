@@ -65,6 +65,28 @@ app.use('/api/pro-labs',       proLabsRoutes);
 app.use('/api/teams',          teamsRoutes);
 app.use('/api/admin',          adminRoutes);
 
+// Public site settings — readable by anyone so landing/footer can populate
+app.get('/api/site-settings', (_req, res) => {
+  const SITE_DEFAULTS = {
+    hero_eyebrow:  'Now teaching: red-team operations',
+    hero_title:    'Hack to learn.',
+    hero_subtitle: "Don't learn to hack.",
+    hero_tagline:  'Hands-on cybersecurity training by Ammar Yasser — courses, CTF challenges, and writeups built from real engagements, not slideware.',
+    cta_primary_label: 'Browse courses',
+    cta_primary_href:  '/courses',
+    cta_secondary_label: '$ ./play_ctf',
+    cta_secondary_href:  '/challenges',
+    footer_tagline: 'Personal site, CTF platform, and training for people who want to actually understand security — not just collect badges.',
+    about_short:   "I'm Ammar — a red-team operator and instructor.",
+    social_github:   'https://github.com/aysec0',
+    social_twitter:  '',
+    social_discord:  '',
+  };
+  const rows = db.prepare('SELECT key, value FROM site_settings').all();
+  const stored = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  res.json({ settings: { ...SITE_DEFAULTS, ...stored } });
+});
+
 // SEO endpoints
 const SITE_URL = (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 

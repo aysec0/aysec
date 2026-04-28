@@ -328,7 +328,25 @@
       '<div class="card" style="padding:1.25rem;"><p class="dim">Nothing to compete in right now.</p></div>';
   }
 
+  async function loadSiteSettings() {
+    try {
+      const r = await window.api.get('/api/site-settings');
+      const s = r.settings;
+      // Plain text replacements
+      document.querySelectorAll('[data-site]').forEach((el) => {
+        const k = el.dataset.site;
+        if (s[k]) el.textContent = s[k];
+      });
+      // CTA href overrides
+      document.querySelectorAll('[data-site-href]').forEach((a) => {
+        const k = a.dataset.siteHref;
+        if (s[k]) a.setAttribute('href', s[k]);
+      });
+    } catch {} // Silently fall back to default DOM text
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    loadSiteSettings();
     loadCourses();
     loadChallenges();
     loadPosts();
