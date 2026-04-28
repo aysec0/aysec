@@ -616,11 +616,6 @@
           <div class="nav-dd-divider"></div>
           <a class="nav-dd-item" href="/settings">${NAV_DD_ICONS.settings}<span>Settings</span></a>
           ${user.role === 'admin' ? `<a class="nav-dd-item" href="/admin">${NAV_DD_ICONS.settings}<span>Admin panel</span></a>` : ''}
-          <button class="nav-dd-toggle" id="navDdTheme" type="button">
-            ${NAV_DD_ICONS.moon}
-            <span>Dark mode</span>
-            <span class="switch" aria-hidden="true"></span>
-          </button>
           <div class="nav-dd-divider"></div>
           <button class="nav-dd-item danger" id="navDdLogout" type="button">${NAV_DD_ICONS.logout}<span>Sign out</span></button>
         </div>
@@ -648,12 +643,6 @@
           <a class="nav-dd-item" href="/cheatsheets">${NAV_DD_ICONS.cheats}<span>Cheatsheets</span></a>
           <a class="nav-dd-item" href="/community">${NAV_DD_ICONS.discord}<span>Community</span></a>
           <a class="nav-dd-item" href="/levels">${NAV_DD_ICONS.levels}<span>Levels &amp; XP</span></a>
-          <div class="nav-dd-divider"></div>
-          <button class="nav-dd-toggle" id="navDdTheme" type="button">
-            ${NAV_DD_ICONS.moon}
-            <span>Dark mode</span>
-            <span class="switch" aria-hidden="true"></span>
-          </button>
         </div>
       </div>`;
   }
@@ -676,20 +665,6 @@
     if (user) {
       const ddAv = document.getElementById('navDdAvatar');
       if (ddAv) renderAvatarInto(ddAv, user);
-    }
-
-    const themeToggle = document.getElementById('navDdTheme');
-    if (themeToggle) {
-      const root = document.documentElement;
-      const refresh = () => themeToggle.dataset.on = (root.getAttribute('data-theme') !== 'light' ? 'true' : 'false');
-      refresh();
-      themeToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        root.setAttribute('data-theme', next);
-        try { localStorage.setItem('theme', next); } catch {}
-        refresh();
-      });
     }
 
     document.getElementById('navDdLogout')?.addEventListener('click', async () => {
