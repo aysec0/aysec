@@ -92,6 +92,8 @@ app.get('/api/site-settings', (_req, res) => {
     about_title:   'Security engineer, educator, perpetual student.',
     about_p1:      'I build training that respects your time. No 30-minute intros, no recycled slide decks, no "look at this scary screenshot" content. Just labs, code, and the actual mental models you need to do the job.',
     about_p2:      'Everything here — courses, challenges, writeups — is open to feedback. If something’s wrong, broken, or could be better, tell me.',
+    show_compete:  '1',
+    show_about:    '1',
   };
   const rows = db.prepare('SELECT key, value FROM site_settings').all();
   const stored = Object.fromEntries(rows.map((r) => [r.key, r.value]));

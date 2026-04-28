@@ -342,6 +342,14 @@
         const k = a.dataset.siteHref;
         if (s[k]) a.setAttribute('href', s[k]);
       });
+      // Section visibility toggles ("0" / "false" hides the element)
+      document.querySelectorAll('[data-site-toggle]').forEach((el) => {
+        const k = el.dataset.siteToggle;
+        const v = s[k];
+        if (v != null && (v === '0' || v === 'false' || v === false)) {
+          el.style.display = 'none';
+        }
+      });
     } catch {} // Silently fall back to default DOM text
   }
 

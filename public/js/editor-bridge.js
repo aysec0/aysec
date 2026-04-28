@@ -11,9 +11,22 @@
   const HOVER_BORDER = '2px dashed #ffb74d';
   const SEL_BORDER   = '2px solid var(--accent, #5b9cff)';
   const STYLE = `
-    [data-site], [data-site-href] { cursor: pointer; outline-offset: 2px; transition: outline-color 0.1s; }
-    [data-site]:hover, [data-site-href]:hover { outline: ${HOVER_BORDER}; }
+    [data-site], [data-site-href], [data-site-toggle] { cursor: pointer; outline-offset: 2px; transition: outline-color 0.1s; }
+    [data-site]:hover, [data-site-href]:hover, [data-site-toggle]:hover { outline: ${HOVER_BORDER}; }
     .__aysec-edit-selected { outline: ${SEL_BORDER} !important; }
+    .__aysec-edit-hidden {
+      outline: 2px dashed #888 !important;
+      opacity: 0.55;
+      position: relative;
+    }
+    .__aysec-edit-hidden::before {
+      content: 'hidden';
+      position: absolute; top: 4px; left: 4px;
+      font-family: var(--font-mono, ui-monospace, monospace);
+      font-size: 10px; padding: 2px 6px; border-radius: 3px;
+      background: #888; color: #fff; letter-spacing: 0.05em;
+      pointer-events: none;
+    }
     .__aysec-edit-tag {
       position: absolute;
       background: var(--accent, #5b9cff);
@@ -40,12 +53,14 @@
 
   function describeEl(el) {
     return {
-      siteKey:     el.dataset.site || null,
-      siteHrefKey: el.dataset.siteHref || null,
-      tagName:     el.tagName.toLowerCase(),
-      classNames:  (el.className || '').toString().slice(0, 80),
-      text:        el.textContent.trim(),
-      href:        el.getAttribute('href') || null,
+      siteKey:       el.dataset.site || null,
+      siteHrefKey:   el.dataset.siteHref || null,
+      siteToggleKey: el.dataset.siteToggle || null,
+      tagName:       el.tagName.toLowerCase(),
+      classNames:    (el.className || '').toString().slice(0, 80),
+      text:          el.textContent.trim().slice(0, 200),
+      href:          el.getAttribute('href') || null,
+      hidden:        el.style.display === 'none' || el.classList.contains('__aysec-edit-hidden'),
     };
   }
 
@@ -54,9 +69,11 @@
     tag.style.display = 'block';
     tag.style.top = (r.top + window.scrollY - 18) + 'px';
     tag.style.left = (r.left + window.scrollX) + 'px';
-    tag.textContent = el.tagName.toLowerCase()
-      + (el.dataset.site ? '#' + el.dataset.site : '')
-      + (el.dataset.siteHref ? ' (link)' : '');
+    const k = el.dataset.site || el.dataset.siteHref || el.dataset.siteToggle || '';
+    const kind = el.dataset.siteHref ? ' (link)'
+               : el.dataset.siteToggle ? ' (visibility)'
+               : '';
+    tag.textContent = el.tagName.toLowerCase() + (k ? '#' + k : '') + kind;
   }
 
   function selectEl(el) {
@@ -75,7 +92,7 @@
 
   // Intercept clicks: select editable elements, swallow other navigation.
   document.addEventListener('click', (e) => {
-    const editable = e.target.closest('[data-site], [data-site-href]');
+    const editable = e.target.closest('[data-site], [data-site-href], [data-site-toggle]');
     if (editable) {
       e.preventDefault();
       e.stopPropagation();
@@ -90,7 +107,7 @@
   // Hover tag tracking
   let hoverEl = null;
   document.addEventListener('mouseover', (e) => {
-    const el = e.target.closest('[data-site], [data-site-href]');
+    const el = e.target.closest('[data-site], [data-site-href], [data-site-toggle]');
     if (!el || el === selected) return;
     hoverEl = el;
     positionTag(el);
@@ -111,11 +128,27 @@
       document.querySelectorAll(`[data-site-href="${msg.key}"]`).forEach((el) => {
         if (msg.href != null) el.setAttribute('href', msg.href);
       });
+      // Toggle visibility for [data-site-toggle=key]
+      if (msg.visible != null) {
+        document.querySelectorAll(`[data-site-toggle="${msg.key}"]`).forEach((el) => {
+          // In editor mode we keep elements rendered (so they can still be clicked)
+          // but mark them visually as hidden — the public site uses display:none.
+          if (msg.visible) {
+            el.classList.remove('__aysec-edit-hidden');
+            el.style.display = '';
+          } else {
+            el.classList.add('__aysec-edit-hidden');
+            el.style.display = '';
+          }
+        });
+      }
       if (selected) positionTag(selected); // re-anchor tag if dimensions changed
     } else if (msg.type === 'aysec:edit:clear') {
       clearSelect();
     } else if (msg.type === 'aysec:edit:select-key' && msg.key) {
-      const el = document.querySelector(`[data-site="${msg.key}"], [data-site-href="${msg.key}"]`);
+      const el = document.querySelector(
+        `[data-site="${msg.key}"], [data-site-href="${msg.key}"], [data-site-toggle="${msg.key}"]`
+      );
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         selectEl(el);
@@ -128,12 +161,26 @@
   window.addEventListener('scroll', reposition, { passive: true });
   window.addEventListener('resize', reposition);
 
+  // In editor mode the page applies hidden state visually rather than removing
+  // the element, so editors can still click and unhide it.
+  document.querySelectorAll('[data-site-toggle]').forEach((el) => {
+    if (el.style.display === 'none') {
+      el.classList.add('__aysec-edit-hidden');
+      el.style.display = '';
+    }
+  });
+
   // Tell parent we're ready, with the list of editable keys present on this page
   function announce() {
-    const editable = [...document.querySelectorAll('[data-site], [data-site-href]')].map((el) => ({
-      key:  el.dataset.site || el.dataset.siteHref,
-      kind: el.dataset.siteHref ? 'link' : 'text',
-      preview: (el.textContent || el.getAttribute('href') || '').trim().slice(0, 60),
+    const editable = [...document.querySelectorAll('[data-site], [data-site-href], [data-site-toggle]')].map((el) => ({
+      key:  el.dataset.site || el.dataset.siteHref || el.dataset.siteToggle,
+      kind: el.dataset.siteHref ? 'link'
+          : el.dataset.siteToggle ? 'toggle'
+          : 'text',
+      preview: (el.dataset.siteToggle
+        ? (el.classList.contains('__aysec-edit-hidden') ? 'hidden' : 'visible')
+        : (el.textContent || el.getAttribute('href') || '')
+      ).trim().slice(0, 60),
     }));
     parent.postMessage({ type: 'aysec:edit:ready', url: location.pathname, editable }, '*');
   }

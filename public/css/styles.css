@@ -7676,8 +7676,49 @@ kbd {
   transition: background 0.1s, border-color 0.1s;
 }
 .se-key:hover { background: var(--surface); border-color: var(--border); }
-.se-key-name { font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent); }
+.se-key.is-active {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+.se-key-name {
+  font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent);
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.se-key-kind {
+  font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700;
+  color: var(--text-dim); background: var(--bg-elev);
+  padding: 0.05rem 0.3rem; border-radius: 3px;
+  border: 1px solid var(--border); flex-shrink: 0;
+}
 .se-key-preview { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.se-key-search {
+  width: 100%;
+  font-size: 0.84rem;
+  margin: 0.5rem 0 0.4rem;
+}
+
+/* Visibility toggle buttons in the sidebar */
+.se-toggle-row {
+  display: flex; gap: 0.4rem; margin-top: 0.3rem;
+}
+.se-toggle-btn {
+  flex: 1;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6rem;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 0.86rem;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.se-toggle-btn:hover { background: var(--surface); }
+.se-toggle-btn.is-active {
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 @media (max-width: 900px) {
   .se-shell { grid-template-columns: 1fr; }

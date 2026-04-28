@@ -49,9 +49,10 @@
     </div>
 
     <div class="se-toolbar-right">
+      <button class="btn btn-ghost" id="seReset" title="Discard all unsaved edits">↺ Reset</button>
       <button class="btn btn-ghost" id="seOpenLive" title="Open live page in a new tab">↗</button>
       <span class="se-state" id="seState">Saved</span>
-      <button class="btn btn-primary" id="seSave">Save</button>
+      <button class="btn btn-primary" id="seSave" title="Save (⌘S)">Save</button>
     </div>
   </header>
 
@@ -69,20 +70,33 @@
       </div>
 
       <div class="se-side-section" id="seFieldSection" hidden>
-        <div class="se-side-eyebrow">Text</div>
-        <textarea class="textarea" id="seText" rows="4"></textarea>
+        <div id="seTextWrap">
+          <div class="se-side-eyebrow">Text</div>
+          <textarea class="textarea" id="seText" rows="4"></textarea>
+        </div>
         <div id="seHrefWrap" hidden>
           <div class="se-side-eyebrow" style="margin-top:0.7rem;">Link</div>
           <input class="input mono" id="seHref" />
         </div>
-        <p class="dim" style="font-size:0.78rem; margin-top:0.5rem;">
-          Live-syncs to the iframe as you type. Click <strong>Save</strong> to persist.
+        <div id="seToggleWrap" hidden>
+          <div class="se-side-eyebrow">Visibility</div>
+          <div class="se-toggle-row">
+            <button class="se-toggle-btn" id="seToggleShow" data-vis="1">👁 Show</button>
+            <button class="se-toggle-btn" id="seToggleHide" data-vis="0">🚫 Hide</button>
+          </div>
+          <p class="dim" style="font-size:0.78rem; margin-top:0.5rem;">
+            Hidden sections still render in the editor (dimmed) so you can click to bring them back.
+          </p>
+        </div>
+        <p class="dim" id="seFieldHint" style="font-size:0.78rem; margin-top:0.5rem;">
+          Live-syncs to the iframe as you type. Click <strong>Save</strong> (⌘S) to persist.
         </p>
         <button class="btn btn-ghost" id="seRevert" style="margin-top:0.5rem;">Revert this element</button>
       </div>
 
       <div class="se-side-section">
         <div class="se-side-eyebrow">Editable on this page</div>
+        <input class="input se-key-search" id="seKeySearch" placeholder="Filter keys…" />
         <ol class="se-key-list" id="seKeyList"></ol>
       </div>
 
