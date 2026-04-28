@@ -1,4 +1,13 @@
-/* Tiny fetch wrapper used everywhere. Loaded before layout.js. */
+/* Tiny fetch wrapper used everywhere. Loaded before layout.js.
+ *
+ * VAULT V03 — for the JWT-curious. Decode the payload of this token
+ * (base64url, second segment between the dots). The header tells you
+ * everything you need to know about why it's funny.
+ *
+ * eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ2YXVsdCI6IlYwMyIsImZsYWciOiJmbGFne2FsZ19ub25lX2lzX3N0aWxsX2FsaXZlX2luXzIwMjZ9In0.
+ *
+ * (3 of 7 — submit at /vault)
+ */
 (() => {
   async function request(method, path, body) {
     const init = {

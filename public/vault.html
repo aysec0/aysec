@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>The Vault — meta-CTF — aysec</title>
+  <meta name="description" content="Seven flags hidden across the platform itself. Hack aysec to find them." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>vault</span></div>
+      <span class="page-eyebrow">// /vault</span>
+      <h1 class="page-title">The Vault.</h1>
+      <p class="page-subtitle">
+        Seven flags hidden across <strong>this website itself</strong>. View the source.
+        Read robots.txt. Decode the JWT. Look at the favicon. Find them all and earn the
+        <strong>Vault Cracker</strong> badge — only one of its kind on the platform.
+        First-line hints are public. The exact location of each flag unlocks after you've
+        solved at least 2 of them.
+      </p>
+    </div>
+  </header>
+
+  <section class="section section-narrow">
+    <div class="container" style="max-width:760px;">
+      <div class="vault-progress" id="vaultProgress"></div>
+
+      <div class="vault-form" id="vaultFormWrap">
+        <h3 style="font-size:1.05rem; font-weight:600; margin-bottom:0.85rem;">Submit a vault flag</h3>
+        <form id="vaultForm" class="form">
+          <div id="vaultAlert" hidden></div>
+          <div class="field">
+            <div class="field-row">
+              <input class="input mono" type="text" id="vaultFlagInput" placeholder="flag{...}" autocomplete="off" required />
+              <button class="btn btn-primary" type="submit" id="vaultSubmit">Submit</button>
+            </div>
+            <span class="field-hint">Sign-in required to record progress. Same hash check as regular CTF.</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:920px;">
+      <div class="section-head">
+        <span class="section-eyebrow">// the seven</span>
+        <h2 class="section-title">The flags</h2>
+        <p class="section-subtitle muted">First-line hints are public. The exact location reveals after 2 solves.</p>
+      </div>
+      <div class="vault-list" id="vaultList"></div>
+    </div>
+  </section>
+
+  <section class="section section-narrow" style="background:var(--bg-elev);">
+    <div class="container" style="max-width:760px;">
+      <div class="section-head">
+        <span class="section-eyebrow">// vault leaderboard</span>
+        <h2 class="section-title">Vault Crackers</h2>
+        <p class="section-subtitle muted">Top hunters by flags found. Find all 7 to enter the hall of fame.</p>
+      </div>
+      <div id="vaultLb"></div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/vault-page.js"></script>
+</body>
+</html>

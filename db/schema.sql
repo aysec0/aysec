@@ -597,3 +597,17 @@ CREATE TABLE IF NOT EXISTS team_invites (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   accepted_at TEXT
 );
+
+-- ============================================================
+-- The Vault — meta-CTF where flags are hidden across the platform
+-- itself. Solves recorded separately from regular CTF solves.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS vault_solves (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  vault_id   TEXT NOT NULL,
+  solved_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(user_id, vault_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_vault_user ON vault_solves(user_id, solved_at DESC);

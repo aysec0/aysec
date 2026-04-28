@@ -121,17 +121,23 @@
     }
 
     // ---- Stars: place each solve ----
-    const stars = [];  // remember positions for connecting lines
+    // Sort solves by chronological order so the animated entrance reveals them in
+    // the same order the user actually solved them.
+    const allOrdered = [...solves].sort((a, b) => String(a.solved_at || '').localeCompare(String(b.solved_at || '')));
+    const orderIdx = new Map(allOrdered.map((s, i) => [s.slug, i]));
+    const totalSolves = allOrdered.length;
+    const animate = !preview && !opts.static && totalSolves > 0;
+    const STAGGER = 60;  // ms between stars
+
+    const stars = [];
     for (const cat of CATEGORIES) {
       const list = byCat[cat.key];
       const pts = [];
       list.forEach((s, idx) => {
         const diffR = DIFF_RADIUS[s.difficulty] || 0.5;
-        // Spread within sector based on hashed slug + index
         const localSeed = hash01(seed + s.slug);
         const angleInSector = SECTOR * 0.15 + localSeed * SECTOR * 0.7;
         const angle = cat.angle + angleInSector;
-        // Slight random radius jitter
         const jitter = (rand() - 0.5) * 0.06;
         const r = maxR * (diffR + jitter);
         const a = (angle - 90) * Math.PI / 180;
@@ -139,29 +145,57 @@
         const y = cy + Math.sin(a) * r;
         const baseSize = preview ? 1.6 : 2.6;
         const size = baseSize + (s.points / 100);
-        pts.push({ x, y, points: s.points, fb: !!s.first_blood });
+        const order = orderIdx.get(s.slug) ?? idx;
+        pts.push({ x, y, points: s.points, fb: !!s.first_blood, order });
 
-        // Faint halo for each star
+        // Animation: each star has its own stagger delay (in ms)
+        const delay = animate ? order * STAGGER : 0;
+        const animAttr = animate
+          ? ` style="opacity:0; animation: dna-star-in 0.7s ease-out ${delay}ms forwards;"`
+          : '';
+
+        // Faint halo for each star (full pages only)
         if (!preview) {
-          parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(size + 4).toFixed(1)}" fill="${cat.color}" fill-opacity="0.10" filter="url(#dna-glow)"/>`);
+          parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(size + 4).toFixed(1)}" fill="${cat.color}" fill-opacity="0.10" filter="url(#dna-glow)"${animAttr}/>`);
         }
         // The star itself
-        const isLastSolve = idx === list.length - 1;
+        const isLastSolve = order === totalSolves - 1;
         const cls = isLastSolve ? 'dna-star active' : 'dna-star';
-        parts.push(`<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${size.toFixed(1)}" fill="${cat.color}" stroke="${s.first_blood ? '#fff' : 'none'}" stroke-width="${s.first_blood ? 1.5 : 0}"/>`);
-        // First-blood crown — extra glow ring
+        parts.push(`<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${size.toFixed(1)}" fill="${cat.color}" stroke="${s.first_blood ? '#fff' : 'none'}" stroke-width="${s.first_blood ? 1.5 : 0}"${animAttr}/>`);
         if (s.first_blood && !preview) {
-          parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(size + 3).toFixed(1)}" fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="0.8"/>`);
+          parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(size + 3).toFixed(1)}" fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="0.8"${animAttr}/>`);
         }
       });
       stars.push({ cat, pts });
 
-      // Connect stars within a category — constellation lines
+      // Constellation lines connect category stars; animate the path drawing
       if (pts.length >= 2 && !preview) {
-        const sorted = [...pts].sort((a, b) => a.x - b.x);
+        const sorted = [...pts].sort((a, b) => a.order - b.order);
         const path = sorted.map((p, i) => (i === 0 ? `M${p.x.toFixed(1)} ${p.y.toFixed(1)}` : `L${p.x.toFixed(1)} ${p.y.toFixed(1)}`)).join(' ');
-        parts.push(`<path d="${path}" fill="none" stroke="${cat.color}" stroke-opacity="0.22" stroke-width="0.7"/>`);
+        const lastDelay = animate ? sorted[sorted.length - 1].order * STAGGER + 200 : 0;
+        const lineAttr = animate
+          ? ` style="opacity:0; animation: dna-line-in 0.6s ease-out ${lastDelay}ms forwards;"`
+          : '';
+        parts.push(`<path d="${path}" fill="none" stroke="${cat.color}" stroke-opacity="0.22" stroke-width="0.7"${lineAttr}/>`);
       }
+    }
+
+    // ---- Empty state: zero solves → ghost stars + a message ----
+    if (!preview && totalSolves === 0) {
+      // Sprinkle "ghost" placeholder stars across all sectors at the lowest tier
+      for (const cat of CATEGORIES) {
+        for (let g = 0; g < 3; g++) {
+          const localSeed = hash01(seed + cat.key + g);
+          const angle = cat.angle + SECTOR * 0.2 + localSeed * SECTOR * 0.6;
+          const r = maxR * (0.30 + (g / 4) * 0.5);
+          const a = (angle - 90) * Math.PI / 180;
+          const x = cx + Math.cos(a) * r;
+          const y = cy + Math.sin(a) * r;
+          parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2" fill="${cat.color}" fill-opacity="0.18"/>`);
+        }
+      }
+      const msgY = cy + maxR * 0.32;
+      parts.push(`<text x="${cx}" y="${msgY}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="14" fill="${tierColor}" fill-opacity="0.65" letter-spacing="3">SOLVE TO ILLUMINATE</text>`);
     }
 
     // ---- Center medallion ----

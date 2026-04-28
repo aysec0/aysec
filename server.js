@@ -28,6 +28,7 @@ import proLabsRoutes from './routes/pro-labs.js';
 import teamsRoutes from './routes/teams.js';
 import adminRoutes from './routes/admin.js';
 import forumRoutes from './routes/forum.js';
+import vaultRoutes from './routes/vault.js';
 import { marked } from 'marked';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -64,6 +65,7 @@ app.use('/api/pro-labs',       proLabsRoutes);
 app.use('/api/teams',          teamsRoutes);
 app.use('/api/admin',          adminRoutes);
 app.use('/api/forum',          forumRoutes);
+app.use('/api/vault',          vaultRoutes);
 
 // Public site settings — readable by anyone so landing/footer can populate
 app.get('/api/site-settings', (_req, res) => {
@@ -100,11 +102,31 @@ app.get('/api/site-settings', (_req, res) => {
 const SITE_URL = (process.env.SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 
 app.get('/robots.txt', (_req, res) => {
+  // VAULT V01 — for the curious robot
   res.type('text/plain').send(
 `User-agent: *
 Allow: /
 
 Sitemap: ${SITE_URL}/sitemap.xml
+
+# you found me. one of seven.
+# flag{vault_robots_remember_what_humans_forget}
+# (submit it at /vault for credit)
+`);
+});
+
+// VAULT V04 — undocumented .well-known endpoint
+app.get('/.well-known/security.txt', (_req, res) => {
+  res.type('text/plain').send(
+`Contact: ${SITE_URL}/hire
+Acknowledgements: ${SITE_URL}/about
+Preferred-Languages: en
+Canonical: ${SITE_URL}/.well-known/security.txt
+Policy: ${SITE_URL}/terms
+
+# vault hint:
+# flag{security_dot_txt_is_a_starting_line}
+# (1 of 7 — submit at /vault)
 `);
 });
 
