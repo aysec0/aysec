@@ -7432,6 +7432,16 @@ kbd {
 .avatar-clear-btn:hover { color: var(--text); border-color: var(--border-hover); }
 
 /* ============================================================
+   [hidden] override — restore the user-agent rule for elements
+   where a class or media-query rule otherwise wins on specificity
+   ============================================================ */
+.tools-dd-item[hidden],
+.tools-dd-group[hidden],
+.tools-dd-empty[hidden],
+.nav-stat-chip[hidden],
+.nav-stat-divider[hidden] { display: none !important; }
+
+/* ============================================================
    Tools dropdown (navbar)
    ============================================================ */
 .tools-nav-wrap {
