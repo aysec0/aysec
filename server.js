@@ -28,6 +28,7 @@ import assessmentsRoutes from './routes/assessments.js';
 import proLabsRoutes from './routes/pro-labs.js';
 import teamsRoutes from './routes/teams.js';
 import adminRoutes from './routes/admin.js';
+import forumRoutes from './routes/forum.js';
 import { marked } from 'marked';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -64,6 +65,7 @@ app.use('/api/assessments',    assessmentsRoutes);
 app.use('/api/pro-labs',       proLabsRoutes);
 app.use('/api/teams',          teamsRoutes);
 app.use('/api/admin',          adminRoutes);
+app.use('/api/forum',          forumRoutes);
 
 // Public site settings — readable by anyone so landing/footer can populate
 app.get('/api/site-settings', (_req, res) => {
@@ -81,6 +83,11 @@ app.get('/api/site-settings', (_req, res) => {
     social_github:   'https://github.com/aysec0',
     social_twitter:  '',
     social_discord:  '',
+    compete_eyebrow:  '// compete',
+    compete_title:    'Daily reps, live events, full networks.',
+    compete_subtitle: 'A challenge a day, scheduled CTFs, and multi-machine Pro Labs that simulate real enterprise networks.',
+    compete_cta_label: 'Today’s challenge →',
+    compete_cta_href:  '/daily',
   };
   const rows = db.prepare('SELECT key, value FROM site_settings').all();
   const stored = Object.fromEntries(rows.map((r) => [r.key, r.value]));
@@ -103,8 +110,8 @@ app.get('/sitemap.xml', (_req, res) => {
   const urls = [
     '/', '/courses', '/certifications', '/challenges', '/blog',
     '/daily', '/live', '/pro-labs', '/assessments', '/teams',
-    '/tools', '/cheatsheets', '/events', '/about',
-    '/hire', '/talks', '/newsletter', '/terms', '/privacy', '/refunds',
+    '/tools', '/cheatsheets', '/events', '/community', '/about',
+    '/hire', '/talks', '/terms', '/privacy', '/refunds',
   ];
   const courses    = db.prepare('SELECT slug, updated_at FROM courses    WHERE published = 1').all();
   const challenges = db.prepare('SELECT slug, updated_at FROM challenges WHERE published = 1').all();
@@ -173,6 +180,8 @@ app.get('/pro-labs/:slug',        sendDetail('pro-lab-detail.html'));
 app.get('/lab-term/:slug',        sendDetail('lab-term.html'));
 app.get('/teams/:slug',           sendDetail('team-detail.html'));
 app.get('/teams/join/:token',     sendDetail('team-join.html'));
+app.get('/community/post/:id',    sendDetail('community-post.html'));
+app.get('/community/submit',      sendDetail('community-submit.html'));
 app.get('/u/:username',           sendDetail('profile.html'));
 app.get('/u/:username/dna',       sendDetail('dna.html'));
 app.get('/certifications/:slug',  sendDetail('cert-detail.html'));

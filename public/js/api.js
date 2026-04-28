@@ -27,6 +27,9 @@
     post: (p, b) => request('POST',   p, b ?? {}),
     put:  (p, b) => request('PUT',    p, b ?? {}),
     del:  (p)    => request('DELETE', p),
+    // Generic — admin code calls api.req('PATCH'|'PUT'|'DELETE', path, body)
+    req:  (method, p, b) => request(String(method).toUpperCase(), p, b),
+    patch:(p, b) => request('PATCH',  p, b ?? {}),
   };
 
   window.escapeHtml = (s = '') =>

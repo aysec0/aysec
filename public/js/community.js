@@ -1,55 +1,116 @@
-/* /community — pulls live Discord widget data from /api/community/discord. */
+/* /community — Reddit-style forum (post list + sidebar). */
 (() => {
-  function $(id) { return document.getElementById(id); }
-  function initials(s) { return String(s || '?').slice(0, 2).toUpperCase(); }
+  const $ = (id) => document.getElementById(id);
+  const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    let info = null;
+  let state = { sort: 'hot', cat: null, categories: [] };
+
+  function renderCats() {
+    const list = $('forumCats');
+    list.innerHTML = `
+      <li><button class="forum-cat ${state.cat == null ? 'is-active' : ''}" data-cat="">All</button></li>
+      ${state.categories.map((c) => `
+        <li><button class="forum-cat ${state.cat === c.slug ? 'is-active' : ''}" data-cat="${c.slug}" style="--cat: ${c.color || 'var(--accent)'};">
+          ${escapeHtml(c.name)} <span class="dim mono" style="font-size:0.74rem;">${c.post_count}</span>
+        </button></li>`).join('')}`;
+    list.querySelectorAll('.forum-cat').forEach((b) => {
+      b.addEventListener('click', () => {
+        state.cat = b.dataset.cat || null;
+        renderCats(); loadPosts();
+      });
+    });
+  }
+
+  function relTime(s) {
+    if (!s) return '';
+    const t = new Date(s.replace(' ', 'T') + 'Z').getTime();
+    const diff = (Date.now() - t) / 1000;
+    if (diff < 60)        return 'just now';
+    if (diff < 3600)      return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400)     return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 86400 * 7) return Math.floor(diff / 86400) + 'd ago';
+    return new Date(s.replace(' ', 'T') + 'Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  function postCard(p) {
+    const my = p.my_vote;
+    const hostFromUrl = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+    return `
+      <article class="forum-post" data-id="${p.id}">
+        <div class="forum-vote">
+          <button class="forum-arrow ${my === 1 ? 'is-up' : ''}" data-v="1" aria-label="upvote">▲</button>
+          <div class="forum-score">${p.score}</div>
+          <button class="forum-arrow ${my === -1 ? 'is-down' : ''}" data-v="-1" aria-label="downvote">▼</button>
+        </div>
+        <div class="forum-body">
+          <div class="forum-meta">
+            <span class="forum-cat-pill" style="--cat: ${p.cat_color || 'var(--accent)'};">/${escapeHtml(p.cat_slug)}</span>
+            <span class="dim">posted by <a href="/u/${escapeHtml(p.username)}">@${escapeHtml(p.username)}</a> ${escapeHtml(relTime(p.created_at))}</span>
+            ${p.pinned ? '<span class="tag" style="background: var(--accent-soft); color: var(--accent);">pinned</span>' : ''}
+            ${p.locked ? '<span class="tag">locked</span>' : ''}
+          </div>
+          <h3 class="forum-title"><a href="/community/post/${p.id}">${escapeHtml(p.title)}</a></h3>
+          ${p.url ? `<a class="forum-url-pill" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(hostFromUrl(p.url))} ↗</a>` : ''}
+          ${p.body_md ? `<div class="forum-excerpt">${escapeHtml((p.body_md || '').slice(0, 240))}${p.body_md.length > 240 ? '…' : ''}</div>` : ''}
+          <div class="forum-actions">
+            <a href="/community/post/${p.id}" class="dim">💬 ${p.comment_count} comments</a>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  async function loadPosts() {
+    const params = new URLSearchParams({ sort: state.sort });
+    if (state.cat) params.set('cat', state.cat);
     try {
-      info = await window.api.get('/api/community/discord');
-    } catch {}
-
-    const inviteUrl = info?.invite_url || '';
-    const hasInvite = !!inviteUrl;
-    const widgetEnabled = !!info?.enabled;
-
-    // CTA button
-    if (hasInvite) {
-      $('discordCTA').innerHTML = `
-        <a class="discord-cta" href="${inviteUrl}" target="_blank" rel="noopener">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.078.037 13.7 13.7 0 0 0-.61 1.249 18.27 18.27 0 0 0-5.487 0 12.65 12.65 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.099.245.198.372.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-          Open Discord invite
-        </a>`;
-    } else {
-      $('discordCTA').innerHTML = `
-        <span class="discord-cta-disabled">
-          // invite link coming soon — set DISCORD_INVITE_URL to enable
-        </span>`;
+      const r = await window.api.get('/api/forum/posts?' + params);
+      $('forumPosts').innerHTML = r.posts.length
+        ? r.posts.map(postCard).join('')
+        : '<div class="card" style="padding:1.5rem;"><p class="dim">Nothing here yet — be the first to post.</p></div>';
+      $('forumPosts').querySelectorAll('.forum-post').forEach(wireVotes);
+    } catch (e) {
+      $('forumPosts').innerHTML = `<div class="card" style="padding:1.5rem;"><p class="dim">${escapeHtml(e.message)}</p></div>`;
     }
+  }
 
-    // Stats: members online + total
-    if (widgetEnabled && info.presence_count != null) {
-      $('discordStats').innerHTML = `
-        <div class="discord-stats">
-          <span class="discord-stat-online">
-            <strong>${Number(info.presence_count).toLocaleString()}</strong>&nbsp;online now
-          </span>
-          ${info.name ? `<span style="opacity:0.8;">in <strong>${escapeHtml(info.name)}</strong></span>` : ''}
-        </div>`;
-    } else if (hasInvite) {
-      $('discordStats').innerHTML = `
-        <div class="discord-stats">
-          <span style="opacity:0.85;">enable widget in Discord settings to show live counts here</span>
-        </div>`;
-    }
+  function wireVotes(article) {
+    const id = Number(article.dataset.id);
+    article.querySelectorAll('.forum-arrow').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const requested = Number(b.dataset.v);
+        const already = b.classList.contains(requested === 1 ? 'is-up' : 'is-down');
+        try {
+          const r = await window.api.post(`/api/forum/posts/${id}/vote`, { vote: already ? 0 : requested });
+          article.querySelector('.forum-score').textContent = r.score;
+          const upBtn = article.querySelector('.forum-arrow[data-v="1"]');
+          const dnBtn = article.querySelector('.forum-arrow[data-v="-1"]');
+          upBtn.classList.toggle('is-up', r.my_vote === 1);
+          dnBtn.classList.toggle('is-down', r.my_vote === -1);
+        } catch (err) {
+          if (err.status === 401) location.href = '/login?next=' + encodeURIComponent(location.pathname);
+          else alert(err.message);
+        }
+      });
+    });
+  }
 
-    // Online avatars (if widget enabled)
-    if (widgetEnabled && info.online_users?.length) {
-      $('discordOnline').innerHTML = info.online_users.slice(0, 12).map((u) => `
-        <span class="discord-online-avatar" title="${escapeHtml(u.username)}">
-          ${u.avatar_url ? `<img src="${escapeHtml(u.avatar_url)}" alt="${escapeHtml(u.username)}" loading="lazy" />` : escapeHtml(initials(u.username))}
-        </span>
-      `).join('');
+  async function init() {
+    try {
+      const cr = await window.api.get('/api/forum/categories');
+      state.categories = cr.categories;
+      renderCats();
+      loadPosts();
+    } catch (e) {
+      $('forumPosts').innerHTML = `<div class="card" style="padding:1.5rem;"><p class="dim">Couldn’t load: ${escapeHtml(e.message)}</p></div>`;
     }
-  });
+    document.querySelectorAll('#forumSort .chip').forEach((b) => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('#forumSort .chip').forEach((x) => x.classList.remove('is-active'));
+        b.classList.add('is-active');
+        state.sort = b.dataset.sort;
+        loadPosts();
+      });
+    });
+  }
+  document.addEventListener('DOMContentLoaded', init);
 })();

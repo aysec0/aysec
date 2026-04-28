@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Site Editor — aysec admin</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body class="se-body">
+  <header class="se-toolbar">
+    <div class="se-toolbar-left">
+      <a class="se-back" href="/admin" title="Back to admin">←</a>
+      <span class="se-title">Site editor</span>
+      <select class="input mono" id="sePage">
+        <option value="/">Home (/)</option>
+        <option value="/courses">Courses (/courses)</option>
+        <option value="/certifications">Certs (/certifications)</option>
+        <option value="/challenges">CTF (/challenges)</option>
+        <option value="/blog">Blog (/blog)</option>
+        <option value="/daily">Daily (/daily)</option>
+        <option value="/live">Live (/live)</option>
+        <option value="/pro-labs">Pro Labs (/pro-labs)</option>
+        <option value="/assessments">Assessments (/assessments)</option>
+        <option value="/teams">Teams (/teams)</option>
+        <option value="/tools">Tools (/tools)</option>
+        <option value="/cheatsheets">Cheatsheets (/cheatsheets)</option>
+        <option value="/about">About (/about)</option>
+        <option value="/hire">Hire (/hire)</option>
+      </select>
+    </div>
+
+    <div class="se-toolbar-mid">
+      <div class="se-device-toggle" role="tablist" aria-label="Device">
+        <button class="se-dev is-active" data-dev="desktop" title="Desktop">🖥</button>
+        <button class="se-dev" data-dev="tablet"  title="Tablet">📱</button>
+        <button class="se-dev" data-dev="phone"   title="Phone">📱</button>
+      </div>
+      <div class="se-mode-toggle">
+        <button class="se-mode is-active" data-mode="edit"    title="Edit">✎ Edit</button>
+        <button class="se-mode"             data-mode="preview" title="Preview">⊙ Preview</button>
+      </div>
+    </div>
+
+    <div class="se-toolbar-right">
+      <button class="btn btn-ghost" id="seOpenLive" title="Open live page in a new tab">↗</button>
+      <span class="se-state" id="seState">Saved</span>
+      <button class="btn btn-primary" id="seSave">Save</button>
+    </div>
+  </header>
+
+  <div class="se-shell">
+    <main class="se-canvas" id="seCanvas">
+      <div class="se-frame-wrap" id="seFrameWrap">
+        <iframe id="seFrame" src="/?_edit=1" frameborder="0" allow="clipboard-write"></iframe>
+      </div>
+    </main>
+
+    <aside class="se-sidebar">
+      <div class="se-side-section">
+        <div class="se-side-eyebrow">Selected</div>
+        <div id="seSelected" class="se-selected-empty">Click any highlighted element to edit it.</div>
+      </div>
+
+      <div class="se-side-section" id="seFieldSection" hidden>
+        <div class="se-side-eyebrow">Text</div>
+        <textarea class="textarea" id="seText" rows="4"></textarea>
+        <div id="seHrefWrap" hidden>
+          <div class="se-side-eyebrow" style="margin-top:0.7rem;">Link</div>
+          <input class="input mono" id="seHref" />
+        </div>
+        <p class="dim" style="font-size:0.78rem; margin-top:0.5rem;">
+          Live-syncs to the iframe as you type. Click <strong>Save</strong> to persist.
+        </p>
+        <button class="btn btn-ghost" id="seRevert" style="margin-top:0.5rem;">Revert this element</button>
+      </div>
+
+      <div class="se-side-section">
+        <div class="se-side-eyebrow">Editable on this page</div>
+        <ol class="se-key-list" id="seKeyList"></ol>
+      </div>
+
+      <div class="se-side-section">
+        <div class="se-side-eyebrow">Tip</div>
+        <p class="dim" style="font-size:0.82rem;">
+          Only elements marked with <code>data-site</code> in the HTML are editable here.
+          To make a new element editable, add a <code>data-site="some_key"</code> attribute
+          and add the key to <code>SITE_DEFAULTS</code> in <code>server.js</code>.
+        </p>
+      </div>
+    </aside>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/site-editor.js"></script>
+</body>
+</html>

@@ -788,6 +788,11 @@ const SITE_DEFAULTS = {
   social_github:   'https://github.com/aysec0',
   social_twitter:  '',
   social_discord:  '',
+  compete_eyebrow:  '// compete',
+  compete_title:    'Daily reps, live events, full networks.',
+  compete_subtitle: 'A challenge a day, scheduled CTFs, and multi-machine Pro Labs that simulate real enterprise networks.',
+  compete_cta_label: 'Today’s challenge →',
+  compete_cta_href:  '/daily',
 };
 
 router.get('/site-settings', (_req, res) => {

@@ -518,6 +518,67 @@ CREATE TABLE IF NOT EXISTS team_members (
 );
 
 -- ============================================================
+-- Reddit-style community forum
+-- Categories ("subs"), posts (text or link), nested comments,
+-- per-user up/down votes on both. score is denormalised so list
+-- queries don't need a SUM().
+-- ============================================================
+CREATE TABLE IF NOT EXISTS forum_categories (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug        TEXT NOT NULL UNIQUE,
+  name        TEXT NOT NULL,
+  description TEXT,
+  color       TEXT,                                       -- hex / css
+  position    INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS forum_posts (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  category_id   INTEGER NOT NULL REFERENCES forum_categories(id) ON DELETE CASCADE,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title         TEXT NOT NULL,
+  body_md       TEXT NOT NULL DEFAULT '',
+  url           TEXT,                                      -- optional link post
+  score         INTEGER NOT NULL DEFAULT 1,
+  comment_count INTEGER NOT NULL DEFAULT 0,
+  pinned        INTEGER NOT NULL DEFAULT 0,
+  locked        INTEGER NOT NULL DEFAULT 0,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_forum_posts_cat   ON forum_posts(category_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_forum_posts_score ON forum_posts(score DESC);
+
+CREATE TABLE IF NOT EXISTS forum_post_votes (
+  post_id  INTEGER NOT NULL REFERENCES forum_posts(id) ON DELETE CASCADE,
+  user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  vote     INTEGER NOT NULL,                              -- +1 / -1
+  voted_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (post_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS forum_comments (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id    INTEGER NOT NULL REFERENCES forum_posts(id) ON DELETE CASCADE,
+  parent_id  INTEGER REFERENCES forum_comments(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body_md    TEXT NOT NULL,
+  score      INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_forum_comments_post ON forum_comments(post_id, created_at);
+
+CREATE TABLE IF NOT EXISTS forum_comment_votes (
+  comment_id INTEGER NOT NULL REFERENCES forum_comments(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  vote       INTEGER NOT NULL,
+  voted_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (comment_id, user_id)
+);
+
+-- ============================================================
 -- Site settings (key/value) — editable via /admin → Site
 -- Used to populate hero / footer / about copy without re-deploying.
 -- ============================================================

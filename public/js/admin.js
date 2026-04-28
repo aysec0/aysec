@@ -48,7 +48,26 @@
     if (tab === 'talks')        return talks();
     if (tab === 'testimonials') return testimonials();
     if (tab === 'faqs')         return faqs();
-    if (tab === 'newsletter')   return newsletter();
+    if (tab === 'forum')        return forumModeration();
+  }
+
+  async function forumModeration() {
+    try {
+      const r = await api.get('/api/forum/categories');
+      main().innerHTML = `
+        <h2 style="margin-top:0;">Forum</h2>
+        <p class="dim">Categories live in <code>db/init.js</code> seeds. Posts &amp; comments are moderated by deleting from the public page (admin badge can delete anything).</p>
+        <div class="admin-table" style="margin-top:1rem;">
+          <div class="admin-row admin-head"><div>slug</div><div>name</div><div>posts</div></div>
+          ${r.categories.map((c) => `
+            <div class="admin-row">
+              <div class="mono">/${c.slug}</div>
+              <div>${escapeHtml(c.name)}</div>
+              <div>${c.post_count}</div>
+            </div>`).join('')}
+        </div>
+        <a class="btn btn-ghost" href="/community" target="_blank" style="margin-top:1rem;">Open community forum →</a>`;
+    } catch (e) { main().innerHTML = err(e); }
   }
 
   // Markdown live-preview: turn a textarea[data-md] into editor + preview

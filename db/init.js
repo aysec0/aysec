@@ -2106,6 +2106,39 @@ Pipe directly. Don't write to disk if you can avoid it.
     insLabMachine.run(lid, 2, 'build-server', '10.0.5.42', 'CI/CD',   sha('aysec{build-user}'),      sha('aysec{build-root}'),     20, 40, 'Jenkins script console.');
   }
 
+  // ===== Forum (Reddit-style community) =====
+  const insCat = db.prepare(`
+    INSERT OR IGNORE INTO forum_categories (slug, name, description, color, position)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  insCat.run('beginner',  'beginner',  'Just starting out — no question is too basic.', '#5b9cff', 0);
+  insCat.run('web',       'web',       'Web app pentesting, bug bounty, OWASP, recon.', '#39ff7a', 1);
+  insCat.run('crypto',    'crypto',    'Classical and modern cryptography, attacks, primitives.', '#ffb74d', 2);
+  insCat.run('pwn',       'pwn',       'Binary exploitation, ROP, heap, kernel.',          '#ff6b6b', 3);
+  insCat.run('rev',       'rev',       'Reverse engineering, malware analysis, ghidra.',   '#c084fc', 4);
+  insCat.run('ai',        'ai',        'LLM red-teaming, prompt injection, model attacks.', '#22d3ee', 5);
+  insCat.run('careers',   'careers',   'Jobs, certs, interviews, salaries, advice.',       '#f97316', 6);
+  insCat.run('news',      'news',      'CVEs, breaches, write-ups in the wild.',           '#eab308', 7);
+
+  const insPost = db.prepare(`
+    INSERT INTO forum_posts (category_id, user_id, title, body_md, score, comment_count)
+    VALUES ((SELECT id FROM forum_categories WHERE slug = ?), ?, ?, ?, ?, ?)
+  `);
+  const insVote = db.prepare(`INSERT INTO forum_post_votes (post_id, user_id, vote) VALUES (?, ?, 1)`);
+  const adminId = admin.lastInsertRowid;
+  const seedPosts = [
+    ['beginner', 'Welcome — read this first',
+     '**Welcome to /community.** This is a focused forum for cybersecurity practitioners.\n\n- Posts go in the right category (left sidebar)\n- Use markdown for code blocks (```)\n- Upvote what you learned from, downvote what wastes your time\n- For real-time chat, the Discord link is in the footer\n\nHave at it.', 5],
+    ['careers', "What cert should I do after Sec+?",
+     "Just passed Sec+. Looking at: CEH, CySA+, OSCP, eJPT.\n\nGoal is offensive (eventually OSCP) but I'm not at the OSCP-ready level yet. Anyone walked this path?", 3],
+    ['ai', 'Prompt injection cheat sheet — what works in 2026?',
+     'Tracking what still bypasses GPT-4 / Claude / Gemini guardrails:\n\n1. **System-prompt leak via "translate this"** — partially mitigated\n2. **Indirect injection via tool results** — still works\n3. **Token-smuggling with unicode lookalikes** — patched on most providers\n\nAdd what you have.', 4],
+  ];
+  for (const [cat, title, body, score] of seedPosts) {
+    const info = insPost.run(cat, adminId, title, body, score, 0);
+    insVote.run(info.lastInsertRowid, adminId);
+  }
+
   const cnt = (t) => db.prepare(`SELECT COUNT(*) c FROM ${t}`).get().c;
   console.log(
     `Seeded admin (id=${admin.lastInsertRowid}) + ${cnt('courses')} courses · ${cnt('lessons')} lessons · ` +

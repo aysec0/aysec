@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Post — community — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><a href="/community">community</a><span class="sep">/</span><span id="postCrumb">…</span></div>
+      <span class="page-eyebrow" id="postEyebrow">// /community</span>
+    </div>
+  </header>
+  <section class="section"><div class="container forum-shell">
+    <main class="forum-main">
+      <div id="postBody"><div class="card" style="padding:1.5rem;"><div class="skeleton" style="height:18px;width:60%"></div></div></div>
+      <h2 style="margin: 1.5rem 0 0.7rem; font-size:1.15rem;" id="commentsHead">Comments</h2>
+      <form id="commentForm" class="card" style="padding:1rem 1.2rem; display:flex; gap:0.5rem; align-items:flex-start;">
+        <textarea class="textarea" name="body_md" rows="3" placeholder="What do you have to add?" required></textarea>
+        <button class="btn btn-primary" type="submit" style="align-self:stretch;">Reply</button>
+      </form>
+      <div id="commentsList" style="margin-top:1rem;"></div>
+    </main>
+    <aside class="forum-side">
+      <div class="card" style="padding:1.1rem 1.2rem;">
+        <div class="tool-out-label">Browse</div>
+        <a class="btn btn-ghost" href="/community" style="margin-top:0.5rem; width:100%;">← All posts</a>
+      </div>
+    </aside>
+  </div></section>
+  <div id="footer-mount"></div>
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
+  <script src="/js/community-post.js"></script>
+</body>
+</html>

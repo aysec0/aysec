@@ -12,6 +12,7 @@
     { href: '/challenges',     label: 'CTF' },
     { href: '/daily',          label: 'Daily' },
     { type: 'tools',           label: 'Tools' },
+    { href: '/community',      label: 'Community' },
     { href: '/blog',           label: 'Blog' },
   ];
 
@@ -206,11 +207,6 @@
               Personal site, CTF platform, and training for people who want to actually
               understand security — not just collect badges.
             </p>
-            <form class="newsletter-mini" id="footerNlForm" aria-label="Subscribe to newsletter">
-              <input class="input" type="email" id="footer-nl-email" placeholder="you@domain.com" aria-label="Email" required />
-              <button class="btn btn-primary" type="submit" id="footer-nl-submit">Subscribe</button>
-            </form>
-            <div id="footer-nl-msg" class="dim" style="font-size:0.78rem; margin-top:0.5rem; font-family:var(--font-mono);">Monthly. No spam. Unsubscribe anytime.</div>
           </div>
           <div>
             <div class="footer-col-title">Learn</div>
@@ -240,7 +236,6 @@
               <li><a href="/dashboard">Dashboard</a></li>
               <li><a href="/settings">Settings</a></li>
               <li><a href="/levels">Levels</a></li>
-              <li><a href="/newsletter">Newsletter</a></li>
             </ul>
           </div>
           <div>
@@ -821,7 +816,6 @@
     wireThemeToggle();
     wireMobileDrawer();
     wireToolsDropdown();
-    wireFooterNewsletter();
     setYear();
     syncAuthNav();
     reveal();
@@ -870,6 +864,16 @@
       const href = shouldPrefetch(a);
       if (href) prefetch(href);
     }, { passive: true });
+  }
+
+  // Load /js/editor-bridge.js when the page is rendered inside the visual
+  // editor's iframe (URL has ?_edit=1). The bridge handles its own no-op
+  // cases so importing it on non-edit pages is safe.
+  if (new URLSearchParams(location.search).has('_edit') && window.top !== window.self) {
+    const s = document.createElement('script');
+    s.src = '/js/editor-bridge.js';
+    s.defer = true;
+    document.head.appendChild(s);
   }
 
   // Inject the floating "Ask aysec" widget on every page (its own script

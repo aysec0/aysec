@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>New post — community — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><a href="/community">community</a><span class="sep">/</span><span>new</span></div>
+      <span class="page-eyebrow">// /community/submit</span>
+      <h1 class="page-title">New post</h1>
+    </div>
+  </header>
+  <section class="section">
+    <div class="container" style="max-width:780px;">
+      <form id="newPostForm" class="card" style="padding:1.5rem; display:grid; gap:0.7rem;">
+        <label>category
+          <select class="input" name="category" id="newPostCat" required></select>
+        </label>
+        <label>title (required)
+          <input class="input" name="title" maxlength="280" required />
+        </label>
+        <label>link (optional)
+          <input class="input mono" name="url" placeholder="https://…" />
+        </label>
+        <label>body (markdown, optional)
+          <textarea class="textarea" name="body_md" rows="10" placeholder="What did you find / learn / question?"></textarea>
+        </label>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <button class="btn btn-primary" type="submit">Post</button>
+          <a class="btn btn-ghost" href="/community">Cancel</a>
+          <span id="newPostMsg" class="dim" style="font-size:0.85rem;"></span>
+        </div>
+      </form>
+    </div>
+  </section>
+  <div id="footer-mount"></div>
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      (async () => {
+        const me = await window.api.get('/api/auth/me').catch(() => null);
+        if (!me?.user) { location.href = '/login?next=/community/submit'; return; }
+        const r = await window.api.get('/api/forum/categories');
+        $('newPostCat').innerHTML = r.categories.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
+        $('newPostForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const fd = new FormData(e.target);
+          try {
+            const cr = await window.api.post('/api/forum/posts', {
+              category: fd.get('category'),
+              title: fd.get('title'),
+              body_md: fd.get('body_md'),
+              url: fd.get('url') || null,
+            });
+            location.href = '/community/post/' + cr.id;
+          } catch (err) {
+            $('newPostMsg').textContent = err.message;
+            $('newPostMsg').style.color = 'var(--hard,#ff6b6b)';
+          }
+        });
+      })();
+    })();
+  </script>
+</body>
+</html>
