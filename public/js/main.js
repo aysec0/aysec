@@ -328,33 +328,10 @@
       '<div class="card" style="padding:1.25rem;"><p class="dim">Nothing to compete in right now.</p></div>';
   }
 
-  async function loadSiteSettings() {
-    try {
-      const r = await window.api.get('/api/site-settings');
-      const s = r.settings;
-      // Plain text replacements
-      document.querySelectorAll('[data-site]').forEach((el) => {
-        const k = el.dataset.site;
-        if (s[k]) el.textContent = s[k];
-      });
-      // CTA href overrides
-      document.querySelectorAll('[data-site-href]').forEach((a) => {
-        const k = a.dataset.siteHref;
-        if (s[k]) a.setAttribute('href', s[k]);
-      });
-      // Section visibility toggles ("0" / "false" hides the element)
-      document.querySelectorAll('[data-site-toggle]').forEach((el) => {
-        const k = el.dataset.siteToggle;
-        const v = s[k];
-        if (v != null && (v === '0' || v === 'false' || v === false)) {
-          el.style.display = 'none';
-        }
-      });
-    } catch {} // Silently fall back to default DOM text
-  }
+  // Site settings (data-site attributes) are now applied globally by
+  // layout.js's applySiteSettings() — runs on every page, not just /.
 
   document.addEventListener('DOMContentLoaded', () => {
-    loadSiteSettings();
     loadCourses();
     loadChallenges();
     loadPosts();

@@ -21,7 +21,8 @@
     device: 'desktop',
     mode: 'edit',
     settings: {},     // current values (server)
-    pending: {},      // queued edits {key: value, key__href: value}
+    defaults: {},     // SITE_DEFAULTS (used for the Modified panel)
+    pending: {},      // queued edits {key: value, key__href: value, key__toggle: value}
     selectedKey: null,
     selectedHrefKey: null,
     selectedToggleKey: null,
@@ -34,8 +35,67 @@
   async function loadSettings() {
     try {
       const r = await api.get('/api/admin/site-settings');
-      state.settings = r.settings;
+      state.settings = r.settings || {};
+      state.defaults = r.defaults || {};
+      renderModifiedPanel();
     } catch {}
+  }
+
+  // Show the Modified panel for any keys whose stored value differs from
+  // the SITE_DEFAULTS value. This is global (across pages) so it surfaces
+  // edits made on pages other than the one currently in the iframe.
+  function renderModifiedPanel() {
+    const section = $('seModifiedSection');
+    if (!section) return;
+    const modified = Object.keys(state.defaults).filter((k) => {
+      const cur = state.settings[k];
+      const def = state.defaults[k];
+      return cur != null && String(cur) !== String(def);
+    });
+    if (!modified.length) {
+      section.hidden = true;
+      return;
+    }
+    section.hidden = false;
+    $('seModifiedCount').textContent = modified.length;
+    $('seModifiedList').innerHTML = modified.map((k) => {
+      const cur = state.settings[k] ?? '';
+      const preview = String(cur).slice(0, 50);
+      return `<li>
+        <button class="se-modified-key" data-key="${escapeHtml(k)}" title="Jump to this key">
+          <span class="se-modified-key-name">${escapeHtml(k)}</span>
+          <span class="se-modified-key-preview">${escapeHtml(preview)}</span>
+        </button>
+        <button class="se-modified-reset" data-reset-key="${escapeHtml(k)}" title="Reset to default">↺</button>
+      </li>`;
+    }).join('');
+    $('seModifiedList').querySelectorAll('[data-key]').forEach((b) =>
+      b.addEventListener('click', () => {
+        // Find the key on the current page; if it's there, jump. Otherwise
+        // hint with a toast that the key lives on another page.
+        const onPage = state.editableOnPage.find((it) => it.key === b.dataset.key);
+        if (onPage) selectKey(onPage.key, onPage.kind);
+        else window.toast?.(`@${b.dataset.key} isn't on this page — switch pages to edit it.`, 'info');
+      })
+    );
+    $('seModifiedList').querySelectorAll('[data-reset-key]').forEach((b) =>
+      b.addEventListener('click', async () => {
+        const k = b.dataset.resetKey;
+        if (!confirm(`Reset ${k} to its default value?`)) return;
+        b.disabled = true;
+        try {
+          await api.req('PUT', '/api/admin/site-settings', { [k]: state.defaults[k] });
+          state.settings[k] = state.defaults[k];
+          renderModifiedPanel();
+          // Re-apply to iframe if visible
+          sendToFrame({ type: 'aysec:edit:apply', key: k, text: state.defaults[k], href: state.defaults[k], visible: !(state.defaults[k] === '0' || state.defaults[k] === 'false') });
+        } catch (err) {
+          window.toast?.(err.message || 'reset failed', 'error');
+        } finally {
+          b.disabled = false;
+        }
+      })
+    );
   }
 
   // ----- Iframe handling -----
@@ -271,11 +331,31 @@
       Object.assign(state.settings, body);
       state.pending = {};
       setUnsaved(false);
+      renderModifiedPanel();
     } catch (e) {
       $('seState').textContent = 'Save failed: ' + e.message;
       $('seState').classList.add('is-error');
     } finally {
       $('seSave').disabled = false;
+    }
+  });
+
+  $('seModifiedResetAll')?.addEventListener('click', async () => {
+    const modified = Object.keys(state.defaults).filter((k) =>
+      state.settings[k] != null && String(state.settings[k]) !== String(state.defaults[k])
+    );
+    if (!modified.length) return;
+    if (!confirm(`Reset all ${modified.length} modified keys to their defaults?`)) return;
+    const body = Object.fromEntries(modified.map((k) => [k, state.defaults[k]]));
+    try {
+      await api.req('PUT', '/api/admin/site-settings', body);
+      Object.assign(state.settings, body);
+      renderModifiedPanel();
+      // Reload the iframe so the page reflects everything-reset
+      loadFrame();
+      window.toast?.(`Reset ${modified.length} keys`, 'success');
+    } catch (e) {
+      window.toast?.(e.message || 'reset failed', 'error');
     }
   });
 

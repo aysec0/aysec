@@ -795,6 +795,33 @@
     reveal();
     loadAskFab();
     wireHoverPrefetch();
+    applySiteSettings();
+  }
+
+  // Apply admin-edited site settings to any [data-site*] attributes on the
+  // current page. Used to live in main.js (homepage only); now runs on every
+  // page so /about, /hire, etc. all stay in sync with the visual editor.
+  async function applySiteSettings() {
+    if (!window.api) return;
+    try {
+      const r = await window.api.get('/api/site-settings');
+      const s = r.settings || {};
+      document.querySelectorAll('[data-site]').forEach((el) => {
+        const k = el.dataset.site;
+        if (s[k] != null && s[k] !== '') el.textContent = s[k];
+      });
+      document.querySelectorAll('[data-site-href]').forEach((a) => {
+        const k = a.dataset.siteHref;
+        if (s[k]) a.setAttribute('href', s[k]);
+      });
+      document.querySelectorAll('[data-site-toggle]').forEach((el) => {
+        const k = el.dataset.siteToggle;
+        const v = s[k];
+        if (v != null && (v === '0' || v === 'false' || v === false)) {
+          el.style.display = 'none';
+        }
+      });
+    } catch {}
   }
 
   // ---- Hover-prefetch: when the user moves over an internal link, fire a

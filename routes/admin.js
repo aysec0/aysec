@@ -920,6 +920,12 @@ const SITE_DEFAULTS = {
   about_p2:      'Everything here — courses, challenges, writeups — is open to feedback. If something’s wrong, broken, or could be better, tell me.',
   show_compete:  '1',
   show_about:    '1',
+  about_page_title:    'About me.',
+  about_page_subtitle: 'Ammar Yasser. Security engineer, educator, AI red-teamer.',
+  about_short_eyebrow: '// the short version',
+  about_short_title:   'I help people break things — properly.',
+  hire_page_title:     'Hire me.',
+  hire_page_subtitle:  'Pentests, AI/LLM red-team engagements, training for engineering teams, and one-off advisory work. Direct, small-team, no junior bait-and-switch.',
 };
 
 router.get('/site-settings', (_req, res) => {
