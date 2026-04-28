@@ -7711,6 +7711,92 @@ kbd {
 .empty[hidden] { display: none !important; }
 
 /* ============================================================
+   Smoothness pass — page-wide polish
+   ============================================================ */
+
+/* Smooth scroll for in-page anchors; respect reduced-motion. */
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Theme transition: ease background + text color when toggling. */
+html, body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Active-press feedback on every button + tool card. */
+.btn:active,
+.tool-card:active,
+.tools-index-card:active,
+.ask-fab-btn:active,
+.tools-nav-trigger:active { transform: scale(0.97); }
+.btn,
+.tool-card,
+.tools-index-card,
+.ask-fab-btn,
+.tools-nav-trigger { transition: transform 0.12s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease; }
+
+/* View Transitions API — same-origin nav cross-fades on Chromium.
+   Falls back gracefully (instant cut) on Safari / Firefox. */
+@view-transition { navigation: auto; }
+
+/* Popover fade + scale-in. The Tools / Ask FAB / avatar dropdowns
+   each set hidden=true|false; we animate the swap with an animation
+   on the visible state so it triggers fresh on every open. */
+@keyframes aysec-pop-in {
+  from { opacity: 0; transform: var(--pop-from, translateX(-50%) translateY(-4px) scale(0.97)); }
+  to   { opacity: 1; transform: var(--pop-to,   translateX(-50%) translateY(0)    scale(1)); }
+}
+@keyframes aysec-fab-pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+@keyframes aysec-dd-pop-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); transform-origin: top right; }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    transform-origin: top right; }
+}
+
+.tools-dd:not([hidden]) {
+  animation: aysec-pop-in 0.14s ease-out both;
+}
+.ask-fab-panel:not([hidden]) {
+  animation: aysec-fab-pop-in 0.16s ease-out both;
+  transform-origin: bottom left;
+}
+#navDropdown {
+  animation: aysec-dd-pop-in 0.14s ease-out both;
+}
+
+/* Backdrop-blur the popovers so what's behind softens — feels native. */
+.tools-dd,
+.ask-fab-panel,
+.nav-dropdown {
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+/* Subtle nav-link hover lift. */
+.nav-link {
+  transition: color 0.15s ease, transform 0.12s ease;
+}
+.nav-link:hover { transform: translateY(-1px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tools-dd:not([hidden]),
+  .ask-fab-panel:not([hidden]),
+  #navDropdown { animation: none; }
+  .btn:active,
+  .tool-card:active,
+  .tools-index-card:active,
+  .ask-fab-btn:active,
+  .tools-nav-trigger:active,
+  .nav-link:hover { transform: none; }
+}
+
+/* ============================================================
    Tools dropdown (navbar)
    ============================================================ */
 .tools-nav-wrap {

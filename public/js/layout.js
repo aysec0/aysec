@@ -832,6 +832,43 @@
     syncAuthNav();
     reveal();
     loadAskFab();
+    wireHoverPrefetch();
+  }
+
+  // ---- Hover-prefetch: when the user moves over an internal link, fire a
+  // prefetch so the click feels instant. ~20% latency on a fast network,
+  // but the perceived snap is the win. Skips already-prefetched URLs,
+  // hash-only links, and external destinations.
+  function wireHoverPrefetch() {
+    if (!('IntersectionObserver' in window)) return;
+    const seen = new Set();
+    function prefetch(href) {
+      if (!href || seen.has(href)) return;
+      seen.add(href);
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = href;
+      link.as = 'document';
+      document.head.appendChild(link);
+    }
+    function shouldPrefetch(a) {
+      if (!a || a.target === '_blank') return null;
+      const u = a.getAttribute('href');
+      if (!u || u.startsWith('#') || u.startsWith('mailto:') || u.startsWith('tel:')) return null;
+      if (/^https?:/i.test(u) && !u.startsWith(location.origin)) return null;
+      return new URL(u, location.href).pathname + new URL(u, location.href).search;
+    }
+    document.addEventListener('mouseover', (e) => {
+      const a = e.target.closest && e.target.closest('a[href]');
+      const href = shouldPrefetch(a);
+      if (href) prefetch(href);
+    }, { passive: true });
+    // Touch devices: prefetch on touchstart since hover doesn't fire
+    document.addEventListener('touchstart', (e) => {
+      const a = e.target.closest && e.target.closest('a[href]');
+      const href = shouldPrefetch(a);
+      if (href) prefetch(href);
+    }, { passive: true });
   }
 
   // Inject the floating "Ask aysec" widget on every page (its own script
