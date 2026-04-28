@@ -62,10 +62,7 @@
     `).join('');
     return `
       <li class="tools-nav-wrap">
-        <button type="button" class="nav-link tools-nav-trigger" id="toolsNavBtn" aria-haspopup="true" aria-expanded="false">
-          Tools
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
+        <button type="button" class="nav-link tools-nav-trigger" id="toolsNavBtn" aria-haspopup="true" aria-expanded="false">Tools</button>
         <div class="tools-dd" id="toolsDd" hidden role="menu" aria-label="Tools">
           <div class="tools-dd-search-wrap">
             <svg class="tools-dd-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>

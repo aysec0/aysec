@@ -7651,14 +7651,9 @@ kbd {
   border: 0;
   cursor: pointer;
   font: inherit;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
 }
 
 .tools-nav-trigger.is-open { color: var(--accent); }
-.tools-nav-trigger.is-open svg { transform: rotate(180deg); }
-.tools-nav-trigger svg { transition: transform 0.15s ease; }
 
 .tools-dd {
   position: absolute;
