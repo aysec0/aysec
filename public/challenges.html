@@ -42,37 +42,6 @@
     </div>
   </div>
 
-  <section class="section section-narrow">
-    <div class="container">
-      <!-- CTF Placement quiz -->
-      <div class="quiz-shell" id="quizShell">
-        <div class="quiz-intro" id="quizIntro">
-          <div class="quiz-intro-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-          </div>
-          <div class="quiz-intro-text">
-            <h2 class="quiz-intro-title">First time on a CTF? Don't know where to start?</h2>
-            <p class="quiz-intro-sub">4 quick questions. We'll pick the right difficulty + a starting challenge so you actually solve something today instead of staring at the grid.</p>
-          </div>
-          <button class="btn btn-primary" id="quizStart">Place me →</button>
-        </div>
-        <div class="quiz-active" id="quizActive" hidden>
-          <div class="quiz-progress">
-            <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgressFill"></div></div>
-            <div class="quiz-progress-meta"><span id="quizStep">1</span> of <span id="quizTotal">4</span><button class="quiz-link" id="quizExit">cancel</button></div>
-          </div>
-          <div class="quiz-question" id="quizQuestion"></div>
-          <div class="quiz-options" id="quizOptions"></div>
-          <div class="quiz-nav">
-            <button class="btn btn-ghost" id="quizBack" disabled>← back</button>
-            <span class="quiz-hint">click an option to continue</span>
-          </div>
-        </div>
-        <div class="quiz-result" id="quizResult" hidden></div>
-      </div>
-    </div>
-  </section>
-
   <section class="section">
     <div class="container">
 
@@ -135,6 +104,5 @@
   <script src="/js/layout.js"></script>
   <script src="/js/tier-icons.js"></script>
   <script src="/js/challenges-list.js"></script>
-  <script src="/js/ctf-placement.js"></script>
 </body>
 </html>
