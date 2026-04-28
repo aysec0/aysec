@@ -309,9 +309,9 @@
       const quickActions = `
         <div class="admin-quick-actions">
           <span class="admin-quick-eyebrow">Quick actions</span>
-          <button class="btn btn-primary btn-sm" data-go-tab="challenges">+ Challenge</button>
-          <button class="btn btn-ghost btn-sm" data-go-tab="posts">+ Post</button>
-          <button class="btn btn-ghost btn-sm" data-go-tab="courses">+ Course</button>
+          <button class="btn btn-primary btn-sm" data-go-tab="challenges" data-go-action="new">+ Challenge</button>
+          <button class="btn btn-ghost btn-sm" data-go-tab="posts" data-go-action="new">+ Post</button>
+          <button class="btn btn-ghost btn-sm" data-go-tab="courses" data-go-action="new">+ Course</button>
           <button class="btn btn-ghost btn-sm" data-go-tab="daily">+ Daily</button>
           <a class="btn btn-ghost btn-sm" href="/site-editor">✎ Visual editor</a>
         </div>`;
@@ -374,12 +374,30 @@
   }
 
   // Click a [data-go-tab="..."] anywhere to switch tabs (used in overview).
+  // If the source also has [data-go-action="new"], poll briefly for the
+  // tab's "+ New X" button (id starts with "new", ends with "Btn") and
+  // click it once it appears, so the form opens in one motion.
   document.addEventListener('click', (e) => {
     const target = e.target.closest('[data-go-tab]');
     if (!target) return;
     const tabName = target.dataset.goTab;
+    const action = target.dataset.goAction;
     const btn = document.querySelector(`.admin-tab[data-tab="${tabName}"]`);
-    if (btn) btn.click();
+    if (!btn) return;
+    btn.click();
+    if (action === 'new') {
+      let tries = 0;
+      const tryClick = () => {
+        const newBtn = document.querySelector('#adminMain button[id^="new"][id$="Btn"]');
+        if (newBtn) {
+          newBtn.click();
+          newBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          return;
+        }
+        if (++tries < 20) setTimeout(tryClick, 100);
+      };
+      setTimeout(tryClick, 100);
+    }
   });
 
   // ----------------------- Users -----------------------
