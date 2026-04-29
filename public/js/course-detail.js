@@ -60,6 +60,9 @@
           <h1 class="detail-title">${escapeHtml(course.title)}</h1>
           <p class="detail-subtitle">${escapeHtml(course.subtitle || '')}</p>
           <p class="muted" style="max-width:640px">${escapeHtml(course.description || '')}</p>
+          <div style="margin-top:0.85rem;">
+            <button type="button" data-bookmark-kind="course" data-bookmark-slug="${escapeHtml(course.slug)}">Save</button>
+          </div>
         </div>
         <aside class="detail-side">
           ${priceHtml}

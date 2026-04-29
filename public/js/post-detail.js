@@ -117,7 +117,8 @@
         <h1 class="detail-title">${escapeHtml(post.title)}</h1>
         <p class="muted">
           Published ${escapeHtml(window.fmtDate(post.published_at))} · ${post.reading_minutes || 1} min read
-        </p>`;
+        </p>
+        <div style="margin-top:0.6rem;"><button type="button" data-bookmark-kind="post" data-bookmark-slug="${escapeHtml(post.slug)}">Save</button></div>`;
 
       bodyEl.innerHTML = post.content_html || '<p class="muted">No content.</p>';
 

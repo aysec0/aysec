@@ -39,7 +39,8 @@
         ${solved ? '<span class="badge solved">✓ solved</span>' : ''}
       </div>
       <h1 class="detail-title">${escapeHtml(chal.title)}</h1>
-      ${chal.author ? `<p class="muted">by <strong>${escapeHtml(chal.author)}</strong></p>` : ''}`;
+      ${chal.author ? `<p class="muted">by <strong>${escapeHtml(chal.author)}</strong></p>` : ''}
+      <div style="margin-top:0.6rem;"><button type="button" data-bookmark-kind="challenge" data-bookmark-slug="${escapeHtml(chal.slug)}">Save</button></div>`;
   }
 
   function renderBody(data) {

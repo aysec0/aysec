@@ -838,6 +838,21 @@
     applySiteSettings();
     registerServiceWorker();
     checkLoginStreak();
+    loadBookmarkHelper();
+  }
+
+  // Lazy-load the bookmark helper. It auto-wires any data-bookmark-* button
+  // on the page (already-rendered or rendered later via MutationObserver).
+  function loadBookmarkHelper() {
+    // Skip on pages where it'd be pointless
+    if (location.pathname.startsWith('/admin')) return;
+    if (location.pathname.startsWith('/site-editor')) return;
+    if (document.querySelector('script[data-bookmark-helper]')) return;
+    const s = document.createElement('script');
+    s.src = '/js/bookmark.js';
+    s.dataset.bookmarkHelper = '1';
+    s.defer = true;
+    document.body.appendChild(s);
   }
 
   // Idempotent per-day login streak ping. Backend awards XP and emits a

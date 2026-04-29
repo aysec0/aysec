@@ -78,7 +78,8 @@
         </div>
         <h1 class="detail-title" style="font-family:var(--font-mono);">${escapeHtml(cheatsheet.title)}</h1>
         <p class="detail-subtitle">${escapeHtml(cheatsheet.subtitle || '')}</p>
-        ${cheatsheet.tool_url ? `<p class="muted"><a href="${escapeHtml(cheatsheet.tool_url)}" target="_blank" rel="noopener">official site →</a></p>` : ''}`;
+        ${cheatsheet.tool_url ? `<p class="muted"><a href="${escapeHtml(cheatsheet.tool_url)}" target="_blank" rel="noopener">official site →</a></p>` : ''}
+        <div style="margin-top:0.6rem;"><button type="button" data-bookmark-kind="cheatsheet" data-bookmark-slug="${escapeHtml(cheatsheet.slug)}">Save</button></div>`;
 
       bodyEl.innerHTML = cheatsheet.content_html || '<p class="muted">No content.</p>';
       renderTOC(buildTOC(bodyEl));

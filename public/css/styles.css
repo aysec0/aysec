@@ -4423,6 +4423,29 @@ kbd {
 }
 .vault-hint-btn:disabled { opacity: 0.5; cursor: wait; }
 
+/* Bookmark toggle button — appears on course/challenge/post/cheatsheet detail pages */
+.bookmark-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s, transform 0.12s;
+}
+.bookmark-btn:hover {
+  color: var(--accent); border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+.bookmark-btn.is-bookmarked {
+  color: var(--accent); border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+.bookmark-btn:disabled { opacity: 0.6; cursor: wait; }
+.bookmark-btn .bookmark-icon { display: inline-grid; place-items: center; }
+
 /* Profile customization — banner + social-link icons */
 .profile-hero { position: relative; }
 .profile-banner {
