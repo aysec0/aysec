@@ -11,6 +11,7 @@ const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 router.get('/', optionalAuth, (req, res) => {
   const challenges = db.prepare(`
     SELECT c.id, c.slug, c.title, c.category, c.difficulty, c.points, c.author,
+           c.source, c.external_url, c.source_pack,
            (SELECT COUNT(*) FROM solves s WHERE s.challenge_id = c.id) AS solves,
            CASE WHEN ? IS NULL THEN 0
                 ELSE EXISTS(SELECT 1 FROM solves s WHERE s.challenge_id = c.id AND s.user_id = ?)

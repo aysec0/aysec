@@ -8,60 +8,76 @@
   <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="/css/styles.css" />
   <script src="/js/theme.js"></script>
 </head>
-<body class="duel-detail-page">
+<body class="duel-arena-page" data-no-transition>
   <div id="navbar-mount"></div>
 
-  <header class="page-header">
-    <div class="container">
-      <div class="crumbs">
-        <a href="/">~</a><span class="sep">/</span>
-        <a href="/duels">duels</a><span class="sep">/</span>
-        <span id="crumbId">…</span>
+  <!-- Compact arena top-bar instead of the regular page-header.
+       Big countdown front-and-center; format badge + status to the side. -->
+  <header class="arena-bar">
+    <div class="container arena-bar-inner">
+      <a href="/duels" class="arena-back" aria-label="Back to duels">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+        </svg>
+        <span>Duels</span>
+      </a>
+      <div class="arena-clock-wrap">
+        <div class="arena-clock" id="arenaClock">--:--</div>
+        <div class="arena-clock-label" id="arenaClockLabel">loading…</div>
       </div>
-      <div id="duelHead">
-        <div class="skeleton" style="height:34px;width:50%"></div>
-      </div>
+      <div class="arena-meta" id="arenaMeta"></div>
     </div>
   </header>
 
-  <section class="section">
+  <!-- Versus banner — two faces, format/icon between them -->
+  <section class="arena-versus-section">
     <div class="container">
-      <div class="duel-shell">
-        <main>
-          <div id="duelArena" class="duel-arena">
-            <div class="skeleton" style="height:160px;border-radius:18px"></div>
-          </div>
+      <div id="duelArena" class="arena-versus">
+        <div class="skeleton" style="height:140px;border-radius:18px;margin-bottom:1rem"></div>
+      </div>
+    </div>
+  </section>
 
-          <div id="duelChallengeBox" class="duel-challenge-box" hidden></div>
+  <!-- Featured challenge spotlight -->
+  <section class="arena-section">
+    <div class="container">
+      <div class="arena-grid">
+        <main class="arena-main">
+          <div id="duelChallengeBox" class="arena-challenge" hidden></div>
 
-          <div id="duelFlagBox" class="duel-flag-box" hidden>
-            <h3 class="duel-section-title">Submit flag</h3>
+          <div id="duelFlagBox" class="arena-flag" hidden>
+            <div class="arena-flag-head">
+              <h2>Submit flag</h2>
+              <span class="arena-flag-rate">5 attempts / minute</span>
+            </div>
             <form id="duelFlagForm" class="form">
               <div id="duelFlagAlert" hidden></div>
               <div class="field">
-                <div class="field-row">
-                  <input class="input mono flag-input" type="text" id="duelFlagInput" name="flag" placeholder="flag{...}" autocomplete="off" required />
-                  <button class="btn btn-primary" type="submit" id="duelFlagBtn">Submit</button>
+                <div class="field-row arena-flag-row">
+                  <input class="input mono flag-input" type="text" id="duelFlagInput" name="flag" placeholder="picoCTF{...}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" required />
+                  <button class="btn btn-primary arena-submit-btn" type="submit" id="duelFlagBtn">Submit ⏎</button>
                 </div>
-                <span class="field-hint">5 attempts/min. First correct flag wins the pot.</span>
+                <span class="field-hint">Hashed server-side. First correct flag wins the rating swing.</span>
               </div>
             </form>
           </div>
 
-          <div id="duelTimeline" class="duel-timeline">
-            <h3 class="duel-section-title">Timeline</h3>
-            <div id="duelTimelineBox"><p class="muted">No submissions yet.</p></div>
+          <div id="duelTimeline" class="arena-timeline">
+            <div class="arena-timeline-head">
+              <h3>Timeline</h3>
+              <span class="dim mono" id="timelineCount">0 submissions</span>
+            </div>
+            <div id="duelTimelineBox"><p class="muted">No submissions yet — be the first to fire.</p></div>
           </div>
         </main>
 
-        <aside class="detail-side duel-side">
-          <div id="duelStats"></div>
-
-          <div id="duelActions" class="duel-actions"></div>
+        <aside class="arena-side">
+          <div id="duelStats" class="arena-stats"></div>
+          <div id="duelActions" class="arena-actions"></div>
         </aside>
       </div>
     </div>

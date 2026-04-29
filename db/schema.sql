@@ -75,21 +75,24 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
 
 -- CTF challenges
 CREATE TABLE IF NOT EXISTS challenges (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  slug         TEXT NOT NULL UNIQUE,
-  title        TEXT NOT NULL,
-  category     TEXT NOT NULL,                         -- web | crypto | pwn | rev | forensics | misc
-  difficulty   TEXT NOT NULL,                         -- easy | medium | hard | insane
-  points       INTEGER NOT NULL DEFAULT 100,
-  description  TEXT,
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug           TEXT NOT NULL UNIQUE,
+  title          TEXT NOT NULL,
+  category       TEXT NOT NULL,                       -- web | crypto | pwn | rev | forensics | misc
+  difficulty     TEXT NOT NULL,                       -- easy | medium | hard | insane
+  points         INTEGER NOT NULL DEFAULT 100,
+  description    TEXT,
   attachment_url TEXT,
-  remote_url   TEXT,                                  -- e.g., target host:port
-  flag_hash    TEXT NOT NULL,                         -- sha256(flag)
-  hints        TEXT,                                  -- JSON array of strings (progressive hints)
-  author       TEXT,
-  published    INTEGER NOT NULL DEFAULT 0,
-  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+  remote_url     TEXT,                                -- e.g., target host:port
+  flag_hash      TEXT NOT NULL,                       -- sha256(flag)
+  hints          TEXT,                                -- JSON array of strings (progressive hints)
+  author         TEXT,
+  source         TEXT NOT NULL DEFAULT 'aysec',       -- aysec | picoctf | overthewire | cryptohack | ...
+  external_url   TEXT,                                -- canonical URL on the source platform
+  source_pack    TEXT,                                -- e.g. picoctf-2019, overthewire-bandit
+  published      INTEGER NOT NULL DEFAULT 0,
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_challenges_category ON challenges(category);

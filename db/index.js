@@ -46,6 +46,13 @@ export function migrate() {
   // True until the player has finished their first 10 matches in this format.
   tryAdd(`ALTER TABLE duel_ratings ADD COLUMN provisional INTEGER NOT NULL DEFAULT 1`);
 
+  // Real CTF integration: challenges can come from external sources
+  // (picoCTF, OverTheWire, cryptohack, etc.) — store the source label,
+  // external URL, and a pack identifier so the arena page can deep-link.
+  tryAdd(`ALTER TABLE challenges ADD COLUMN source TEXT NOT NULL DEFAULT 'aysec'`);
+  tryAdd(`ALTER TABLE challenges ADD COLUMN external_url TEXT`);
+  tryAdd(`ALTER TABLE challenges ADD COLUMN source_pack TEXT`);
+
   // Idempotent migration: blog posts -> community/forum posts under a
   // dedicated "Writeups & blog" category. Runs on every startup but only
   // touches posts whose migrated_to_forum_id is NULL.

@@ -282,7 +282,12 @@ function rowToDto(row) {
     opponent:  row.opponent_id
       ? { id: row.opponent_id, username: row.op_username, display_name: row.op_display, avatar_url: row.op_avatar }
       : null,
-    challenge: { id: row.challenge_id, slug: row.c_slug, title: row.c_title, category: row.c_category, difficulty: row.c_difficulty, points: row.c_points },
+    challenge: {
+      id: row.challenge_id, slug: row.c_slug, title: row.c_title,
+      category: row.c_category, difficulty: row.c_difficulty, points: row.c_points,
+      source: row.c_source || 'aysec', external_url: row.c_external_url,
+      source_pack: row.c_source_pack, description: row.c_description,
+    },
     winner_id: row.winner_id,
     winner_rating_change: row.winner_rating_change,
     loser_rating_change: row.loser_rating_change,
@@ -293,7 +298,9 @@ const SELECT_BASE = `
   SELECT d.*,
          cu.username AS ch_username, cu.display_name AS ch_display, cu.avatar_url AS ch_avatar,
          ou.username AS op_username, ou.display_name AS op_display, ou.avatar_url AS op_avatar,
-         c.slug AS c_slug, c.title AS c_title, c.category AS c_category, c.difficulty AS c_difficulty, c.points AS c_points
+         c.slug AS c_slug, c.title AS c_title, c.category AS c_category, c.difficulty AS c_difficulty,
+         c.points AS c_points, c.source AS c_source, c.external_url AS c_external_url,
+         c.source_pack AS c_source_pack, c.description AS c_description
   FROM duels d
   JOIN users cu      ON cu.id = d.challenger_id
   LEFT JOIN users ou ON ou.id = d.opponent_id

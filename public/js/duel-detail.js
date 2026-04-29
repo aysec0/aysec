@@ -1,26 +1,45 @@
 /* ============================================================
-   /duels/:id — single duel arena.
+   /duels/:id — focused arena page.
 
-   Fetches the duel + submission timeline, polls every 4s while
-   the duel is active so each side sees the other's submissions
-   in near-real-time, runs a live mm:ss countdown, and exposes
-   the flag form when the viewer is one of the two duelists.
+   Layout:
+     - Top bar: back arrow + BIG countdown clock + status/format meta
+     - Versus banner: avatars left + center pot + avatars right
+     - Challenge spotlight: title + category + difficulty + source badge
+       + "Open original challenge ↗" link
+     - Flag form (only for active duelists)
+     - Submission timeline
+     - Side rail: stats + actions
+
+   Polling:
+     - 4s while open/active. Stops on terminal states.
+     - 1Hz local clock so the countdown doesn't tick once per fetch.
    ============================================================ */
 (() => {
   const id = location.pathname.split('/').filter(Boolean)[1];
-  let state = null;   // { duel, submissions, viewer }
+  let state = null;
   let pollTimer = null;
   let clockTimer = null;
 
   const $ = (s) => document.querySelector(s);
 
-  function avatarFor(u) {
-    if (!u) return '<div class="duel-avatar duel-avatar-empty">?</div>';
+  // Small visual labels for source platforms (icon + display name)
+  const SOURCE_LABELS = {
+    aysec:       { name: 'aysec original', icon: '~$', color: '#39ff7a' },
+    picoctf:     { name: 'picoCTF',        icon: '🤖', color: '#e05569' },
+    overthewire: { name: 'OverTheWire',    icon: '🐚', color: '#7aa2f7' },
+    cryptohack:  { name: 'CryptoHack',     icon: '🔐', color: '#bb88ff' },
+    tryhackme:   { name: 'TryHackMe',      icon: '🎯', color: '#88e8a3' },
+    htb:         { name: 'Hack The Box',   icon: '🟢', color: '#9fef00' },
+  };
+
+  function avatarFor(u, large = false) {
+    const cls = `arena-avatar${large ? ' arena-avatar-lg' : ''}`;
+    if (!u) return `<div class="${cls} arena-avatar-empty">?</div>`;
     if (u.avatar_url) {
-      return `<img class="duel-avatar" src="${escapeHtml(u.avatar_url)}" alt="" loading="lazy" />`;
+      return `<img class="${cls}" src="${escapeHtml(u.avatar_url)}" alt="" loading="lazy" />`;
     }
     const initial = (u.display_name || u.username || '?').slice(0, 1).toUpperCase();
-    return `<div class="duel-avatar duel-avatar-letter">${escapeHtml(initial)}</div>`;
+    return `<div class="${cls} arena-avatar-letter">${escapeHtml(initial)}</div>`;
   }
 
   function diffDot(diff) {
@@ -32,18 +51,17 @@
     </span>`;
   }
 
-  function fmtRemaining(iso) {
-    if (!iso) return '';
+  function fmtClock(iso) {
+    if (!iso) return '--:--';
     const target = new Date(iso.replace(' ', 'T') + 'Z').getTime();
     const diff = target - Date.now();
-    if (diff <= 0) return 'expired';
-    const m = Math.floor(diff / 60_000);
-    const s = Math.floor((diff % 60_000) / 1000);
-    if (m >= 60) {
-      const h = Math.floor(m / 60);
-      return `${h}h ${m % 60}m`;
-    }
-    return `${m}:${String(s).padStart(2, '0')}`;
+    if (diff <= 0) return '00:00';
+    const totalSec = Math.floor(diff / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
 
   function fmtElapsed(start, end) {
@@ -53,13 +71,13 @@
     const diff = Math.max(0, Math.floor((b - a) / 1000));
     const m = Math.floor(diff / 60);
     const s = diff % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
 
-  function renderHead() {
+  /* ---- Top bar ---- */
+  function renderArenaBar() {
     const d = state.duel;
-    document.title = `Duel #${d.id} — aysec`;
-    $('#crumbId').textContent = `#${d.id}`;
+    document.title = `${d.format ? d.format.name + ' ' : ''}duel #${d.id} — aysec`;
 
     const labels = { open: 'OPEN', active: 'LIVE', finished: 'FINISHED', cancelled: 'CANCELLED', expired: 'EXPIRED' };
     const fmt = d.format;
@@ -67,128 +85,115 @@
       ? `<span class="duel-format-badge" style="--fmt-c:${fmt.color};">${fmt.icon} ${escapeHtml(fmt.name)}</span>`
       : '';
 
-    // For finished duels with recorded ELO swings, show the actual win/loss
-    // pills next to the format badge. For active duels it'd be misleading
-    // (depends on eventual outcome) so we just show the time control.
-    let outcomePill = '';
+    let label = '';
+    if (d.status === 'active')   label = 'time remaining';
+    else if (d.status === 'open') label = 'expires in';
+    else if (d.status === 'finished') label = `took ${fmtElapsed(d.started_at, d.finished_at)}`;
+    else label = labels[d.status] || d.status;
+
+    $('#arenaClockLabel').textContent = label;
+    tickClocks();   // populate immediately
+
+    let metaHtml = `
+      <span class="duel-status duel-status-${d.status}">${labels[d.status] || d.status}</span>
+      ${formatBadge}
+    `;
     if (d.status === 'finished' && d.winner_rating_change != null) {
-      outcomePill = `
+      metaHtml += `
         <span class="duel-rating-swing positive">+${d.winner_rating_change}</span>
         <span class="duel-rating-swing negative">${d.loser_rating_change}</span>
       `;
-    } else if (fmt) {
-      outcomePill = `<span class="card-meta-item">${fmt.minutes}-min clock</span>`;
-    } else {
-      outcomePill = `<span class="card-meta-item">${d.stake} XP at stake</span>`;
     }
-
-    $('#duelHead').innerHTML = `
-      <div class="detail-meta">
-        <span class="duel-status duel-status-${d.status}">${labels[d.status] || d.status}</span>
-        ${formatBadge}
-        ${outcomePill}
-        ${d.status === 'active' ? `<span class="duel-clock duel-clock-live" id="liveClock">${escapeHtml(fmtRemaining(d.expires_at))} left</span>` : ''}
-        ${d.status === 'open'   ? `<span class="duel-clock">expires ${escapeHtml(fmtRemaining(d.expires_at))}</span>` : ''}
-      </div>
-      <h1 class="detail-title">${fmt ? `${fmt.name} duel` : 'Duel'} #${d.id}</h1>
-      ${d.message ? `<p class="duel-message">"${escapeHtml(d.message)}"</p>` : ''}
-      <div style="margin-top:0.6rem;">
-        <span data-presence-scope="duel" data-presence-id="${d.id}"></span>
-      </div>
-    `;
+    metaHtml += `<span data-presence-scope="duel" data-presence-id="${d.id}"></span>`;
+    $('#arenaMeta').innerHTML = metaHtml;
   }
 
-  function renderArena() {
+  /* ---- Versus banner ---- */
+  function renderVersus() {
     const d = state.duel;
     const winner = d.winner_id;
     const fmt = d.format;
-    // For finished duels with recorded ELO swings, show the actual numbers
-    // ("won +28 rating", "lost -15"). For open / active duels we show a
-    // generic placeholder since the swing depends on the eventual opponent.
-    const finishedWithElo = d.status === 'finished' && (d.winner_rating_change != null);
-    const winLbl  = finishedWithElo ? `+${d.winner_rating_change} rating`
-                  : fmt ? 'rating gain' : `+${d.stake} XP`;
-    const lossLbl = finishedWithElo ? `${d.loser_rating_change} rating`
-                  : fmt ? 'rating loss' : `−${d.stake} XP`;
-    const potLbl  = fmt ? '±ELO' : d.stake;
-    const potCap  = fmt ? `${fmt.minutes}-min ${fmt.name}` : 'XP pot';
+    const finishedWithElo = d.status === 'finished' && d.winner_rating_change != null;
+
+    const winLbl  = finishedWithElo ? `+${d.winner_rating_change}` : (fmt ? '+ELO' : `+${d.stake} XP`);
+    const lossLbl = finishedWithElo ? `${d.loser_rating_change}`   : (fmt ? '−ELO' : `−${d.stake} XP`);
+    const centerLabel = fmt ? `${fmt.minutes}-min ${fmt.name}` : 'Duel';
 
     $('#duelArena').innerHTML = `
-      <div class="duel-arena-grid">
-        <div class="duel-arena-side ${winner === d.challenger.id ? 'is-winner' : ''}">
-          <div class="duel-arena-tag">CHALLENGER</div>
-          <a href="/u/${escapeHtml(d.challenger.username)}" class="duel-arena-link">
-            ${avatarFor(d.challenger)}
+      <div class="arena-versus-grid">
+        <div class="arena-versus-side ${winner === d.challenger.id ? 'is-winner' : ''}">
+          <a href="/u/${escapeHtml(d.challenger.username)}" class="arena-versus-link">
+            ${avatarFor(d.challenger, true)}
             <div>
-              <div class="duel-arena-name">${escapeHtml(d.challenger.display_name || d.challenger.username)}</div>
-              <div class="duel-arena-handle">@${escapeHtml(d.challenger.username)}</div>
+              <div class="arena-versus-name">${escapeHtml(d.challenger.display_name || d.challenger.username)}</div>
+              <div class="arena-versus-handle">@${escapeHtml(d.challenger.username)}</div>
             </div>
           </a>
-          ${winner === d.challenger.id ? `<div class="duel-trophy">🏆 ${escapeHtml(winLbl)}</div>` : ''}
-          ${winner && winner !== d.challenger.id ? `<div class="duel-loss">${escapeHtml(lossLbl)}</div>` : ''}
+          ${winner === d.challenger.id ? `<div class="arena-trophy">🏆 ${escapeHtml(winLbl)}</div>` : ''}
+          ${winner && winner !== d.challenger.id ? `<div class="arena-loss">${escapeHtml(lossLbl)}</div>` : ''}
         </div>
 
-        <div class="duel-arena-mid">
-          <div class="duel-arena-vs">VS</div>
-          <div class="duel-arena-stake" ${fmt ? `style="--pot-c:${fmt.color};"` : ''}>
-            <span class="duel-stake-num">${potLbl}</span>
-            <span class="duel-stake-label">${escapeHtml(potCap)}</span>
-          </div>
-          ${d.started_at && d.status === 'active' ? `<div class="duel-arena-elapsed" id="elapsedClock">${escapeHtml(fmtElapsed(d.started_at, null))}</div>` : ''}
-          ${d.started_at && d.status !== 'active' && d.finished_at ? `<div class="duel-arena-elapsed">Took ${escapeHtml(fmtElapsed(d.started_at, d.finished_at))}</div>` : ''}
+        <div class="arena-versus-mid" ${fmt ? `style="--fmt-c:${fmt.color};"` : ''}>
+          ${fmt ? `<div class="arena-versus-icon">${fmt.icon}</div>` : ''}
+          <div class="arena-versus-vs">VS</div>
+          <div class="arena-versus-cap">${escapeHtml(centerLabel)}</div>
         </div>
 
-        <div class="duel-arena-side ${winner && d.opponent && winner === d.opponent.id ? 'is-winner' : ''} ${!d.opponent ? 'is-empty' : ''}">
-          <div class="duel-arena-tag">OPPONENT</div>
+        <div class="arena-versus-side ${winner && d.opponent && winner === d.opponent.id ? 'is-winner' : ''} ${!d.opponent ? 'is-empty' : ''}">
           ${d.opponent ? `
-            <a href="/u/${escapeHtml(d.opponent.username)}" class="duel-arena-link">
-              ${avatarFor(d.opponent)}
+            <a href="/u/${escapeHtml(d.opponent.username)}" class="arena-versus-link">
+              ${avatarFor(d.opponent, true)}
               <div>
-                <div class="duel-arena-name">${escapeHtml(d.opponent.display_name || d.opponent.username)}</div>
-                <div class="duel-arena-handle">@${escapeHtml(d.opponent.username)}</div>
+                <div class="arena-versus-name">${escapeHtml(d.opponent.display_name || d.opponent.username)}</div>
+                <div class="arena-versus-handle">@${escapeHtml(d.opponent.username)}</div>
               </div>
             </a>
           ` : `
-            <div class="duel-arena-link">
-              <div class="duel-avatar duel-avatar-empty">?</div>
-              <div><div class="duel-arena-name dim"><em>Awaiting acceptor</em></div></div>
+            <div class="arena-versus-link">
+              ${avatarFor(null, true)}
+              <div><div class="arena-versus-name dim"><em>Awaiting acceptor</em></div></div>
             </div>
           `}
-          ${winner && d.opponent && winner === d.opponent.id ? `<div class="duel-trophy">🏆 ${escapeHtml(winLbl)}</div>` : ''}
-          ${winner && d.opponent && winner !== d.opponent.id ? `<div class="duel-loss">${escapeHtml(lossLbl)}</div>` : ''}
+          ${winner && d.opponent && winner === d.opponent.id ? `<div class="arena-trophy">🏆 ${escapeHtml(winLbl)}</div>` : ''}
+          ${winner && d.opponent && winner !== d.opponent.id ? `<div class="arena-loss">${escapeHtml(lossLbl)}</div>` : ''}
         </div>
-      </div>`;
+      </div>
+      ${d.message ? `<p class="arena-trash-talk">"${escapeHtml(d.message)}"</p>` : ''}
+    `;
   }
 
+  /* ---- Challenge spotlight ---- */
   function renderChallengeBox() {
     const d = state.duel;
     const v = state.viewer;
     const isDuelist = v && (v.id === d.challenger.id || (d.opponent && v.id === d.opponent.id));
     const showFlag = isDuelist && d.status === 'active';
     const box = $('#duelChallengeBox');
+    const c = d.challenge;
+    const src = SOURCE_LABELS[c.source || 'aysec'] || SOURCE_LABELS.aysec;
 
-    // Hide the challenge body until the viewer is actually in the race —
-    // public spectators see only metadata. (We rely on the regular CTF page
-    // staying solvable by anyone, but the live duel doesn't broadcast hints.)
     if (showFlag || d.status !== 'active') {
       box.hidden = false;
+      const externalCta = c.external_url
+        ? `<a class="btn btn-primary arena-source-btn" href="${escapeHtml(c.external_url)}" target="_blank" rel="noopener" style="--src-c:${src.color};">
+             ${src.icon} Open on ${escapeHtml(src.name)} ↗
+           </a>`
+        : `<a class="btn btn-ghost btn-sm" href="/challenges/${escapeHtml(c.slug)}" target="_blank" rel="noopener">Open challenge ↗</a>`;
       box.innerHTML = `
-        <h3 class="duel-section-title">Challenge</h3>
-        <div class="duel-challenge-card">
-          <div class="duel-challenge-head">
-            <span class="duel-challenge-cat">${escapeHtml(d.challenge.category)}</span>
-            ${diffDot(d.challenge.difficulty)}
-            <span class="duel-challenge-pts">${d.challenge.points} pts</span>
+        <div class="arena-challenge-head">
+          <div class="arena-challenge-tags">
+            <span class="arena-source-badge" style="--src-c:${src.color};">${src.icon} ${escapeHtml(src.name)}</span>
+            <span class="arena-cat-pill">${escapeHtml(c.category)}</span>
+            ${diffDot(c.difficulty)}
+            <span class="dim mono" style="font-size:0.78rem;">${c.points} pts</span>
           </div>
-          <h4 class="duel-challenge-title">${escapeHtml(d.challenge.title)}</h4>
-          <p class="muted" style="margin:0.4rem 0 0.6rem;">
-            Solve this challenge through the regular flow — read the brief, download attachments,
-            target the remote.
-          </p>
-          <a class="btn btn-ghost btn-sm" href="/challenges/${escapeHtml(d.challenge.slug)}" target="_blank" rel="noopener">
-            Open challenge ↗
-          </a>
-        </div>`;
+        </div>
+        <h2 class="arena-challenge-title">${escapeHtml(c.title)}</h2>
+        ${c.description ? `<p class="arena-challenge-desc">${escapeHtml(c.description)}</p>` : ''}
+        <div class="arena-challenge-actions">
+          ${externalCta}
+        </div>
+      `;
     } else {
       box.hidden = true;
     }
@@ -196,14 +201,18 @@
     $('#duelFlagBox').hidden = !showFlag;
   }
 
+  /* ---- Side rail ---- */
   function renderStats() {
     const d = state.duel;
+    const c = d.challenge;
+    const src = SOURCE_LABELS[c.source || 'aysec'] || SOURCE_LABELS.aysec;
     $('#duelStats').innerHTML = `
       <div class="stat"><span class="stat-key">status</span><span class="stat-val">${escapeHtml(d.status)}</span></div>
-      <div class="stat"><span class="stat-key">stake</span><span class="stat-val">${d.stake} XP</span></div>
-      <div class="stat"><span class="stat-key">challenge</span><span class="stat-val">${escapeHtml(d.challenge.title)}</span></div>
-      <div class="stat"><span class="stat-key">difficulty</span><span class="stat-val">${escapeHtml(d.challenge.difficulty)}</span></div>
-      <div class="stat"><span class="stat-key">points</span><span class="stat-val">${d.challenge.points}</span></div>
+      ${d.format ? `<div class="stat"><span class="stat-key">format</span><span class="stat-val" style="color:${d.format.color};">${d.format.icon} ${escapeHtml(d.format.name)}</span></div>` : ''}
+      <div class="stat"><span class="stat-key">source</span><span class="stat-val" style="color:${src.color};">${escapeHtml(src.name)}</span></div>
+      <div class="stat"><span class="stat-key">category</span><span class="stat-val">${escapeHtml(c.category)}</span></div>
+      <div class="stat"><span class="stat-key">difficulty</span><span class="stat-val">${escapeHtml(c.difficulty)}</span></div>
+      <div class="stat"><span class="stat-key">points</span><span class="stat-val">${c.points}</span></div>
       <div class="stat"><span class="stat-key">issued</span><span class="stat-val">${escapeHtml(window.fmtRelative(d.created_at))}</span></div>
       ${d.started_at ? `<div class="stat"><span class="stat-key">started</span><span class="stat-val">${escapeHtml(window.fmtRelative(d.started_at))}</span></div>` : ''}
       ${d.finished_at ? `<div class="stat"><span class="stat-key">finished</span><span class="stat-val">${escapeHtml(window.fmtRelative(d.finished_at))}</span></div>` : ''}
@@ -262,7 +271,7 @@
       }
     });
     $('#forfeitBtn')?.addEventListener('click', async () => {
-      if (!confirm('Forfeit? You lose the stake and the duel ends.')) return;
+      if (!confirm('Forfeit? You drop rating and the duel ends.')) return;
       try {
         await window.api.post(`/api/duels/${d.id}/forfeit`);
         window.toast?.('Forfeited.', 'info');
@@ -276,8 +285,9 @@
   function renderTimeline() {
     const box = $('#duelTimelineBox');
     const subs = state.submissions || [];
+    $('#timelineCount').textContent = `${subs.length} submission${subs.length === 1 ? '' : 's'}`;
     if (!subs.length) {
-      box.innerHTML = `<p class="muted">No submissions yet.</p>`;
+      box.innerHTML = `<p class="muted">No submissions yet — be the first to fire.</p>`;
       return;
     }
     const start = state.duel.started_at;
@@ -293,28 +303,41 @@
       </div>`;
   }
 
+  /* ---- Tickers ---- */
+  function tickClocks() {
+    const d = state?.duel;
+    if (!d) return;
+    const clock = $('#arenaClock');
+    if (!clock) return;
+    if (d.status === 'active' || d.status === 'open') {
+      clock.textContent = fmtClock(d.expires_at);
+      clock.classList.toggle('is-low', secsRemaining(d.expires_at) < 60);
+      clock.classList.toggle('is-critical', secsRemaining(d.expires_at) < 15);
+      // If we crossed expiry locally, force a refetch to flip status server-side
+      if (d.status === 'active' && secsRemaining(d.expires_at) <= 0) {
+        load();
+      }
+    } else if (d.status === 'finished' && d.started_at && d.finished_at) {
+      clock.textContent = fmtElapsed(d.started_at, d.finished_at);
+      clock.classList.remove('is-low', 'is-critical');
+    } else {
+      clock.textContent = '00:00';
+    }
+  }
+  function secsRemaining(iso) {
+    if (!iso) return 0;
+    const target = new Date(iso.replace(' ', 'T') + 'Z').getTime();
+    return Math.max(0, Math.floor((target - Date.now()) / 1000));
+  }
   function startClocks() {
     if (clockTimer) clearInterval(clockTimer);
-    clockTimer = setInterval(() => {
-      const d = state?.duel;
-      if (!d) return;
-      const live = document.getElementById('liveClock');
-      if (live && d.expires_at) live.textContent = `${fmtRemaining(d.expires_at)} left`;
-      const el = document.getElementById('elapsedClock');
-      if (el && d.started_at) el.textContent = fmtElapsed(d.started_at, null);
-      // If we crossed expiry locally, force a refetch to flip status server-side
-      if (d.status === 'active' && d.expires_at) {
-        const target = new Date(d.expires_at.replace(' ', 'T') + 'Z').getTime();
-        if (Date.now() > target + 1500) load();
-      }
-    }, 1000);
+    clockTimer = setInterval(tickClocks, 1000);
   }
 
   function startPolling() {
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(() => {
       if (!state?.duel) return;
-      // Only poll while the duel is open or active — finished/cancelled is terminal.
       if (state.duel.status === 'open' || state.duel.status === 'active') load(true);
     }, 4000);
   }
@@ -323,15 +346,15 @@
     try {
       const data = await window.api.get(`/api/duels/${id}`);
       state = data;
-      renderHead();
-      renderArena();
+      renderArenaBar();
+      renderVersus();
       renderChallengeBox();
       renderStats();
       renderActions();
       renderTimeline();
     } catch (err) {
       if (!silent) {
-        $('#duelHead').innerHTML = `<div class="alert error">${escapeHtml(err.message || 'Duel not found')}</div>`;
+        $('#duelArena').innerHTML = `<div class="alert error">${escapeHtml(err.message || 'Duel not found')}</div>`;
       }
     }
   }
@@ -341,7 +364,6 @@
     startClocks();
     startPolling();
 
-    // Wire flag-submit form (lives in static HTML; only enabled when arena rendered).
     document.getElementById('duelFlagForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const alertEl = $('#duelFlagAlert');
@@ -362,7 +384,10 @@
         if (res.correct && res.won) {
           alertEl.hidden = false;
           alertEl.className = 'alert ok';
-          alertEl.textContent = `🩸 Flag accepted — you took the pot. +${res.stake} XP.`;
+          const r = res.rating_delta;
+          alertEl.textContent = r
+            ? `🩸 First flag — you took the swing. +${r.win} rating${res.streak_bonus ? ` (+${res.streak_bonus} streak)` : ''}.`
+            : `🩸 First flag — you took the pot. +${res.stake} XP.`;
         } else if (res.correct) {
           alertEl.hidden = false;
           alertEl.className = 'alert warn';
@@ -371,6 +396,9 @@
           alertEl.hidden = false;
           alertEl.className = 'alert warn';
           alertEl.textContent = 'Wrong flag. Keep trying — clock is ticking.';
+          // Quick wiggle so the input visually rejects
+          $('#duelFlagInput').classList.add('arena-flag-wrong');
+          setTimeout(() => $('#duelFlagInput').classList.remove('arena-flag-wrong'), 380);
         }
         load();
       } catch (err) {
