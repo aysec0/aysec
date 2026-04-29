@@ -5,6 +5,23 @@
 import { Router } from 'express';
 import { db } from '../db/index.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import { emit as emitNotification } from './notifications.js';
+
+// ---- @mention parser ---------------------------------------------------
+// Pulls every @username out of a markdown body, deduplicates, returns the
+// matching user rows (existing users only, never the author themselves).
+function findMentions(body, authorId) {
+  if (!body) return [];
+  const set = new Set();
+  const re = /(?:^|[^\w@])@([a-zA-Z0-9_]{2,32})\b/g;
+  let m;
+  while ((m = re.exec(body)) !== null) set.add(m[1].toLowerCase());
+  if (!set.size) return [];
+  const placeholders = [...set].map(() => '?').join(',');
+  return db.prepare(
+    `SELECT id, username FROM users WHERE LOWER(username) IN (${placeholders}) AND id != ?`
+  ).all(...[...set], authorId);
+}
 
 const router = Router();
 
@@ -87,6 +104,17 @@ router.post('/posts', requireAuth, (req, res) => {
   db.prepare(
     'INSERT INTO forum_post_votes (post_id, user_id, vote) VALUES (?, ?, 1)'
   ).run(info.lastInsertRowid, req.user.id);
+  // Mention notifications — anyone @mentioned in the post body gets pinged
+  for (const mu of findMentions(body_md, req.user.id)) {
+    emitNotification({
+      userId: mu.id,
+      kind: 'mention',
+      title: `@${req.user.username} mentioned you`,
+      body: title.trim(),
+      link: `/community/post/${info.lastInsertRowid}`,
+      icon: '@',
+    });
+  }
   res.json({ id: info.lastInsertRowid });
 });
 
@@ -143,11 +171,16 @@ router.post('/posts/:id/comments', requireAuth, (req, res) => {
   const { body_md, parent_id } = req.body || {};
   if (!body_md || !body_md.trim()) return res.status(400).json({ error: 'Need body_md' });
   if (body_md.length > 10000) return res.status(400).json({ error: 'Comment too long' });
-  const post = db.prepare('SELECT id, locked FROM forum_posts WHERE id = ?').get(req.params.id);
+  const post = db.prepare(
+    'SELECT id, user_id, title, locked FROM forum_posts WHERE id = ?'
+  ).get(req.params.id);
   if (!post) return res.status(404).json({ error: 'Post not found' });
   if (post.locked) return res.status(400).json({ error: 'Post is locked' });
+  let parent = null;
   if (parent_id) {
-    const parent = db.prepare('SELECT id FROM forum_comments WHERE id = ? AND post_id = ?').get(parent_id, post.id);
+    parent = db.prepare(
+      'SELECT id, user_id FROM forum_comments WHERE id = ? AND post_id = ?'
+    ).get(parent_id, post.id);
     if (!parent) return res.status(400).json({ error: 'Bad parent_id' });
   }
   const info = db.prepare(`
@@ -158,7 +191,52 @@ router.post('/posts/:id/comments', requireAuth, (req, res) => {
     'INSERT INTO forum_comment_votes (comment_id, user_id, vote) VALUES (?, ?, 1)'
   ).run(info.lastInsertRowid, req.user.id);
   db.prepare('UPDATE forum_posts SET comment_count = comment_count + 1 WHERE id = ?').run(post.id);
-  res.json({ id: info.lastInsertRowid });
+
+  // ---- Notifications ----
+  const cid = info.lastInsertRowid;
+  const link = `/community/post/${post.id}#c${cid}`;
+  const titleSnippet = body_md.trim().slice(0, 120);
+  // 1) Reply to a comment → ping that comment's author
+  if (parent && parent.user_id !== req.user.id) {
+    emitNotification({
+      userId: parent.user_id,
+      kind: 'forum_reply',
+      title: `@${req.user.username} replied to you`,
+      body: titleSnippet,
+      link,
+      icon: '↩',
+    });
+  }
+  // 2) Top-level comment → ping the post author (unless self-reply or already
+  //    notified via the parent above)
+  if (!parent && post.user_id !== req.user.id) {
+    emitNotification({
+      userId: post.user_id,
+      kind: 'forum_reply',
+      title: `@${req.user.username} commented on your post`,
+      body: post.title,
+      link,
+      icon: '↩',
+    });
+  }
+  // 3) @mentions in the body → ping each mentioned user (skip everyone we
+  //    already pinged above to avoid double-notif)
+  const alreadyNotified = new Set();
+  if (parent?.user_id) alreadyNotified.add(parent.user_id);
+  if (!parent && post.user_id !== req.user.id) alreadyNotified.add(post.user_id);
+  for (const mu of findMentions(body_md, req.user.id)) {
+    if (alreadyNotified.has(mu.id)) continue;
+    emitNotification({
+      userId: mu.id,
+      kind: 'mention',
+      title: `@${req.user.username} mentioned you`,
+      body: titleSnippet,
+      link,
+      icon: '@',
+    });
+  }
+
+  res.json({ id: cid });
 });
 
 // ===== Vote on comment =====
