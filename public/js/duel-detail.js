@@ -71,6 +71,9 @@
       </div>
       <h1 class="detail-title">Duel #${d.id}</h1>
       ${d.message ? `<p class="duel-message">"${escapeHtml(d.message)}"</p>` : ''}
+      <div style="margin-top:0.6rem;">
+        <span data-presence-scope="duel" data-presence-id="${d.id}"></span>
+      </div>
     `;
   }
 

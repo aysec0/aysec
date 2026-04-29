@@ -40,7 +40,10 @@
       </div>
       <h1 class="detail-title">${escapeHtml(chal.title)}</h1>
       ${chal.author ? `<p class="muted">by <strong>${escapeHtml(chal.author)}</strong></p>` : ''}
-      <div style="margin-top:0.6rem;"><button type="button" data-bookmark-kind="challenge" data-bookmark-slug="${escapeHtml(chal.slug)}">Save</button></div>`;
+      <div style="margin-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.7rem; align-items:center;">
+        <button type="button" data-bookmark-kind="challenge" data-bookmark-slug="${escapeHtml(chal.slug)}">Save</button>
+        <span data-presence-scope="challenge" data-presence-id="${escapeHtml(chal.slug)}"></span>
+      </div>`;
   }
 
   function renderBody(data) {

@@ -47,6 +47,7 @@
             ${p.pinned ? '<span class="tag" style="background: var(--accent-soft); color: var(--accent);">📌 pinned</span>' : ''}
             ${p.locked ? '<span class="tag">🔒 locked</span>' : ''}
             ${canDelete ? `<button class="forum-del" data-pdel="${p.id}">delete</button>` : ''}
+            <span data-presence-scope="community-post" data-presence-id="${p.id}"></span>
           </div>
           <h1 class="forum-title-detail">${escapeHtml(p.title)}</h1>
           ${p.url ? `<a class="forum-url-pill" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.url)} ↗</a>` : ''}

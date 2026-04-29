@@ -10713,3 +10713,66 @@ html, body {
   .duel-card-c-pts { margin-left: 0; }
   .duel-lb-row { grid-template-columns: 36px 1fr 50px 50px 90px; gap: 0.5rem; padding: 0.55rem 0.7rem; }
 }
+
+/* ============================================================
+   Live presence widget — "X people here right now". Auto-mounted
+   on any [data-presence-scope] element by /js/presence.js.
+   ============================================================ */
+.presence-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  vertical-align: middle;
+  line-height: 1;
+}
+.presence-widget.presence-empty,
+.presence-widget.presence-loading { opacity: 0.7; }
+
+.presence-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  display: inline-block;
+}
+.presence-dot.is-live {
+  background: var(--terminal);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--terminal) 60%, transparent);
+  animation: presencePulse 1.6s ease-in-out infinite;
+}
+@keyframes presencePulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--terminal) 60%, transparent); }
+  50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--terminal) 0%,  transparent); }
+}
+
+.presence-stack {
+  display: inline-flex;
+  align-items: center;
+}
+.presence-stack > * + * { margin-left: -8px; }
+.presence-avatar {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: var(--bg-elev);
+  object-fit: cover;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.presence-avatar-letter {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-elev));
+}
+.presence-anon {
+  font-style: italic;
+  color: var(--text-dim);
+}

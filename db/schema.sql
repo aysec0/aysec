@@ -704,3 +704,66 @@ CREATE TABLE IF NOT EXISTS duel_submissions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_duel_subs_duel ON duel_submissions(duel_id, submitted_at);
+
+-- ============================================================
+-- Live presence — "X people working on this right now"
+-- Heartbeat-driven: clients POST to /api/presence every ~25s while
+-- they're on a challenge/duel/lab/etc. page. Rows older than 60s
+-- are considered stale and pruned/ignored on read.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS presence (
+  scope       TEXT    NOT NULL,           -- e.g. 'challenge', 'duel', 'lab', 'community-post'
+  scope_id    TEXT    NOT NULL,           -- entity slug or numeric id (kept TEXT for flexibility)
+  user_id     INTEGER REFERENCES users(id) ON DELETE CASCADE, -- NULL for anon
+  client_id   TEXT    NOT NULL,           -- random per-tab id; lets one user count once even with two tabs (we de-dupe in SQL)
+  username    TEXT,                       -- denormalised so reads can show avatars without a JOIN if user_id is NULL
+  display_name TEXT,
+  avatar_url  TEXT,
+  last_seen   TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (scope, scope_id, client_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_presence_scope     ON presence(scope, scope_id, last_seen DESC);
+CREATE INDEX IF NOT EXISTS idx_presence_last_seen ON presence(last_seen);
+
+-- ============================================================
+-- Activity feed — every event worth surfacing on the dashboard
+-- (solves, duels, level-ups, posts, etc.) drops a row here.
+-- Read endpoints filter by visibility ('public' | 'self') so we
+-- can show a global "what's happening" feed plus a personal one.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS activities (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind        TEXT    NOT NULL,           -- solve | first_blood | duel_won | duel_lost | post | comment | level_up | course_done | cert_earned | streak
+  title       TEXT    NOT NULL,           -- pre-rendered short headline
+  body        TEXT,                       -- optional small subline
+  link        TEXT,                       -- where the row points
+  visibility  TEXT    NOT NULL DEFAULT 'public', -- public | self
+  payload     TEXT,                       -- JSON for extra fields (icon hint, score delta, etc.)
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_activities_recent ON activities(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_activities_user   ON activities(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_activities_kind   ON activities(kind, created_at DESC);
+
+-- ============================================================
+-- Personal API keys — read-only public API.
+-- A user creates a key in /settings, gets a `aysec_pk_…` token,
+-- and can hit /api/v1/* endpoints with `Authorization: Bearer <key>`.
+-- Tokens are stored hashed (sha256) — only the prefix is shown back.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS api_keys (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  prefix       TEXT    NOT NULL,           -- first 8 chars after the prefix marker, displayed in the UI
+  hash         TEXT    NOT NULL UNIQUE,    -- sha256 of the full token
+  name         TEXT    NOT NULL,           -- user-supplied label
+  scopes       TEXT    NOT NULL DEFAULT 'read',  -- comma-separated; only 'read' for now
+  last_used_at TEXT,
+  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  revoked_at   TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id, created_at DESC);

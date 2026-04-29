@@ -917,6 +917,20 @@
     registerServiceWorker();
     checkLoginStreak();
     loadBookmarkHelper();
+    loadPresenceHelper();
+  }
+
+  // Live presence widget — auto-mounts on any [data-presence-scope] element.
+  // Skip /admin + /site-editor (no point) and the heartbeat noise on big lists.
+  function loadPresenceHelper() {
+    if (location.pathname.startsWith('/admin')) return;
+    if (location.pathname.startsWith('/site-editor')) return;
+    if (document.querySelector('script[data-presence-helper]')) return;
+    const s = document.createElement('script');
+    s.src = '/js/presence.js';
+    s.dataset.presenceHelper = '1';
+    s.defer = true;
+    document.body.appendChild(s);
   }
 
   // Lazy-load the bookmark helper. It auto-wires any data-bookmark-* button
