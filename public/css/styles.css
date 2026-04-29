@@ -9279,42 +9279,64 @@ body.admin-modal-open { overflow: hidden; }
   animation: none;
 }
 
-/* ---- Avatar life: full body, blinking eyes, tracking, waving arm ---- */
+/* ---- Avatar: full body sitting at a laptop, raises hand to wave ---- */
 .ask-fab-avatar {
   overflow: visible;
-  /* The figure is taller than the button — let the head + raised hand
-     extend outside the circle bounds. */
-  width: 44px;
+  width: 48px;
   height: 56px;
-  margin-top: -10px; /* nudge up so head pokes above the button rim */
+  margin-top: -12px; /* head pokes above the round button rim */
 }
 .ask-fab-btn { overflow: visible; }
 
-/* Waving arm — rotates around the shoulder pivot (32, 26) in viewBox space */
+/* Right arm — drawn in "raised up" pose. At rest, rotated to sit on
+   the keyboard. Pivots around the right shoulder (32, 30 in viewBox). */
 .ask-fab-arm {
-  transform-origin: 32px 26px;
+  transform-origin: 32px 30px;
   transform-box: view-box;
+  transform: rotate(135deg);  /* default resting pose: hand on keyboard */
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
+
+/* Wave: raise → oscillate → return. Anchored both ends to the resting
+   pose so the animation hands off cleanly to the static rule. */
 .ask-fab-avatar.is-waving .ask-fab-arm {
-  animation: ask-fab-wave 1.6s ease-in-out 1;
+  animation: ask-fab-wave 2.0s ease-in-out 1;
+  transition: none;
 }
 .ask-fab-avatar.is-waving .ask-fab-sparkle {
-  animation: ask-fab-sparkle 1.6s ease-out 1;
+  animation: ask-fab-sparkle 2.0s ease-out 1;
 }
 
 @keyframes ask-fab-wave {
-  0%   { transform: rotate(0deg); }
-  10%  { transform: rotate(-22deg); }
-  30%  { transform: rotate(8deg); }
-  50%  { transform: rotate(-22deg); }
-  70%  { transform: rotate(8deg); }
-  90%  { transform: rotate(-15deg); }
-  100% { transform: rotate(0deg); }
+  0%   { transform: rotate(135deg); }   /* hand on keyboard */
+  10%  { transform: rotate(20deg); }    /* arm raised — fast lift */
+  18%  { transform: rotate(-5deg); }
+  32%  { transform: rotate(20deg); }
+  46%  { transform: rotate(-5deg); }
+  60%  { transform: rotate(20deg); }
+  72%  { transform: rotate(-5deg); }
+  82%  { transform: rotate(15deg); }
+  100% { transform: rotate(135deg); }   /* return to keyboard */
 }
 @keyframes ask-fab-sparkle {
   0%, 100% { opacity: 0; transform: scale(0.8); }
-  30%      { opacity: 0.9; }
+  20%      { opacity: 0; }
+  35%      { opacity: 0.9; transform: scale(1); }
   60%      { opacity: 0.6; transform: scale(1.1); }
+  80%      { opacity: 0; }
+}
+
+/* The screen's code lines flicker subtly — sells "actively working" */
+.ask-fab-screen-line {
+  animation: ask-fab-screen-flicker 3.6s ease-in-out infinite;
+}
+.ask-fab-screen-line:nth-of-type(2) { animation-delay: 0.6s; }
+.ask-fab-screen-line:nth-of-type(3) { animation-delay: 1.2s; }
+.ask-fab-screen-line:nth-of-type(4) { animation-delay: 1.8s; }
+
+@keyframes ask-fab-screen-flicker {
+  0%, 100% { opacity: var(--code-op, 0.6); }
+  50%      { opacity: 0.95; }
 }
 
 .ask-fab-eyes {

@@ -254,37 +254,49 @@
     root.id = 'askFab';
     root.innerHTML = [
       '<button type="button" id="askFabBtn" class="ask-fab-btn" aria-label="Talk to aysec" aria-expanded="false" title="aysec — your friend on the inside">',
-      '  <svg viewBox="0 0 44 56" width="44" height="56" aria-hidden="true" class="ask-fab-avatar" overflow="visible">',
-      // Cloaked body — torso under the hood, slightly flared at the bottom
-      '    <path class="ask-fab-body" d="M14 24 C12 24 10 26 10 30 V48 C10 50 11 51 13 51 H31 C33 51 34 50 34 48 V30 C34 26 32 24 30 24 Z" fill="currentColor" opacity="0.22"/>',
-      '    <path class="ask-fab-body-line" d="M14 24 C12 24 10 26 10 30 V48 C10 50 11 51 13 51 H31 C33 51 34 50 34 48 V30 C34 26 32 24 30 24 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
-      // Left arm at side
-      '    <path class="ask-fab-arm-left" d="M12 26 L10.5 38" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" opacity="0.85"/>',
-      // Right arm — raised and waving. Group rotates around the shoulder (33,26).
+      '  <svg viewBox="0 0 48 56" width="48" height="56" aria-hidden="true" class="ask-fab-avatar" overflow="visible">',
+      // ---- Body (drawn first, sits behind hands and laptop) ----
+      '    <path class="ask-fab-body" d="M18 26 C16 26 14 28 14 31 V44 H34 V31 C34 28 32 26 30 26 Z" fill="currentColor" opacity="0.22"/>',
+      '    <path class="ask-fab-body-line" d="M18 26 C16 26 14 28 14 31 V44 H34 V31 C34 28 32 26 30 26 Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>',
+      // ---- Hood + head ----
+      '    <path class="ask-fab-cloak" d="M24 2 C16 2 11 6 11 14 v3 c-2 1-3 3-3 5 v3 c0 1 0.7 1.5 1.5 1.5 H38.5 c0.8 0 1.5-0.5 1.5-1.5 v-3 c0-2-1-4-3-5 v-3 C37 6 32 2 24 2 z" fill="currentColor" opacity="0.18"/>',
+      '    <path class="ask-fab-cloak-line" d="M24 2 C16 2 11 6 11 14 v3 c-2 1-3 3-3 5 v3 c0 1 0.7 1.5 1.5 1.5 H38.5 c0.8 0 1.5-0.5 1.5-1.5 v-3 c0-2-1-4-3-5 v-3 C37 6 32 2 24 2 z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
+      // Face cavity (dark inside the hood)
+      '    <path class="ask-fab-face" d="M14 17 c0-4 4-7 10-7 s10 3 10 7 c0 3-2 5-4 6 l-2.5 1.5 h-7 l-2.5-1.5 c-2-1-4-3-4-6 z" fill="#0a0d12"/>',
+      // Eyes — JS translates this group for cursor-tracking
+      '    <g class="ask-fab-eyes">',
+      '      <circle class="ask-fab-eye ask-fab-eye-l" cx="20" cy="19" r="1.3" fill="#39ff7a"/>',
+      '      <circle class="ask-fab-eye ask-fab-eye-r" cx="28" cy="19" r="1.3" fill="#39ff7a"/>',
+      '    </g>',
+      // ---- Left arm — always resting on the keyboard ----
+      '    <path class="ask-fab-arm-left" d="M16 30 Q14 38 16 44" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>',
+      '    <circle cx="16" cy="44" r="1.9" fill="currentColor" opacity="0.85"/>',
+      // ---- Right arm — drawn in "raised up" pose, rotated down to keyboard at rest, animates up to wave ----
       '    <g class="ask-fab-arm">',
-      '      <path d="M32 26 Q37 22 38 14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
+      '      <path d="M32 30 Q35 22 36 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
       '      <g class="ask-fab-hand">',
-      '        <circle cx="38" cy="14" r="3.2" fill="currentColor"/>',
+      '        <circle cx="36" cy="14" r="2.6" fill="currentColor"/>',
       // Three faint finger creases — sells "hand" not "ball"
-      '        <path d="M36.4 12.2 L36.4 11" stroke="#0a0d12" stroke-width="0.6" stroke-linecap="round" opacity="0.55"/>',
-      '        <path d="M38 11.4 L38 10.2" stroke="#0a0d12" stroke-width="0.6" stroke-linecap="round" opacity="0.55"/>',
-      '        <path d="M39.6 12.2 L39.6 11" stroke="#0a0d12" stroke-width="0.6" stroke-linecap="round" opacity="0.55"/>',
+      '        <path d="M34.6 12.6 L34.6 11.4" stroke="#0a0d12" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/>',
+      '        <path d="M36 11.9 L36 10.7" stroke="#0a0d12" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/>',
+      '        <path d="M37.4 12.6 L37.4 11.4" stroke="#0a0d12" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/>',
       '      </g>',
       '    </g>',
-      // Hood + head — the silhouette you already had, repositioned for the body
-      '    <path class="ask-fab-cloak" d="M22 4 c-7 0-11 4-11 11 v3 c-2 1-3 2.5-3 4.5 v3 c0 1 0.7 1.5 1.5 1.5 H35.5 c0.8 0 1.5-0.5 1.5-1.5 v-3 c0-2-1-3.5-3-4.5 v-3 c0-7-4-11-11-11 z" fill="currentColor" opacity="0.18"/>',
-      '    <path class="ask-fab-cloak-line" d="M22 4 c-7 0-11 4-11 11 v3 c-2 1-3 2.5-3 4.5 v3 c0 1 0.7 1.5 1.5 1.5 H35.5 c0.8 0 1.5-0.5 1.5-1.5 v-3 c0-2-1-3.5-3-4.5 v-3 c0-7-4-11-11-11 z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
-      // Face cavity
-      '    <path class="ask-fab-face" d="M14 18 c0-4 3.5-7 8-7 s8 3 8 7 c0 3-2 5-4 6 l-2 1.5 h-4 l-2-1.5 c-2-1-4-3-4-6 z" fill="#0a0d12"/>',
-      // Eyes (preserved from previous version, repositioned for new face)
-      '    <g class="ask-fab-eyes">',
-      '      <circle class="ask-fab-eye ask-fab-eye-l" cx="19" cy="19.5" r="1.3" fill="#39ff7a"/>',
-      '      <circle class="ask-fab-eye ask-fab-eye-r" cx="25" cy="19.5" r="1.3" fill="#39ff7a"/>',
-      '    </g>',
-      // Subtle "speech sparkle" near the hand on first wave (CSS-controlled visibility)
+      // ---- Laptop (drawn last so it sits in front of body + hands) ----
+      // Base
+      '    <path class="ask-fab-laptop-base" d="M5 49 L43 49 L41 53 L7 53 Z" fill="currentColor" opacity="0.28"/>',
+      '    <path class="ask-fab-laptop-base-line" d="M5 49 L43 49 L41 53 L7 53 Z" fill="none" stroke="currentColor" stroke-width="1.1"/>',
+      // Screen
+      '    <rect class="ask-fab-laptop-screen" x="9" y="36" width="30" height="13" rx="1" fill="#0a0d12" stroke="currentColor" stroke-width="1.1"/>',
+      // Code lines glowing on screen
+      '    <line class="ask-fab-screen-line" x1="11.5" y1="39" x2="20" y2="39" stroke="#39ff7a" stroke-width="0.7" opacity="0.7"/>',
+      '    <line class="ask-fab-screen-line" x1="11.5" y1="41" x2="26" y2="41" stroke="#39ff7a" stroke-width="0.7" opacity="0.5"/>',
+      '    <line class="ask-fab-screen-line" x1="11.5" y1="43" x2="18" y2="43" stroke="#39ff7a" stroke-width="0.7" opacity="0.6"/>',
+      '    <line class="ask-fab-screen-line" x1="11.5" y1="45" x2="22" y2="45" stroke="#39ff7a" stroke-width="0.7" opacity="0.4"/>',
+      // Sparkle near hand during wave
       '    <g class="ask-fab-sparkle" opacity="0">',
-      '      <circle cx="42" cy="9" r="0.6" fill="#39ff7a"/>',
-      '      <circle cx="44" cy="11" r="0.4" fill="#39ff7a"/>',
+      '      <circle cx="40" cy="9" r="0.7" fill="#39ff7a"/>',
+      '      <circle cx="42.5" cy="11.5" r="0.5" fill="#39ff7a"/>',
       '    </g>',
       '  </svg>',
       '</button>',
