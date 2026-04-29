@@ -4423,6 +4423,40 @@ kbd {
 }
 .vault-hint-btn:disabled { opacity: 0.5; cursor: wait; }
 
+/* Profile customization — banner + social-link icons */
+.profile-hero { position: relative; }
+.profile-banner {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin-bottom: 1rem;
+  z-index: 0;
+  /* Fade to surface so the avatar/text reads cleanly */
+  mask-image: linear-gradient(180deg, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, black 60%, transparent 100%);
+}
+.profile-hero:has(.profile-banner) { padding-top: 130px; }
+.profile-hero:has(.profile-banner) .profile-avatar { position: relative; z-index: 2; }
+
+.profile-socials {
+  display: flex; gap: 0.5rem; margin-top: 0.6rem; flex-wrap: wrap;
+}
+.profile-social {
+  display: inline-grid; place-items: center;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: color 0.12s, border-color 0.12s, transform 0.12s, background 0.12s;
+}
+.profile-social:hover {
+  color: var(--accent); border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  transform: translateY(-1px);
+}
+
 /* ============================================================
    Global search page (/search) — FTS5-backed
    ============================================================ */

@@ -15,4 +15,13 @@ db.pragma('foreign_keys = ON');
 export function migrate() {
   const schema = readFileSync(join(__dirname, 'schema.sql'), 'utf8');
   db.exec(schema);
+  // Idempotent column additions for tables that already exist.
+  // SQLite doesn't have ADD COLUMN IF NOT EXISTS, so we just try and ignore.
+  const tryAdd = (sql) => { try { db.exec(sql); } catch {} };
+  // Profile customization fields (banner + social links)
+  tryAdd(`ALTER TABLE users ADD COLUMN banner_url       TEXT`);
+  tryAdd(`ALTER TABLE users ADD COLUMN social_github    TEXT`);
+  tryAdd(`ALTER TABLE users ADD COLUMN social_twitter   TEXT`);
+  tryAdd(`ALTER TABLE users ADD COLUMN social_linkedin  TEXT`);
+  tryAdd(`ALTER TABLE users ADD COLUMN social_website   TEXT`);
 }

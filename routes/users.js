@@ -6,7 +6,8 @@ const router = Router();
 
 router.get('/:username', (req, res) => {
   const user = db.prepare(`
-    SELECT id, username, display_name, bio, avatar_url, created_at
+    SELECT id, username, display_name, bio, avatar_url, created_at,
+           banner_url, social_github, social_twitter, social_linkedin, social_website
     FROM users WHERE username = ?
   `).get(req.params.username);
   if (!user) return res.status(404).json({ error: 'User not found' });

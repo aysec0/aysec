@@ -95,6 +95,30 @@
                 <textarea class="textarea" id="set-bio" maxlength="500" placeholder="A line or two about you (visible on your public profile)."></textarea>
                 <span class="field-hint" id="bioCounter">0 / 500</span>
               </div>
+              <div class="field">
+                <label class="field-label" for="set-banner">Banner image URL</label>
+                <input class="input mono" id="set-banner" placeholder="https://… or /uploads/…" />
+                <span class="field-hint">A wide image (≥ 1200px) shown above your profile. Empty = no banner.</span>
+              </div>
+
+              <h3 style="font-size:1rem; margin-top:1.4rem; margin-bottom:0.4rem;">Social links</h3>
+              <div class="field">
+                <label class="field-label" for="set-github">GitHub</label>
+                <input class="input mono" id="set-github" maxlength="80" placeholder="username, or full https:// URL" />
+              </div>
+              <div class="field">
+                <label class="field-label" for="set-twitter">X / Twitter</label>
+                <input class="input mono" id="set-twitter" maxlength="80" placeholder="handle, or full https:// URL" />
+              </div>
+              <div class="field">
+                <label class="field-label" for="set-linkedin">LinkedIn</label>
+                <input class="input mono" id="set-linkedin" maxlength="80" placeholder="handle, or full https:// URL" />
+              </div>
+              <div class="field">
+                <label class="field-label" for="set-website">Website</label>
+                <input class="input mono" id="set-website" placeholder="https://" />
+              </div>
+
               <button type="submit" class="btn btn-primary" id="profileSubmit">Save profile</button>
             </form>
           </section>

@@ -40,6 +40,11 @@
     $('set-display').value  = user.display_name || '';
     $('set-bio').value      = user.bio || '';
     $('bioCounter').textContent = `${(user.bio || '').length} / 500`;
+    if ($('set-banner'))   $('set-banner').value   = user.banner_url     || '';
+    if ($('set-github'))   $('set-github').value   = user.social_github  || '';
+    if ($('set-twitter'))  $('set-twitter').value  = user.social_twitter || '';
+    if ($('set-linkedin')) $('set-linkedin').value = user.social_linkedin|| '';
+    if ($('set-website'))  $('set-website').value  = user.social_website || '';
 
     $('set-bio').addEventListener('input', () => {
       $('bioCounter').textContent = `${$('set-bio').value.length} / 500`;
@@ -138,6 +143,11 @@
             display_name: $('set-display').value,
             bio: $('set-bio').value,
             avatar_url: pendingAvatar,
+            banner_url:      $('set-banner')?.value   ?? '',
+            social_github:   $('set-github')?.value   ?? '',
+            social_twitter:  $('set-twitter')?.value  ?? '',
+            social_linkedin: $('set-linkedin')?.value ?? '',
+            social_website:  $('set-website')?.value  ?? '',
           }),
         });
         const data = await r.json();

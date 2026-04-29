@@ -55,36 +55,68 @@ router.get('/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
 
-// Update profile (display_name, bio, avatar_url — emoji or HTTPS URL)
+// Update profile (display_name, bio, avatar_url, banner_url, social_*)
 router.patch('/me', requireAuth, (req, res) => {
-  const { display_name, bio, avatar_url } = req.body || {};
-  if (display_name != null && typeof display_name !== 'string') return res.status(400).json({ error: 'Invalid display_name' });
-  if (bio != null          && typeof bio !== 'string')          return res.status(400).json({ error: 'Invalid bio' });
-  if (avatar_url != null   && typeof avatar_url !== 'string')   return res.status(400).json({ error: 'Invalid avatar_url' });
-  if ((display_name?.length || 0) > 64) return res.status(400).json({ error: 'display_name too long' });
-  if ((bio?.length || 0) > 500)         return res.status(400).json({ error: 'bio too long' });
-  if (avatar_url != null) {
-    const v = avatar_url.trim();
-    // Allowed: empty (clears), short emoji (≤8 chars), or HTTPS URL ≤200 chars
-    if (v.length > 0) {
-      if (v.startsWith('https://')) {
-        if (v.length > 200) return res.status(400).json({ error: 'avatar_url too long' });
-      } else if (v.length > 8) {
-        return res.status(400).json({ error: 'avatar must be empty, an emoji, or an https:// URL' });
-      }
-    }
+  const b = req.body || {};
+  const isStr = (v) => v == null || typeof v === 'string';
+  for (const k of ['display_name', 'bio', 'avatar_url', 'banner_url',
+                   'social_github', 'social_twitter', 'social_linkedin', 'social_website']) {
+    if (!isStr(b[k])) return res.status(400).json({ error: `Invalid ${k}` });
   }
+  if ((b.display_name?.length || 0) > 64)  return res.status(400).json({ error: 'display_name too long' });
+  if ((b.bio?.length || 0)          > 500) return res.status(400).json({ error: 'bio too long' });
+
+  // URL fields: must be empty, https:// (max 200), or a path starting with /
+  const checkUrl = (v, label, allowEmoji = false) => {
+    if (v == null) return null;
+    const s = v.trim();
+    if (s === '') return '';
+    if (allowEmoji && s.length <= 8 && !s.includes('://')) return s;       // emoji avatar
+    if (s.startsWith('/uploads/') && s.length <= 200) return s;            // self-hosted upload
+    if (s.startsWith('https://') && s.length <= 200) return s;
+    return { error: `${label} must be empty, an https:// URL, or /uploads/...` };
+  };
+  const checkSocial = (v, label) => {
+    if (v == null) return null;
+    const s = v.trim();
+    if (s === '') return '';
+    if (s.length > 80) return { error: `${label} too long` };
+    // Plain handle (no slashes/spaces) OR full https URL
+    if (s.startsWith('https://')) return s;
+    if (/^[a-zA-Z0-9._-]+$/.test(s)) return s;
+    return { error: `${label} must be a handle or https:// URL` };
+  };
+
+  const checks = [
+    ['avatar_url',      checkUrl(b.avatar_url, 'avatar_url', true)],
+    ['banner_url',      checkUrl(b.banner_url, 'banner_url')],
+    ['social_github',   checkSocial(b.social_github, 'social_github')],
+    ['social_twitter',  checkSocial(b.social_twitter, 'social_twitter')],
+    ['social_linkedin', checkSocial(b.social_linkedin, 'social_linkedin')],
+    ['social_website',  b.social_website == null ? null
+                          : (b.social_website.trim() === '' ? ''
+                              : (b.social_website.trim().startsWith('https://') && b.social_website.length <= 200
+                                  ? b.social_website.trim()
+                                  : { error: 'social_website must be empty or https:// URL' }))],
+  ];
   const updates = [];
   const args = [];
-  if (display_name != null) { updates.push('display_name = ?'); args.push(display_name.trim() || req.user.username); }
-  if (bio != null)          { updates.push('bio = ?');          args.push(bio.trim()); }
-  if (avatar_url != null)   { updates.push('avatar_url = ?');   args.push(avatar_url.trim() || null); }
+  if (b.display_name != null) { updates.push('display_name = ?'); args.push(b.display_name.trim() || req.user.username); }
+  if (b.bio != null)          { updates.push('bio = ?');          args.push(b.bio.trim()); }
+  for (const [field, value] of checks) {
+    if (value === null) continue; // not provided
+    if (typeof value === 'object' && value.error) return res.status(400).json({ error: value.error });
+    updates.push(`${field} = ?`);
+    args.push(value || null);
+  }
   if (!updates.length) return res.json({ ok: true });
   updates.push('updated_at = datetime(\'now\')');
   args.push(req.user.id);
   db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...args);
   const fresh = db.prepare(
-    'SELECT id, username, email, display_name, avatar_url, bio, role FROM users WHERE id = ?'
+    `SELECT id, username, email, display_name, avatar_url, bio, role,
+            banner_url, social_github, social_twitter, social_linkedin, social_website
+     FROM users WHERE id = ?`
   ).get(req.user.id);
   res.json({ user: fresh });
 });

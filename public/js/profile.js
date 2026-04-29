@@ -100,7 +100,32 @@
     })() : '';
 
     const profileUrl = location.href;
+
+    // Resolve social handles → real URLs. Bare handles get the platform's
+    // canonical URL prefix; full https:// URLs pass through.
+    function socialUrl(kind, value) {
+      if (!value) return null;
+      if (value.startsWith('https://')) return value;
+      if (kind === 'github')   return `https://github.com/${value}`;
+      if (kind === 'twitter')  return `https://x.com/${value}`;
+      if (kind === 'linkedin') return `https://www.linkedin.com/in/${value}`;
+      return null;
+    }
+    const socials = [
+      ['github',  user.social_github,  '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.4.5 0 5.9 0 12.5c0 5.3 3.4 9.8 8.2 11.4.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.3 1.9 1.3 1.1 1.9 2.9 1.4 3.6 1 .1-.8.4-1.4.8-1.7-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.3-3.2-.1-.3-.6-1.6.1-3.3 0 0 1-.3 3.3 1.2 1-.3 2-.4 3-.4s2 .1 3 .4c2.3-1.6 3.3-1.2 3.3-1.2.7 1.7.2 3 .1 3.3.8.9 1.3 2 1.3 3.2 0 4.6-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6 4.8-1.6 8.2-6.1 8.2-11.4C24 5.9 18.6.5 12 .5z"/></svg>'],
+      ['twitter', user.social_twitter, '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21l-6.522 7.452L22 22h-6.86l-4.79-6.27L4.8 22H2l7.005-7.99L2 2h7.05l4.31 5.69L18.245 2zm-1.205 18h1.876L7.04 4H5.05l11.989 16z"/></svg>'],
+      ['linkedin',user.social_linkedin,'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5V5c0-2.761-2.238-5-5-5zM8 19H5V8h3v11zM6.5 6.732C5.529 6.732 4.75 5.945 4.75 4.974c0-.97.78-1.758 1.75-1.758 0.97 0 1.75.787 1.75 1.758 0 0.971-0.781 1.758-1.75 1.758zM20 19h-3v-5.604c0-3.368-4-3.113-4 0V19h-3V8h3v1.765c1.396-2.586 7-2.777 7 2.476V19z"/></svg>'],
+      ['website', user.social_website, '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>'],
+    ].map(([kind, val, icon]) => {
+      const u = socialUrl(kind, val);
+      if (!u) return '';
+      return `<a class="profile-social" href="${escapeHtml(u)}" target="_blank" rel="noopener nofollow" aria-label="${kind}">${icon}</a>`;
+    }).join('');
+
+    const banner = user.banner_url ? `<div class="profile-banner" style="background-image:url('${escapeHtml(user.banner_url)}');"></div>` : '';
+
     document.getElementById('profileHero').innerHTML = `
+      ${banner}
       <div class="profile-avatar">${escapeHtml(initials(user.display_name || user.username))}</div>
       <div>
         <h1 class="profile-name">${escapeHtml(user.display_name || user.username)}</h1>
@@ -109,6 +134,7 @@
           ${lvlBadge}
         </div>
         ${user.bio ? `<p class="profile-bio">${escapeHtml(user.bio)}</p>` : ''}
+        ${socials ? `<div class="profile-socials">${socials}</div>` : ''}
         <div class="profile-since">Member since ${escapeHtml(window.fmtDate(user.member_since))}</div>
       </div>
       <div class="profile-share">
