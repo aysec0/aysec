@@ -25,7 +25,6 @@
   // Small visual labels for source platforms (icon + display name)
   const SOURCE_LABELS = {
     aysec:       { name: 'aysec original', icon: '~$', color: '#39ff7a' },
-    picoctf:     { name: 'picoCTF',        icon: '🤖', color: '#e05569' },
     overthewire: { name: 'OverTheWire',    icon: '🐚', color: '#7aa2f7' },
     cryptohack:  { name: 'CryptoHack',     icon: '🔐', color: '#bb88ff' },
     tryhackme:   { name: 'TryHackMe',      icon: '🎯', color: '#88e8a3' },
