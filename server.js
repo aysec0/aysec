@@ -3,6 +3,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { existsSync, readFileSync } from 'node:fs';
 
 import { db, migrate } from './db/index.js';
 import authRoutes from './routes/auth.js';
@@ -161,10 +162,14 @@ app.get('/sitemap.xml', (_req, res) => {
     '/daily', '/live', '/pro-labs', '/assessments', '/teams',
     '/tools', '/cheatsheets', '/events', '/community', '/about',
     '/hire', '/talks', '/terms', '/privacy', '/refunds',
+    '/vault', '/levels', '/search',
   ];
   const courses    = db.prepare('SELECT slug, updated_at FROM courses    WHERE published = 1').all();
   const challenges = db.prepare('SELECT slug, updated_at FROM challenges WHERE published = 1').all();
   const posts      = db.prepare('SELECT slug, updated_at FROM posts      WHERE published = 1').all();
+  let certs = [], cheatsheets = [], tools = [];
+  try { certs       = db.prepare('SELECT slug FROM cert_prep   WHERE published = 1').all(); } catch {}
+  try { cheatsheets = db.prepare('SELECT slug FROM cheatsheets WHERE published = 1').all(); } catch {}
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -172,9 +177,83 @@ ${urls.map((u) => `  <url><loc>${SITE_URL}${u}</loc></url>`).join('\n')}
 ${courses.map((c) =>    `  <url><loc>${SITE_URL}/courses/${c.slug}</loc><lastmod>${(c.updated_at || '').slice(0,10)}</lastmod></url>`).join('\n')}
 ${challenges.map((c) => `  <url><loc>${SITE_URL}/challenges/${c.slug}</loc><lastmod>${(c.updated_at || '').slice(0,10)}</lastmod></url>`).join('\n')}
 ${posts.map((p) =>      `  <url><loc>${SITE_URL}/blog/${p.slug}</loc><lastmod>${(p.updated_at || '').slice(0,10)}</lastmod></url>`).join('\n')}
+${certs.map((c) =>      `  <url><loc>${SITE_URL}/certifications/${c.slug}</loc></url>`).join('\n')}
+${cheatsheets.map((c) =>`  <url><loc>${SITE_URL}/cheatsheets/${c.slug}</loc></url>`).join('\n')}
 </urlset>`;
   res.type('application/xml').send(xml);
 });
+
+// ---- OG / Twitter card injection ---------------------------------------
+// Static HTML pages get OG meta tags inserted before </head> on first read.
+// Per-path defaults below; paths that aren't here fall back to the homepage
+// values. Detail routes (/courses/:slug etc.) extend this further below.
+
+const OG_BY_PATH = {
+  '/':                { title: "Aysec — Hack to learn. Don't learn to hack.",
+                        desc: 'Hands-on cybersecurity training, CTF challenges, and writeups by Ammar Yasser.' },
+  '/courses':         { title: 'Courses — aysec',
+                        desc: 'Web hacking, AI red-teaming, OSCP prep, bug bounty. Hands-on labs that make the theory stick.' },
+  '/challenges':      { title: 'CTF challenges — aysec',
+                        desc: 'Cybersecurity challenges across web, crypto, pwn, AI, and forensics. Climb the leaderboard.' },
+  '/blog':            { title: 'Blog & writeups — aysec',
+                        desc: 'Field notes, CTF writeups, deep dives on cybersecurity.' },
+  '/community':       { title: 'Community — aysec',
+                        desc: 'A focused forum for cybersecurity. Ask, share writeups, post finds.' },
+  '/certifications':  { title: 'Cert prep — aysec',
+                        desc: 'OSCP, OSEP, OSWE, CRTO, CRTP, PNPT, Security+, CEH — mapped courses + CTF challenges.' },
+  '/vault':           { title: 'The vault — aysec',
+                        desc: 'Seven flags hidden across this website itself. View source. Read robots.txt. Decode the JWT.' },
+  '/about':           { title: 'About — Ammar Yasser',
+                        desc: 'Security engineer, educator, AI red-teamer. Background and credentials.' },
+  '/hire':            { title: 'Hire me — aysec',
+                        desc: 'Pentests, AI/LLM red team engagements, training for engineering teams.' },
+  '/daily':           { title: 'Daily challenge — aysec',
+                        desc: 'One rotating challenge per day. Streak rewards consistency.' },
+  '/tools':           { title: 'Security toolbox — aysec',
+                        desc: '24 in-browser security tools: JWT decoder, hash ID, encoders, regex, CIDR, more.' },
+  '/levels':          { title: 'Levels — aysec',
+                        desc: '15 themed tiers from n00b to Legend. XP from every dimension of the platform.' },
+  '/events':          { title: 'Events calendar — aysec',
+                        desc: 'CTF competitions, security conferences, bug-bounty drops — global calendar with .ics export.' },
+  '/cheatsheets':     { title: 'Cheatsheets — aysec',
+                        desc: 'Quick reference for tools, syntax, and tactics across the cybersec stack.' },
+  '/search':          { title: 'Search — aysec',
+                        desc: 'Search across courses, lessons, posts, CTF challenges, cheatsheets, and certs.' },
+};
+
+function ogBlock(path, override) {
+  const d = override || OG_BY_PATH[path] || OG_BY_PATH['/'];
+  const url   = SITE_URL + path;
+  const image = SITE_URL + '/img/og.svg';
+  const safe = (s = '') => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  return `
+    <meta property="og:type" content="${safe(d.type || 'website')}" />
+    <meta property="og:site_name" content="aysec" />
+    <meta property="og:title" content="${safe(d.title)}" />
+    <meta property="og:description" content="${safe(d.desc)}" />
+    <meta property="og:image" content="${safe(image)}" />
+    <meta property="og:url" content="${safe(url)}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${safe(image)}" />
+    <meta name="twitter:title" content="${safe(d.title)}" />
+    <meta name="twitter:description" content="${safe(d.desc)}" />
+    <meta name="description" content="${safe(d.desc)}" />`;
+}
+
+// Read-and-inject helper. Cached on first read since static HTML doesn't change.
+const _htmlCache = new Map();
+function readHtmlWithOg(filePath, ogPath, override) {
+  const key = filePath + '|' + ogPath + '|' + (override ? JSON.stringify(override) : '');
+  if (_htmlCache.has(key)) return _htmlCache.get(key);
+  let html;
+  try { html = readFileSync(filePath, 'utf8'); }
+  catch { return null; }
+  if (!html.includes('property="og:title"')) {
+    html = html.replace('</head>', ogBlock(ogPath, override) + '\n  </head>');
+  }
+  _htmlCache.set(key, html);
+  return html;
+}
 
 app.get('/rss.xml', (_req, res) => {
   const posts = db.prepare(`
@@ -214,14 +293,48 @@ ${items}
   res.type('application/rss+xml').send(xml);
 });
 
-// Dynamic detail-page routes — single template per type, JS reads slug from URL.
-const sendDetail = (file) => (_req, res) => res.sendFile(join(__dirname, 'public', file));
-app.get('/courses/:slug',    sendDetail('course-detail.html'));
-app.get('/challenges/:slug', sendDetail('challenge-detail.html'));
-app.get('/blog/:slug',       sendDetail('post-detail.html'));
+// Dynamic detail-page routes — single template per type, JS reads slug from
+// URL. We also inject entity-specific OG meta when we can (course title,
+// post excerpt, etc.) so shared links preview correctly.
+const sendDetail = (file, ogResolver) => (req, res) => {
+  const filePath = join(__dirname, 'public', file);
+  let override;
+  if (typeof ogResolver === 'function') {
+    try { override = ogResolver(req); } catch {}
+  }
+  const html = readHtmlWithOg(filePath, req.path, override);
+  if (html) return res.type('html').send(html);
+  res.sendFile(filePath);
+};
+
+const courseOg = (req) => {
+  const c = db.prepare('SELECT title, subtitle, description FROM courses WHERE slug = ? AND published = 1').get(req.params.slug);
+  if (!c) return null;
+  return { title: `${c.title} — aysec`, desc: c.subtitle || (c.description || '').slice(0, 200) };
+};
+const postOg = (req) => {
+  const p = db.prepare('SELECT title, excerpt FROM posts WHERE slug = ? AND published = 1').get(req.params.slug);
+  if (!p) return null;
+  return { type: 'article', title: `${p.title} — aysec`, desc: p.excerpt || '' };
+};
+const challengeOg = (req) => {
+  const c = db.prepare('SELECT title, category, difficulty, points, description FROM challenges WHERE slug = ? AND published = 1').get(req.params.slug);
+  if (!c) return null;
+  return { title: `${c.title} — ${c.category}/${c.difficulty} — aysec`, desc: c.description || `${c.points} points · ${c.category} · ${c.difficulty}` };
+};
+const certOg = (req) => {
+  const c = db.prepare('SELECT cert_name, tagline, description FROM cert_prep WHERE slug = ? AND published = 1').get(req.params.slug);
+  if (!c) return null;
+  return { title: `${c.cert_name} prep — aysec`, desc: c.tagline || (c.description || '').slice(0, 200) };
+};
+const toolOg = (req) => ({ title: `${req.params.slug} — aysec tools`, desc: `Free in-browser ${req.params.slug} tool from the aysec security toolbox.` });
+
+app.get('/courses/:slug',    sendDetail('course-detail.html', courseOg));
+app.get('/challenges/:slug', sendDetail('challenge-detail.html', challengeOg));
+app.get('/blog/:slug',       sendDetail('post-detail.html', postOg));
 app.get('/cert/:code',       sendDetail('certificate.html'));
 app.get('/tracks/:slug',          sendDetail('track-detail.html'));
-app.get('/tools/:slug',           sendDetail('tool-detail.html'));
+app.get('/tools/:slug',           sendDetail('tool-detail.html', toolOg));
 app.get('/live/:slug',            sendDetail('live-detail.html'));
 app.get('/assessments/:slug',     sendDetail('assessment-detail.html'));
 app.get('/assessments/:slug/take/:attemptId', sendDetail('assessment-detail.html'));
@@ -233,7 +346,7 @@ app.get('/community/post/:id',    sendDetail('community-post.html'));
 app.get('/community/submit',      sendDetail('community-submit.html'));
 app.get('/u/:username',           sendDetail('profile.html'));
 app.get('/u/:username/dna',       sendDetail('dna.html'));
-app.get('/certifications/:slug',  sendDetail('cert-detail.html'));
+app.get('/certifications/:slug',  sendDetail('cert-detail.html', certOg));
 app.get('/cheatsheets/:slug',     sendDetail('cheatsheet-detail.html'));
 app.get('/events/:slug',          sendDetail('event-detail.html'));
 
@@ -255,7 +368,23 @@ app.use((req, res, next) => {
   res.redirect(301, req.path.slice(0, -1) + q);
 });
 
-app.use(express.static(join(__dirname, 'public'), { extensions: ['html'] }));
+// Static HTML pages with OG injection. Runs BEFORE express.static so we can
+// rewrite the head; non-HTML and missing files fall through.
+app.get(/^[^.]*$/, (req, res, next) => {
+  if (req.method !== 'GET') return next();
+  if (req.path.startsWith('/api/')) return next();
+  if (req.path.startsWith('/uploads/')) return next();
+  // Map "/" → public/index.html, "/about" → public/about.html, etc.
+  const stripped = req.path === '/' ? 'index' : req.path.replace(/^\//, '').replace(/\/$/, '');
+  if (stripped.includes('..')) return next();   // path-traversal guard
+  const filePath = join(__dirname, 'public', stripped + '.html');
+  if (!existsSync(filePath)) return next();
+  const html = readHtmlWithOg(filePath, req.path);
+  if (html) res.type('html').send(html);
+  else next();
+});
+
+app.use(express.static(join(__dirname, 'public')));
 
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
