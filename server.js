@@ -386,7 +386,11 @@ app.get('/teams/:slug',           sendDetail('team-detail.html'));
 app.get('/teams/join/:token',     sendDetail('team-join.html'));
 app.get('/community/post/:id',    sendDetail('community-post.html'));
 app.get('/community/submit',      sendDetail('community-submit.html'));
-app.get('/community/threads',     sendDetail('community-threads.html'));
+// Discord-style chat is now the secondary surface; /community is the
+// Reddit-style forum (the front door). /community/threads is kept as a
+// redirect so old bookmarks still resolve.
+app.get('/community/chat',        sendDetail('community-chat.html'));
+app.get('/community/threads',     (_req, res) => res.redirect(301, '/community'));
 app.get('/u/:username',           sendDetail('profile.html'));
 app.get('/u/:username/dna',       sendDetail('dna.html'));
 app.get('/certifications/:slug',  sendDetail('cert-detail.html', certOg));

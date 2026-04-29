@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Community — aysec</title>
+  <meta name="description" content="The aysec community — Discord-style live chat rooms for cybersecurity. Join the conversation in real time." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body class="community-chat-page">
+  <div id="navbar-mount"></div>
+
+  <main class="chat-shell" data-no-transition>
+    <!-- LEFT: rooms sidebar -->
+    <aside class="chat-rooms" aria-label="Rooms">
+      <div class="chat-rooms-head">
+        <div class="chat-rooms-title">Channels</div>
+        <a class="chat-rooms-threads" href="/community" title="Forum (long-form posts, votes, comments)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Forum</span>
+        </a>
+      </div>
+      <ul class="chat-rooms-list" id="roomsList"></ul>
+    </aside>
+
+    <!-- CENTER: messages + composer -->
+    <section class="chat-main" aria-label="Chat">
+      <header class="chat-header">
+        <div class="chat-header-room">
+          <span class="chat-header-icon" id="roomIcon">💬</span>
+          <div>
+            <h1 id="roomName">…</h1>
+            <p class="chat-header-desc" id="roomDesc"></p>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <span class="chat-header-presence" id="roomPresence"></span>
+          <button class="chat-header-info" id="toggleMembers" type="button" aria-label="Toggle member list" title="Members">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="chat-stream" id="chatStream">
+        <div class="chat-stream-skeleton">
+          <div class="skeleton" style="height:48px;width:60%"></div>
+          <div class="skeleton" style="height:48px;width:75%"></div>
+          <div class="skeleton" style="height:48px;width:50%"></div>
+        </div>
+      </div>
+
+      <div class="chat-reply-bar" id="chatReplyBar" hidden>
+        <span class="chat-reply-text">↩ replying to <strong id="chatReplyName"></strong></span>
+        <span class="chat-reply-snippet" id="chatReplySnippet"></span>
+        <button type="button" id="chatReplyCancel" aria-label="Cancel reply">×</button>
+      </div>
+
+      <form class="chat-composer" id="chatForm">
+        <button type="button" class="chat-composer-emoji" id="emojiBtn" title="Emoji">😊</button>
+        <textarea class="chat-composer-input" id="chatInput"
+                  rows="1" maxlength="4000"
+                  placeholder="Message #general"
+                  autocomplete="off" autocorrect="off"
+                  spellcheck="true"></textarea>
+        <button type="submit" class="chat-composer-send" id="chatSend" aria-label="Send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </form>
+    </section>
+
+    <!-- RIGHT: members panel -->
+    <aside class="chat-members" id="chatMembers" aria-label="Members">
+      <div class="chat-members-head">Online <span class="dim mono" id="memberCount"></span></div>
+      <ul class="chat-members-list" id="membersList">
+        <li class="dim mono" style="font-size:0.78rem;">loading…</li>
+      </ul>
+    </aside>
+  </main>
+
+  <div id="footer-mount" hidden></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
+  <script src="/js/community-chat.js"></script>
+</body>
+</html>

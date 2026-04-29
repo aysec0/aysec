@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0a0d12" />
   <title>Community — aysec</title>
-  <meta name="description" content="The aysec community — Discord-style live chat rooms for cybersecurity. Join the conversation in real time." />
+  <meta name="description" content="The aysec community — a Reddit-style forum where cybersecurity practitioners learn, share writeups, and ask each other questions." />
   <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,81 +13,67 @@
   <link rel="stylesheet" href="/css/styles.css" />
   <script src="/js/theme.js"></script>
 </head>
-<body class="community-chat-page">
+<body>
   <div id="navbar-mount"></div>
 
-  <main class="chat-shell" data-no-transition>
-    <!-- LEFT: rooms sidebar -->
-    <aside class="chat-rooms" aria-label="Rooms">
-      <div class="chat-rooms-head">
-        <div class="chat-rooms-title">Channels</div>
-        <a class="chat-rooms-threads" href="/community/threads" title="Long-form threads">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <span>Threads</span>
-        </a>
-      </div>
-      <ul class="chat-rooms-list" id="roomsList"></ul>
-    </aside>
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>community</span></div>
+      <span class="page-eyebrow">// /community</span>
+      <h1 class="page-title" data-site="community_title">Community.</h1>
+      <p class="page-subtitle" data-site="community_subtitle">
+        A focused forum for cybersecurity — ask questions, share writeups, post finds.
+        No memes-only feed, no drama. Up/downvote what's actually useful.
+      </p>
+    </div>
+  </header>
 
-    <!-- CENTER: messages + composer -->
-    <section class="chat-main" aria-label="Chat">
-      <header class="chat-header">
-        <div class="chat-header-room">
-          <span class="chat-header-icon" id="roomIcon">💬</span>
-          <div>
-            <h1 id="roomName">…</h1>
-            <p class="chat-header-desc" id="roomDesc"></p>
+  <section class="section">
+    <div class="container forum-shell">
+      <main class="forum-main">
+        <div class="forum-toolbar">
+          <div class="chips" id="forumSort" role="tablist">
+            <button class="chip is-active" data-sort="hot">🔥 Hot</button>
+            <button class="chip" data-sort="live">🟢 Live now</button>
+            <button class="chip" data-sort="new">🆕 New</button>
+            <button class="chip" data-sort="top">⭐ Top</button>
+          </div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <a class="btn btn-ghost btn-sm" href="/community/chat" title="Real-time channels">💬 Live chat</a>
+            <a class="btn btn-primary" href="/community/submit" id="forumNewPost">+ New post</a>
           </div>
         </div>
-        <div class="chat-header-actions">
-          <span class="chat-header-presence" id="roomPresence"></span>
-          <button class="chat-header-info" id="toggleMembers" type="button" aria-label="Toggle member list" title="Members">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </button>
+        <div id="forumCatBanner"></div>
+        <div id="forumPosts" class="forum-posts" data-reveal>
+          <div class="card" style="padding:1.25rem;"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%; margin-top:0.5rem;"></div></div>
+          <div class="card" style="padding:1.25rem;"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%; margin-top:0.5rem;"></div></div>
         </div>
-      </header>
+      </main>
 
-      <div class="chat-stream" id="chatStream">
-        <div class="chat-stream-skeleton">
-          <div class="skeleton" style="height:48px;width:60%"></div>
-          <div class="skeleton" style="height:48px;width:75%"></div>
-          <div class="skeleton" style="height:48px;width:50%"></div>
+      <aside class="forum-side">
+        <div class="card" style="padding:1.1rem 1.2rem;">
+          <div class="tool-out-label">Categories</div>
+          <ul id="forumCats" class="forum-cats" style="margin-top:0.5rem;"></ul>
         </div>
-      </div>
 
-      <div class="chat-reply-bar" id="chatReplyBar" hidden>
-        <span class="chat-reply-text">↩ replying to <strong id="chatReplyName"></strong></span>
-        <span class="chat-reply-snippet" id="chatReplySnippet"></span>
-        <button type="button" id="chatReplyCancel" aria-label="Cancel reply">×</button>
-      </div>
+        <div class="card" style="padding:1.1rem 1.2rem;">
+          <div class="tool-out-label">Posting rules</div>
+          <ol style="margin:0.4rem 0 0 1.1rem; padding:0; font-size:0.85rem; color: var(--text-muted); line-height:1.55;">
+            <li>Cybersecurity only. Write-ups, questions, tools, news.</li>
+            <li>No drops of credentials, leaks, or anything you don't have authorization for.</li>
+            <li>Be specific — "It doesn't work" is not a question.</li>
+            <li>Cite sources for claims. Mark assumptions as such.</li>
+            <li>Be the kind of teacher you wish you had.</li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </section>
 
-      <form class="chat-composer" id="chatForm">
-        <button type="button" class="chat-composer-emoji" id="emojiBtn" title="Emoji">😊</button>
-        <textarea class="chat-composer-input" id="chatInput"
-                  rows="1" maxlength="4000"
-                  placeholder="Message #general"
-                  autocomplete="off" autocorrect="off"
-                  spellcheck="true"></textarea>
-        <button type="submit" class="chat-composer-send" id="chatSend" aria-label="Send">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
-      </form>
-    </section>
-
-    <!-- RIGHT: members panel -->
-    <aside class="chat-members" id="chatMembers" aria-label="Members">
-      <div class="chat-members-head">Online <span class="dim mono" id="memberCount"></span></div>
-      <ul class="chat-members-list" id="membersList">
-        <li class="dim mono" style="font-size:0.78rem;">loading…</li>
-      </ul>
-    </aside>
-  </main>
-
-  <div id="footer-mount" hidden></div>
-
+  <div id="footer-mount"></div>
   <script src="/js/api.js"></script>
   <script src="/js/layout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
-  <script src="/js/community-chat.js"></script>
+  <script src="/js/community.js"></script>
 </body>
 </html>

@@ -12700,3 +12700,132 @@ select.input optgroup {
   text-overflow: ellipsis;
 }
 .chat-member-status { width: 7px; height: 7px; border-radius: 50%; }
+
+/* ============================================================
+   Forum v2 — LIVE badge, Verified writeup badge, weighted-vote
+   tooltip, submit-form options.
+   ============================================================ */
+
+/* LIVE badge — green pulsing dot + countdown text */
+.forum-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: color-mix(in srgb, var(--terminal) 14%, transparent);
+  color: var(--terminal);
+  border: 1px solid color-mix(in srgb, var(--terminal) 50%, transparent);
+}
+.forum-live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--terminal);
+  display: inline-block;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--terminal) 60%, transparent);
+  animation: forumLivePulse 1.6s ease-in-out infinite;
+}
+.forum-live-time {
+  font-weight: 500;
+  letter-spacing: 0;
+  font-size: 0.7rem;
+  color: var(--terminal);
+  opacity: 0.85;
+}
+@keyframes forumLivePulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--terminal) 60%, transparent); }
+  50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--terminal) 0%,  transparent); }
+}
+
+/* Whole-card glow when a post is live */
+.forum-post.is-live {
+  border-left: 3px solid var(--terminal);
+  background: color-mix(in srgb, var(--terminal) 3%, transparent);
+}
+
+/* Verified writeup badge */
+.forum-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--terminal) 12%, transparent);
+  color: var(--terminal);
+  border: 1px solid color-mix(in srgb, var(--terminal) 40%, transparent);
+}
+.forum-post.is-verified::before {
+  content: '';
+  position: absolute;
+  left: -1px; top: -1px; bottom: -1px;
+  width: 3px;
+  background: linear-gradient(180deg, var(--terminal), color-mix(in srgb, var(--terminal) 50%, transparent));
+  border-radius: 8px 0 0 8px;
+}
+
+/* Inline writeup-target link (under the title) */
+.forum-writeup-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0.6rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+.forum-writeup-link:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.forum-writeup-link strong { color: var(--text); }
+
+/* Score number gets a help-cursor when there's a tooltip */
+.forum-score[title] { cursor: help; }
+
+/* Submit-form options block */
+.forum-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-elev) 60%, transparent);
+}
+.forum-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.7rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.forum-option:hover { background: var(--bg); }
+.forum-option > input[type="checkbox"] {
+  margin-top: 0.25rem;
+  accent-color: var(--accent);
+  width: 16px; height: 16px;
+}
+.forum-option-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  display: block;
+}
+.forum-option-desc {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  line-height: 1.4;
+}

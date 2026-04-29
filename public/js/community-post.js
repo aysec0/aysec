@@ -44,12 +44,18 @@
           <div class="forum-meta">
             <span class="forum-cat-pill" style="--cat: ${p.cat_color || 'var(--accent)'};">/${escapeHtml(p.cat_slug)}</span>
             <span class="dim">posted by <a href="/u/${escapeHtml(p.username)}">@${escapeHtml(p.username)}</a> ${relTime(p.created_at)}</span>
+            ${p.is_live ? `<span class="forum-live-badge"><span class="forum-live-dot"></span> LIVE</span>` : ''}
+            ${p.verified_writeup ? `<span class="forum-verified" title="Author solved ${escapeHtml(p.verified_writeup.challenge.title)}">✓ verified writeup</span>` : ''}
             ${p.pinned ? '<span class="tag" style="background: var(--accent-soft); color: var(--accent);">📌 pinned</span>' : ''}
             ${p.locked ? '<span class="tag">🔒 locked</span>' : ''}
             ${canDelete ? `<button class="forum-del" data-pdel="${p.id}">delete</button>` : ''}
             <span data-presence-scope="community-post" data-presence-id="${p.id}"></span>
           </div>
           <h1 class="forum-title-detail">${escapeHtml(p.title)}</h1>
+          ${p.verified_writeup ? `
+            <a class="forum-writeup-link" href="/challenges/${escapeHtml(p.verified_writeup.challenge.slug)}" target="_blank" rel="noopener">
+              writeup of <strong>${escapeHtml(p.verified_writeup.challenge.title)}</strong> · ${escapeHtml(p.verified_writeup.challenge.category)} · ${escapeHtml(p.verified_writeup.challenge.difficulty)} ↗
+            </a>` : ''}
           ${p.url ? `<a class="forum-url-pill" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.url)} ↗</a>` : ''}
           ${p.body_md ? `<div class="forum-md prose">${md(p.body_md)}</div>` : ''}
           ${isAdmin ? `
@@ -248,15 +254,36 @@
     }
   });
 
-  async function load() {
+  let liveStream = null;
+  function maybeOpenLiveStream(post) {
+    if (liveStream) { try { liveStream.close(); } catch {} liveStream = null; }
+    if (!post?.is_live) return;
     try {
-      me = (await window.api.get('/api/auth/me').catch(() => null))?.user || null;
+      liveStream = new EventSource(`/api/forum/posts/${post.id}/live`);
+      liveStream.onmessage = (e) => {
+        try {
+          const ev = JSON.parse(e.data);
+          if (ev.type === 'comment') {
+            // Re-fetch comments so the existing render path handles sort,
+            // threading, voting, and dedup. Cheaper than building a one-off
+            // appender that mirrors all of renderComments().
+            load(true);
+          }
+        } catch {}
+      };
+    } catch {}
+  }
+
+  async function load(silent) {
+    try {
+      if (!silent) me = (await window.api.get('/api/auth/me').catch(() => null))?.user || null;
       const r = await window.api.get(`/api/forum/posts/${postId}`);
       renderPost(r.post);
       $('commentsHead').textContent = `Comments (${r.comments.length})`;
       renderComments(r.comments);
+      maybeOpenLiveStream(r.post);
       // If the URL has a #cN anchor, scroll to it after render
-      if (location.hash && /^#c\d+$/.test(location.hash)) {
+      if (!silent && location.hash && /^#c\d+$/.test(location.hash)) {
         const el = document.querySelector(location.hash);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -265,7 +292,7 @@
         }
       }
     } catch (e) {
-      $('postBody').innerHTML = `<div class="card" style="padding:1.5rem;"><p class="dim">${escapeHtml(e.message)}</p></div>`;
+      if (!silent) $('postBody').innerHTML = `<div class="card" style="padding:1.5rem;"><p class="dim">${escapeHtml(e.message)}</p></div>`;
     }
   }
 

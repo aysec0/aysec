@@ -42,6 +42,29 @@
           <summary class="dim" style="font-size:0.85rem; cursor:pointer;">live preview</summary>
           <div id="newPostPreview" class="forum-md prose forum-md-preview-pane"></div>
         </details>
+
+        <!-- Verified writeup + live window — the two new features -->
+        <div class="forum-options">
+          <label class="forum-option">
+            <input type="checkbox" id="newPostGoLive" />
+            <div>
+              <span class="forum-option-name">🟢 Go live for 60 minutes</span>
+              <span class="forum-option-desc">Post pins to the top of the feed and replies stream in real-time. Switches to a normal thread after.</span>
+            </div>
+          </label>
+          <label class="forum-option">
+            <span style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; width:100%;">
+              <span class="forum-option-name">✓ Verify as writeup of:</span>
+              <select class="input mono" id="newPostClaimChallenge" style="flex:1; min-width:240px;">
+                <option value="">— Don't claim a challenge —</option>
+              </select>
+            </span>
+            <span class="forum-option-desc">
+              Only challenges you've solved show up. Verified writeups get a green ✓ badge and surface higher in the feed.
+            </span>
+          </label>
+        </div>
+
         <div style="display:flex; gap:0.5rem; align-items:center;">
           <button class="btn btn-primary" type="submit">Post</button>
           <a class="btn btn-ghost" href="/community">Cancel</a>
@@ -64,6 +87,31 @@
         if (!me?.user) { location.href = '/login?next=/community/submit'; return; }
         const r = await window.api.get('/api/forum/categories');
         $('newPostCat').innerHTML = r.categories.map((c) => `<option value="${c.slug}">${c.name}</option>`).join('');
+
+        // Populate the writeup-claim dropdown with challenges this user has
+        // already solved. Anything they haven't solved is hidden — the
+        // verified-writeup gate is enforced server-side too.
+        try {
+          const ch = await window.api.get('/api/challenges');
+          const solved = (ch.challenges || []).filter((c) => c.solved);
+          const sel = $('newPostClaimChallenge');
+          if (solved.length) {
+            for (const c of solved) {
+              const opt = document.createElement('option');
+              opt.value = c.slug;
+              opt.textContent = `${c.title} · ${c.category} · ${c.difficulty}`;
+              sel.appendChild(opt);
+            }
+          } else {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = "— Solve a challenge first to write it up —";
+            opt.disabled = true;
+            sel.appendChild(opt);
+            sel.disabled = true;
+          }
+        } catch {}
+
         // Live markdown preview (sanitized, even though it's the author's own content)
         const body = $('newPostBody'), prev = $('newPostPreview');
         const renderPreview = () => {
@@ -81,6 +129,8 @@
               title: fd.get('title'),
               body_md: fd.get('body_md'),
               url: fd.get('url') || null,
+              go_live: $('newPostGoLive').checked,
+              claimed_challenge_slug: $('newPostClaimChallenge').value || null,
             });
             location.href = '/community/post/' + cr.id;
           } catch (err) {

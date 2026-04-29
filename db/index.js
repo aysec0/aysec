@@ -53,6 +53,22 @@ export function migrate() {
   tryAdd(`ALTER TABLE challenges ADD COLUMN external_url TEXT`);
   tryAdd(`ALTER TABLE challenges ADD COLUMN source_pack TEXT`);
 
+  // Forum v2 — three differentiators on top of the Reddit-style base:
+  //  - live_until: 60-min window after a post is created during which it
+  //    pins to the top of the feed and replies stream in real-time.
+  //  - claimed_challenge_id: writeup posts can claim a specific CTF
+  //    challenge they're explaining; a corresponding solves row makes
+  //    the writeup "verified" automatically.
+  //  - daily_winner_at: post earned the daily category-trophy on this date.
+  tryAdd(`ALTER TABLE forum_posts ADD COLUMN live_until TEXT`);
+  tryAdd(`ALTER TABLE forum_posts ADD COLUMN claimed_challenge_id INTEGER`);
+  tryAdd(`ALTER TABLE forum_posts ADD COLUMN daily_winner_at TEXT`);
+  // Skill-weighted votes: cache the weight at the moment the vote was
+  // cast so the post score is a pure SUM(weight) — no recompute on every
+  // page load. Default 1 for the legacy votes already in the table.
+  tryAdd(`ALTER TABLE forum_post_votes ADD COLUMN weight REAL NOT NULL DEFAULT 1.0`);
+  tryAdd(`ALTER TABLE forum_comment_votes ADD COLUMN weight REAL NOT NULL DEFAULT 1.0`);
+
   // Idempotent migration: blog posts -> community/forum posts under a
   // dedicated "Writeups & blog" category. Runs on every startup but only
   // touches posts whose migrated_to_forum_id is NULL.
