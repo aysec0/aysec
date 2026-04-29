@@ -639,6 +639,14 @@ CREATE TABLE IF NOT EXISTS vault_solves (
 
 CREATE INDEX IF NOT EXISTS idx_vault_user ON vault_solves(user_id, solved_at DESC);
 
+-- Global full-text search index. Rebuilt from courses + posts + challenges
+-- + cheatsheets + lessons + cert_prep at startup, plus on every admin write
+-- in routes/admin.js. Tokenizer: porter (English stemming) + unicode61.
+CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(
+  type, title, body, slug UNINDEXED, url UNINDEXED,
+  tokenize = 'porter unicode61'
+);
+
 -- Tracks every "show me a deeper hint" tap so the leaderboard can rank
 -- people who solved blind higher than people who unlocked hints.
 CREATE TABLE IF NOT EXISTS vault_hint_uses (

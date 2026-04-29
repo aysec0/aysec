@@ -4423,6 +4423,80 @@ kbd {
 }
 .vault-hint-btn:disabled { opacity: 0.5; cursor: wait; }
 
+/* ============================================================
+   Global search page (/search) — FTS5-backed
+   ============================================================ */
+.search-form {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+.search-form:focus-within { border-color: var(--accent); }
+.search-form-icon { color: var(--text-dim); }
+.search-form-input {
+  border: 0; background: transparent; padding: 0.5rem 0;
+  font-size: 1rem;
+}
+.search-form-input:focus { outline: none; box-shadow: none; }
+
+.search-filters {
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.search-loading {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 1.5rem; color: var(--text-dim);
+}
+
+.search-group { margin-bottom: 1.5rem; }
+.search-group-head {
+  display: flex; align-items: baseline; gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.search-group-tag {
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--type-color, var(--accent));
+  background: color-mix(in srgb, var(--type-color, var(--accent)) 14%, transparent);
+  padding: 0.15rem 0.5rem; border-radius: 4px;
+}
+.search-group-count { font-size: 0.78rem; color: var(--text-dim); }
+.search-group-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+
+.search-result { }
+.search-result-link {
+  display: block;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: inherit; text-decoration: none;
+  transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+}
+.search-result-link:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  transform: translateX(2px);
+  box-shadow: 0 8px 24px -16px rgba(0,0,0,0.5);
+}
+.search-result-title { margin: 0 0 0.3rem; font-size: 1rem; font-weight: 600; line-height: 1.35; }
+.search-result-snippet {
+  margin: 0 0 0.4rem;
+  font-size: 0.88rem; color: var(--text-muted);
+  line-height: 1.5; max-height: 3em; overflow: hidden;
+}
+.search-result-url { font-size: 0.78rem; color: var(--text-dim); }
+.search-result-link mark {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--text); padding: 0 1px; border-radius: 2px;
+}
+
 /* Bell ping — fires when a real-time notification arrives via SSE */
 .bell-btn.is-pinged {
   animation: bell-ping 1.2s ease-in-out 1;

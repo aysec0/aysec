@@ -15,6 +15,7 @@
     { href: '/events',         label: 'Events' },
     { href: '/community',      label: 'Community' },
     { href: '/blog',           label: 'Blog' },
+    { href: '/search',         label: '🔍', srOnly: 'Search' },
   ];
 
   // Catalog used by the navbar Tools dropdown. Each item links to a panel
