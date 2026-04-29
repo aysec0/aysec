@@ -7538,17 +7538,41 @@ kbd {
 .forum-cat:hover { background: var(--bg-elev); }
 .forum-cat.is-active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--cat, var(--accent)); }
 
+/* Reddit-flow comment threading — no per-comment card. The vote column
+   doubles as a "thread rail": a thin vertical line that connects a
+   parent's children visually, and clicking it collapses the subtree. */
 .forum-comment {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.6rem 0.8rem;
-  margin-bottom: 0.4rem;
-  display: grid; grid-template-columns: 32px 1fr; gap: 0.6rem;
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 0.5rem;
+  padding: 0.5rem 0 0.4rem;
+  position: relative;
 }
-.forum-comment .forum-vote { gap: 0; }
-.forum-comment .forum-arrow { font-size: 1rem; padding: 1px 3px; }
-.forum-comment-body { min-width: 0; }
+.forum-comment + .forum-comment {
+  border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+/* Vote column compacted; thread rail extends from voter down */
+.forum-comment .forum-vote {
+  gap: 0;
+  position: relative;
+  padding-top: 2px;
+}
+.forum-comment .forum-vote::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: 56px; bottom: 0;
+  width: 2px; transform: translateX(-50%);
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+  border-radius: 1px;
+  transition: background 0.15s;
+}
+.forum-comment:hover > .forum-vote::after,
+.forum-comment.is-op > .forum-vote::after {
+  background: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.forum-comment .forum-arrow { font-size: 0.92rem; padding: 0 2px; }
+.forum-comment .forum-score { font-size: 0.78rem; }
+.forum-comment-body { min-width: 0; padding-bottom: 0.2rem; }
 .forum-reply-btn {
   background: transparent; border: 0; color: var(--text-muted);
   font: inherit; font-size: 0.78rem; cursor: pointer; padding: 0;
@@ -7587,7 +7611,8 @@ kbd {
   padding: 0.05rem 0.4rem; border-radius: 4px;
   letter-spacing: 0.06em;
 }
-.forum-comment.is-op { border-left: 2px solid var(--accent); }
+/* OP comments get an accent thread rail instead of a left border */
+.forum-comment.is-op { /* rail color handled in .forum-vote::after rule */ }
 
 /* Collapsed thread "+N hidden" hint */
 .forum-collapsed-info {
@@ -7607,11 +7632,16 @@ kbd {
 .forum-comment .forum-meta { gap: 0.4rem; }
 .forum-comment .forum-user { white-space: nowrap; }
 
-/* Nested comments are children of their parent's CSS grid (which is
-   "32px 1fr"), so without an explicit span they get auto-placed into
-   the 32px vote column and get squeezed to a sliver. Force them to
-   span the full row width. */
-.forum-comment > .forum-comment { grid-column: 1 / -1; }
+/* Nested comments live in the body column of their parent so the
+   thread rail of the parent runs through their gutter naturally */
+.forum-comment > .forum-comment {
+  grid-column: 2 / -1;
+  padding-left: 0;
+  /* Re-show the top separator on first nested child */
+}
+.forum-comment > .forum-comment + .forum-comment {
+  border-top: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+}
 
 /* Forum image upload UI */
 .forum-textarea-toolbar {

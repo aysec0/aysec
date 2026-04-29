@@ -94,7 +94,7 @@
       : kids.map((k) => commentNode(k, kidsByParent, depth + 1)).join('');
 
     return `
-      <div class="forum-comment ${isCollapsed ? 'is-collapsed' : ''}${isOp ? ' is-op' : ''}" data-id="${c.id}" id="c${c.id}" style="margin-left:${depth * 16}px;">
+      <div class="forum-comment ${isCollapsed ? 'is-collapsed' : ''}${isOp ? ' is-op' : ''}" data-id="${c.id}" id="c${c.id}">
         <div class="forum-vote">
           <button class="forum-arrow ${c.my_vote === 1 ? 'is-up' : ''}" data-v="1">▲</button>
           <div class="forum-score">${c.score}</div>
