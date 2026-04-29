@@ -733,6 +733,51 @@ CREATE TABLE IF NOT EXISTS duel_ratings (
 CREATE INDEX IF NOT EXISTS idx_duel_ratings_format ON duel_ratings(format, rating DESC);
 
 -- ============================================================
+-- Chat — Discord-style live rooms (replaces the old reddit-style
+-- /community as the primary social surface). Long-form forum
+-- posts still live in `forum_posts`; chat is for fast, casual,
+-- real-time conversation.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS chat_rooms (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug        TEXT NOT NULL UNIQUE,            -- url-safe room id
+  name        TEXT NOT NULL,
+  description TEXT,
+  icon        TEXT,                            -- emoji
+  color       TEXT,                            -- hex / css for accent
+  position    INTEGER NOT NULL DEFAULT 0,
+  is_locked   INTEGER NOT NULL DEFAULT 0,      -- read-only?
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_rooms_pos ON chat_rooms(position, id);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  room_id       INTEGER NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body          TEXT NOT NULL,                 -- markdown text (renders client-side)
+  reply_to      INTEGER REFERENCES chat_messages(id) ON DELETE SET NULL,
+  attachment_url TEXT,                         -- optional image / file
+  edited_at     TEXT,
+  deleted_at    TEXT,                          -- soft delete so threads don't break
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_msgs_room   ON chat_messages(room_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_msgs_recent ON chat_messages(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS chat_reactions (
+  message_id INTEGER NOT NULL REFERENCES chat_messages(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  emoji      TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (message_id, user_id, emoji)
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_reactions_msg ON chat_reactions(message_id);
+
+-- ============================================================
 -- Live presence — "X people working on this right now"
 -- Heartbeat-driven: clients POST to /api/presence every ~25s while
 -- they're on a challenge/duel/lab/etc. page. Rows older than 60s

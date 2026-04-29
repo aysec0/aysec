@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Community — aysec</title>
+  <meta name="description" content="The aysec community — a Reddit-style forum where cybersecurity practitioners learn, share writeups, and ask each other questions." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs"><a href="/">~</a><span class="sep">/</span><span>community</span></div>
+      <span class="page-eyebrow">// /community</span>
+      <h1 class="page-title" data-site="community_title">Community.</h1>
+      <p class="page-subtitle" data-site="community_subtitle">
+        A focused forum for cybersecurity — ask questions, share writeups, post finds.
+        No memes-only feed, no drama. Up/downvote what's actually useful.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container forum-shell">
+      <main class="forum-main">
+        <div class="forum-toolbar">
+          <div class="chips" id="forumSort" role="tablist">
+            <button class="chip is-active" data-sort="hot">🔥 Hot</button>
+            <button class="chip" data-sort="new">🆕 New</button>
+            <button class="chip" data-sort="top">⭐ Top</button>
+          </div>
+          <a class="btn btn-primary" href="/community/submit" id="forumNewPost">+ New post</a>
+        </div>
+        <div id="forumCatBanner"></div>
+        <div id="forumPosts" class="forum-posts" data-reveal>
+          <div class="card" style="padding:1.25rem;"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%; margin-top:0.5rem;"></div></div>
+          <div class="card" style="padding:1.25rem;"><div class="skeleton" style="height:18px;width:60%"></div><div class="skeleton" style="height:14px;width:90%; margin-top:0.5rem;"></div></div>
+        </div>
+      </main>
+
+      <aside class="forum-side">
+        <div class="card" style="padding:1.1rem 1.2rem;">
+          <div class="tool-out-label">Categories</div>
+          <ul id="forumCats" class="forum-cats" style="margin-top:0.5rem;"></ul>
+        </div>
+
+        <div class="card" style="padding:1.1rem 1.2rem;">
+          <div class="tool-out-label">Posting rules</div>
+          <ol style="margin:0.4rem 0 0 1.1rem; padding:0; font-size:0.85rem; color: var(--text-muted); line-height:1.55;">
+            <li>Cybersecurity only. Write-ups, questions, tools, news.</li>
+            <li>No drops of credentials, leaks, or anything you don't have authorization for.</li>
+            <li>Be specific — "It doesn't work" is not a question.</li>
+            <li>Cite sources for claims. Mark assumptions as such.</li>
+            <li>Be the kind of teacher you wish you had.</li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
+  <script src="/js/community.js"></script>
+</body>
+</html>

@@ -57,6 +57,29 @@ export function migrate() {
   // dedicated "Writeups & blog" category. Runs on every startup but only
   // touches posts whose migrated_to_forum_id is NULL.
   migrateBlogToForum();
+
+  // Seed default chat rooms (idempotent — only inserts new slugs).
+  seedDefaultChatRooms();
+}
+
+function seedDefaultChatRooms() {
+  const defaults = [
+    { slug: 'general',    name: 'general',     icon: '💬', color: '#39ff7a', position: 0,  description: "the lobby. say hi, tell us what you're working on." },
+    { slug: 'web',        name: 'web',         icon: '🌐', color: '#7aa2f7', position: 1,  description: 'web hacking, bug bounty, OWASP Top 10 sparring.' },
+    { slug: 'crypto',     name: 'crypto',      icon: '🔐', color: '#bb88ff', position: 2,  description: 'cryptography & cryptanalysis. bring the math.' },
+    { slug: 'pwn',        name: 'pwn',         icon: '💥', color: '#ffb74d', position: 3,  description: 'binary exploitation, RE, low-level chaos.' },
+    { slug: 'ai',         name: 'ai-security', icon: '🤖', color: '#88e8a3', position: 4,  description: 'prompt injection, LLM red-team, model theft.' },
+    { slug: 'forensics',  name: 'forensics',   icon: '🔍', color: '#f25555', position: 5,  description: 'memory dumps, packet caps, file carving.' },
+    { slug: 'help',       name: 'help',        icon: '❓', color: '#5b9cff', position: 6,  description: "stuck on a challenge? ask here. don't ask to ask, just ask." },
+    { slug: 'showcase',   name: 'showcase',    icon: '🏆', color: '#f0c060', position: 7,  description: 'tools, scripts, finds, writeups, trophies.' },
+    { slug: 'off-topic',  name: 'off-topic',   icon: '🎉', color: '#a8b1c2', position: 8,  description: 'memes, music, dogs, chess. anything but ai-slop.' },
+  ];
+  const ins = db.prepare(`
+    INSERT INTO chat_rooms (slug, name, description, icon, color, position)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(slug) DO NOTHING
+  `);
+  for (const r of defaults) ins.run(r.slug, r.name, r.description, r.icon, r.color, r.position);
 }
 
 /* Mirror the legacy `posts` rows into `forum_posts` so the community is
