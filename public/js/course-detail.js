@@ -174,8 +174,11 @@
     try {
       const data = await window.api.get(`/api/courses/${course.slug}/lessons/${lessonSlug}`);
       const { lesson, completed, prev, next } = data;
+      const safeHtml = window.DOMPurify
+        ? window.DOMPurify.sanitize(lesson.content_html || '')
+        : (lesson.content_html || '');
       contentEl.innerHTML = `
-        <div class="prose">${lesson.content_html || '<p class="muted">No content yet.</p>'}</div>
+        <div class="prose">${safeHtml || '<p class="muted">No content yet.</p>'}</div>
         <div class="lesson-nav">
           ${prev ? `<a class="lesson-nav-btn" href="#${escapeHtml(prev.slug)}" data-go="${escapeHtml(prev.slug)}">
             <span class="lesson-nav-label">← Previous</span><span>${escapeHtml(prev.title)}</span>
@@ -187,6 +190,31 @@
             <span class="lesson-nav-label">Next →</span><span>${escapeHtml(next.title)}</span>
           </a>` : '<span></span>'}
         </div>`;
+
+      // Drop a "copy" button on every <pre> block — half the value of a
+      // pentest lesson is the commands; you shouldn't have to triple-click.
+      contentEl.querySelectorAll('.prose pre').forEach((pre) => {
+        if (pre.querySelector('.lesson-copy-btn')) return; // idempotent
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'lesson-copy-btn';
+        btn.title = 'Copy';
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+        pre.style.position = 'relative';
+        pre.appendChild(btn);
+        btn.addEventListener('click', async () => {
+          const text = pre.querySelector('code')?.textContent ?? pre.textContent;
+          try {
+            await navigator.clipboard.writeText(text);
+            btn.classList.add('is-copied');
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+            setTimeout(() => {
+              btn.classList.remove('is-copied');
+              btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+            }, 1400);
+          } catch {}
+        });
+      });
 
       contentEl.querySelectorAll('a[data-go]').forEach((a) => {
         a.addEventListener('click', (e) => {

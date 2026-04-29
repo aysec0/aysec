@@ -4423,6 +4423,31 @@ kbd {
 }
 .vault-hint-btn:disabled { opacity: 0.5; cursor: wait; }
 
+/* Lesson code-block copy button */
+.lesson-copy-btn {
+  position: absolute; top: 0.4rem; right: 0.4rem;
+  width: 28px; height: 28px;
+  display: inline-grid; place-items: center;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.12s, border-color 0.12s, background 0.12s;
+}
+.prose pre:hover .lesson-copy-btn { opacity: 1; }
+.lesson-copy-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.lesson-copy-btn.is-copied {
+  color: var(--terminal, #39ff7a);
+  border-color: var(--terminal, #39ff7a);
+  opacity: 1;
+}
+
 .vault-card-meta {
   display: flex;
   flex-direction: column;
