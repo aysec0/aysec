@@ -8176,6 +8176,65 @@ button.admin-stat-card { width: 100%; }
   .admin-form-grid { grid-template-columns: 1fr; }
 }
 
+/* ============================================================
+   Streamlined "Add a course" form — single-column flow,
+   segmented difficulty, slug auto-derived from the title
+   ============================================================ */
+.admin-form-narrow { max-width: 720px; margin: 0 auto; }
+.admin-form-section.admin-form-section-stacked {
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+  padding: 1rem 1.25rem;
+}
+.admin-form-section-head-inline {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+.admin-form-section-head-inline .admin-form-section-hint { margin: 0; font-size: 0.75rem; }
+
+.admin-field-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem 1rem;
+}
+.admin-field-large {
+  font-size: 1.1rem;
+  padding-top: 0.55rem; padding-bottom: 0.55rem;
+}
+.admin-form-quick-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem;
+}
+.admin-form-quick-grid[hidden] { display: none; }
+
+/* Segmented control (used for difficulty) */
+.admin-segmented {
+  display: inline-flex;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+.admin-seg {
+  flex: 1;
+  background: transparent; border: 0;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem; color: var(--text-muted);
+  border-radius: 5px; cursor: pointer;
+  text-transform: capitalize;
+  transition: background 0.12s, color 0.12s;
+}
+.admin-seg:hover { color: var(--text); }
+.admin-seg.is-active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .admin-field-row { grid-template-columns: 1fr; }
+  .admin-form-quick-grid { grid-template-columns: 1fr; }
+}
+
 .admin-table {
   background: var(--surface);
   border: 1px solid var(--border);

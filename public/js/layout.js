@@ -12,6 +12,7 @@
     { href: '/challenges',     label: 'CTF' },
     { href: '/daily',          label: 'Daily' },
     { type: 'tools',           label: 'Tools' },
+    { href: '/events',         label: 'Events' },
     { href: '/community',      label: 'Community' },
     { href: '/blog',           label: 'Blog' },
   ];

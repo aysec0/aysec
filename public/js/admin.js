@@ -1011,6 +1011,17 @@
     } catch (e) { main().innerHTML = err(e); }
   }
 
+  // Slugify a title: kebab-case ASCII, strip diacritics + non-alphanum.
+  function slugify(s) {
+    return String(s || '')
+      .normalize('NFKD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase().trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
   function renderCForm(c) {
     const isEdit = !!c.id;
     const dollars = ((c.price_cents || 0) / 100).toFixed(2);
@@ -1018,65 +1029,73 @@
       <div class="card admin-form-card" style="margin-top:1rem;">
         <header class="admin-form-head">
           <div>
-            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New'}</span>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New course'}</span>
             <h3 class="admin-form-title">${isEdit ? escapeHtml(c.title || 'course') : 'Add a course'}</h3>
           </div>
           <button class="admin-form-close" type="button" id="cCancel" aria-label="Close" title="Close">×</button>
         </header>
 
-        <form id="cSubForm" class="admin-form admin-form-sectioned">
-          <section class="admin-form-section">
-            <div class="admin-form-section-head">
-              <h4 class="admin-form-section-title">Identity</h4>
-              <p class="admin-form-section-hint">How the course shows up in URLs, lists, and search.</p>
-            </div>
-            <div class="admin-form-grid">
-              <label class="admin-field full">
-                <span class="admin-field-label">Title <em>required</em></span>
-                <input class="input" name="title" value="${escapeHtml(c.title || '')}" required placeholder="Web Hacking 101" />
-              </label>
+        <form id="cSubForm" class="admin-form admin-form-sectioned admin-form-narrow">
+          <section class="admin-form-section admin-form-section-stacked">
+            <label class="admin-field full">
+              <span class="admin-field-label">Title <em>required</em></span>
+              <input class="input admin-field-large" id="cTitle" name="title" value="${escapeHtml(c.title || '')}" required placeholder="e.g. Web Hacking 101" autofocus />
+            </label>
+            <label class="admin-field full">
+              <span class="admin-field-label">One-line summary</span>
+              <input class="input" name="subtitle" value="${escapeHtml(c.subtitle || '')}" placeholder="What this course is about, in one sentence." />
+            </label>
+            <div class="admin-field-row">
               <label class="admin-field">
-                <span class="admin-field-label">Slug <em>required</em></span>
-                <input class="input mono" name="slug" value="${escapeHtml(c.slug || '')}" required placeholder="web-hacking-101" pattern="[a-z0-9-]+" />
-                <span class="admin-field-hint">Lowercase, hyphens only · used in /courses/&lt;slug&gt;</span>
+                <span class="admin-field-label">URL <em>auto</em></span>
+                <span class="admin-field-prefixed">
+                  <span class="admin-field-prefix">/courses/</span>
+                  <input class="input mono" id="cSlug" name="slug" value="${escapeHtml(c.slug || '')}" required pattern="[a-z0-9-]+" placeholder="web-hacking-101" />
+                </span>
+                <span class="admin-field-hint" id="cSlugHint">${isEdit ? 'Editing this changes existing links.' : 'Auto-filled from the title — edit if you want.'}</span>
               </label>
               <label class="admin-field">
                 <span class="admin-field-label">Difficulty</span>
-                <select class="input" name="difficulty">
-                  ${['beginner','intermediate','advanced'].map((x) => `<option ${x===(c.difficulty||'beginner')?'selected':''}>${x}</option>`).join('')}
-                </select>
-              </label>
-              <label class="admin-field full">
-                <span class="admin-field-label">Subtitle</span>
-                <input class="input" name="subtitle" value="${escapeHtml(c.subtitle || '')}" placeholder="A practical intro to web app pentesting" />
+                <div class="admin-segmented" data-name="difficulty">
+                  ${['beginner','intermediate','advanced'].map((x) =>
+                    `<button type="button" class="admin-seg ${x===(c.difficulty||'beginner')?'is-active':''}" data-val="${x}">${x}</button>`
+                  ).join('')}
+                  <input type="hidden" name="difficulty" value="${c.difficulty || 'beginner'}" />
+                </div>
               </label>
             </div>
           </section>
 
-          <section class="admin-form-section">
-            <div class="admin-form-section-head">
+          <section class="admin-form-section admin-form-section-stacked">
+            <div class="admin-form-section-head admin-form-section-head-inline">
               <h4 class="admin-form-section-title">Description</h4>
-              <p class="admin-form-section-hint">Markdown supported. This is what shows on the course detail page.</p>
+              <span class="admin-form-section-hint">Markdown</span>
             </div>
             <label class="admin-field full">
               <textarea class="textarea" name="description" rows="6" data-md placeholder="What learners will be able to do after this course…">${escapeHtml(c.description || '')}</textarea>
             </label>
           </section>
 
-          <section class="admin-form-section">
-            <div class="admin-form-section-head">
-              <h4 class="admin-form-section-title">Pricing</h4>
-              <p class="admin-form-section-hint">Free courses are open to anyone signed in.</p>
-            </div>
-            <div class="admin-form-grid">
-              <label class="admin-toggle full">
+          <section class="admin-form-section admin-form-section-stacked">
+            <div class="admin-form-quick-grid">
+              <label class="admin-toggle">
                 <input type="checkbox" name="is_paid" id="cIsPaid" ${c.is_paid ? 'checked' : ''} />
                 <span class="admin-toggle-track" aria-hidden="true"><span class="admin-toggle-thumb"></span></span>
                 <span class="admin-toggle-label">
-                  <strong>Paid course</strong>
-                  <span class="dim">Charges via Stripe checkout. Toggle off for free.</span>
+                  <strong>Paid</strong>
+                  <span class="dim">Charges via Stripe.</span>
                 </span>
               </label>
+              <label class="admin-toggle">
+                <input type="checkbox" name="published" ${c.published ? 'checked' : ''} />
+                <span class="admin-toggle-track" aria-hidden="true"><span class="admin-toggle-thumb"></span></span>
+                <span class="admin-toggle-label">
+                  <strong>Published</strong>
+                  <span class="dim">Visible in /courses.</span>
+                </span>
+              </label>
+            </div>
+            <div class="admin-form-quick-grid" id="cPriceWrap">
               <label class="admin-field" id="cPriceField">
                 <span class="admin-field-label">Price (USD)</span>
                 <span class="admin-field-prefixed">
@@ -1093,21 +1112,6 @@
             </div>
           </section>
 
-          <section class="admin-form-section">
-            <div class="admin-form-section-head">
-              <h4 class="admin-form-section-title">Visibility</h4>
-              <p class="admin-form-section-hint">Unpublished courses stay hidden from the catalog.</p>
-            </div>
-            <label class="admin-toggle full">
-              <input type="checkbox" name="published" ${c.published ? 'checked' : ''} />
-              <span class="admin-toggle-track" aria-hidden="true"><span class="admin-toggle-thumb"></span></span>
-              <span class="admin-toggle-label">
-                <strong>Published</strong>
-                <span class="dim">Shows on /courses and is searchable.</span>
-              </span>
-            </label>
-          </section>
-
           <footer class="admin-form-foot">
             <button class="btn btn-ghost" type="button" id="cCancel2">Cancel</button>
             <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create course'}</button>
@@ -1118,17 +1122,30 @@
     $('#cCancel').addEventListener('click', close);
     $('#cCancel2').addEventListener('click', close);
 
-    // Toggle the price/currency block based on is_paid
+    // Auto-fill the slug from the title until the user manually edits it
+    const titleEl = $('#cTitle');
+    const slugEl  = $('#cSlug');
+    let slugTouched = isEdit; // when editing, don't auto-overwrite an existing slug
+    slugEl.addEventListener('input', () => { slugTouched = true; });
+    titleEl.addEventListener('input', () => {
+      if (!slugTouched) slugEl.value = slugify(titleEl.value);
+    });
+
+    // Segmented control for difficulty (replaces the bare select)
+    main().querySelectorAll('.admin-segmented').forEach((seg) => {
+      const hidden = seg.querySelector('input[type="hidden"]');
+      seg.querySelectorAll('.admin-seg').forEach((b) => {
+        b.addEventListener('click', () => {
+          seg.querySelectorAll('.admin-seg').forEach((x) => x.classList.toggle('is-active', x === b));
+          hidden.value = b.dataset.val;
+        });
+      });
+    });
+
+    // Show/hide the price block based on is_paid
     const isPaid = $('#cIsPaid');
-    const priceField = $('#cPriceField');
-    const currencyField = $('#cCurrencyField');
-    function syncPaidUI() {
-      const on = isPaid.checked;
-      priceField.classList.toggle('is-disabled', !on);
-      currencyField.classList.toggle('is-disabled', !on);
-      priceField.querySelector('input').disabled = !on;
-      currencyField.querySelector('select').disabled = !on;
-    }
+    const priceWrap = $('#cPriceWrap');
+    const syncPaidUI = () => { priceWrap.hidden = !isPaid.checked; };
     isPaid.addEventListener('change', syncPaidUI);
     syncPaidUI();
 
