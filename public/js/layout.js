@@ -331,7 +331,13 @@
           </div>
         </div>
         <div class="footer-bottom">
-          <div>© <span id="year"></span> Ammar Yasser (aysec) — built with vim and spite.</div>
+          <div>
+            © <span id="year"></span> Ammar Yasser (aysec) — built with vim and spite.
+            <span class="dim mono" style="margin-left:0.6rem;">·</span>
+            <a href="#" data-shortcuts-open class="footer-kbd-link" title="Keyboard shortcuts">
+              press <kbd class="footer-kbd">?</kbd> for shortcuts
+            </a>
+          </div>
           <div class="socials">
             <a class="social-link" href="#" aria-label="GitHub">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.4.5 0 5.9 0 12.5c0 5.3 3.4 9.8 8.2 11.4.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.3 1.9 1.3 1.1 1.9 2.9 1.4 3.6 1 .1-.8.4-1.4.8-1.7-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.3-3.2-.1-.3-.6-1.6.1-3.3 0 0 1-.3 3.3 1.2 1-.3 2-.4 3-.4s2 .1 3 .4c2.3-1.6 3.3-1.2 3.3-1.2.7 1.7.2 3 .1 3.3.8.9 1.3 2 1.3 3.2 0 4.6-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6 4.8-1.6 8.2-6.1 8.2-11.4C24 5.9 18.6.5 12 .5z"/></svg>
@@ -919,6 +925,19 @@
     checkLoginStreak();
     loadBookmarkHelper();
     loadPresenceHelper();
+    loadShortcutsHelper();
+  }
+
+  // Power-user keyboard shortcuts (?, g h, t, b, …) + help overlay.
+  function loadShortcutsHelper() {
+    if (location.pathname.startsWith('/admin')) return;
+    if (location.pathname.startsWith('/site-editor')) return;
+    if (document.querySelector('script[data-shortcuts-helper]')) return;
+    const s = document.createElement('script');
+    s.src = '/js/shortcuts.js';
+    s.dataset.shortcutsHelper = '1';
+    s.defer = true;
+    document.body.appendChild(s);
   }
 
   // Live presence widget — auto-mounts on any [data-presence-scope] element.
