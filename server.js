@@ -37,6 +37,8 @@ import streaksRoutes from './routes/streaks.js';
 import duelsRoutes from './routes/duels.js';
 import presenceRoutes from './routes/presence.js';
 import activityRoutes from './routes/activity.js';
+import apiKeysRoutes from './routes/apiKeys.js';
+import publicApiRoutes from './routes/publicApi.js';
 import { marked } from 'marked';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -81,6 +83,8 @@ app.use('/api/streaks',        streaksRoutes);
 app.use('/api/duels',          duelsRoutes);
 app.use('/api/presence',       presenceRoutes);
 app.use('/api/activity',       activityRoutes);
+app.use('/api/keys',           apiKeysRoutes);
+app.use('/api/v1',             publicApiRoutes);
 
 // Build the FTS5 index on startup so /api/search has data to query.
 // (Adding/editing entities via admin doesn't auto-trigger a rebuild yet —
@@ -239,6 +243,8 @@ const OG_BY_PATH = {
                         desc: 'Search across courses, lessons, posts, CTF challenges, cheatsheets, and certs.' },
   '/duels':           { title: 'Duels — aysec',
                         desc: '1v1 challenge races. Stake XP, pick a CTF, first correct flag wins.' },
+  '/api-docs':        { title: 'API docs — aysec',
+                        desc: 'Public read-only API. Bearer-token auth, 60 rpm, stable v1.' },
 };
 
 function ogBlock(path, override) {

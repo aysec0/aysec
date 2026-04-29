@@ -10887,3 +10887,87 @@ html, body {
   .dash-feed-row-icon { display: none; }
   .dash-feed-avatar { width: 28px; height: 28px; }
 }
+
+/* ============================================================
+   API keys panel (settings) + /api-docs prose
+   ============================================================ */
+.api-keys-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.api-key-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1.4fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 0.86rem;
+}
+.api-key-row.is-revoked { opacity: 0.55; }
+.api-key-name {
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  color: var(--text);
+}
+.api-key-token {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+.api-key-meta {
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.api-key-token-reveal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  margin-top: 0.4rem;
+  background: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--terminal) 40%, var(--border));
+  border-radius: 6px;
+  word-break: break-all;
+}
+.api-key-token-reveal code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--terminal);
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .api-key-row { grid-template-columns: 1fr; }
+}
+
+/* /api-docs prose */
+.api-docs h2 {
+  margin-top: 2rem;
+  font-size: 1.3rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.4rem;
+}
+.api-docs h3.api-endpoint {
+  margin-top: 1.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.api-method {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.18rem 0.45rem;
+  border-radius: 4px;
+}
+.api-method.get { background: color-mix(in srgb, var(--terminal) 16%, transparent); color: var(--terminal); }
+.api-method.post { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }

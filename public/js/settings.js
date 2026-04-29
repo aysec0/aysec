@@ -214,5 +214,86 @@
       if (!confirmed) return;
       alert("Account deletion isn't wired up yet — email me from /hire and I'll process it manually within 24 hours.");
     });
+
+    // ---- API keys panel -------------------------------------------------
+    function fmtRelOrDash(s) {
+      if (!s) return '—';
+      try { return window.fmtRelative(s); } catch { return s; }
+    }
+    function renderKeys(keys) {
+      const list = $('apiKeysList');
+      if (!keys.length) {
+        list.innerHTML = `<p class="muted" style="font-size:0.85rem;">No keys yet. Create one above to start using <code>/api/v1</code>.</p>`;
+        return;
+      }
+      list.innerHTML = keys.map((k) => `
+        <div class="api-key-row ${k.revoked_at ? 'is-revoked' : ''}">
+          <div>
+            <div class="api-key-name">${escapeHtml(k.name)}</div>
+            <div class="api-key-token">aysec_pk_${escapeHtml(k.prefix)}<span class="dim">…</span></div>
+          </div>
+          <div class="api-key-meta dim mono">
+            <div>created ${escapeHtml(fmtRelOrDash(k.created_at))}</div>
+            <div>last used ${escapeHtml(fmtRelOrDash(k.last_used_at))}</div>
+          </div>
+          <div>
+            ${k.revoked_at
+              ? '<span class="tag" style="border-color:color-mix(in srgb,var(--hard) 30%,var(--border)); color: var(--hard);">revoked</span>'
+              : `<button class="btn btn-ghost btn-sm" data-revoke="${k.id}">Revoke</button>`}
+          </div>
+        </div>
+      `).join('');
+      list.querySelectorAll('[data-revoke]').forEach((b) => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Revoke this key? Anything using it stops working immediately.')) return;
+          try {
+            await window.api.del(`/api/keys/${b.dataset.revoke}`);
+            window.toast?.('Key revoked.', 'info');
+            loadKeys();
+          } catch (err) { window.toast?.(err.message || 'Revoke failed', 'error'); }
+        });
+      });
+    }
+    async function loadKeys() {
+      try {
+        const r = await window.api.get('/api/keys');
+        renderKeys(r.keys || []);
+      } catch (err) {
+        $('apiKeysList').innerHTML = `<p class="muted">${escapeHtml(err.message)}</p>`;
+      }
+    }
+    if ($('apiKeyForm')) {
+      loadKeys();
+      $('apiKeyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = $('set-api-name').value.trim();
+        const alertEl = $('apiKeyAlert');
+        alertEl.hidden = true;
+        if (!name) return;
+        try {
+          const r = await window.api.post('/api/keys', { name });
+          alertEl.hidden = false;
+          alertEl.className = 'alert ok';
+          alertEl.innerHTML = `
+            <div>
+              <strong>Token created — copy it now.</strong>
+              <div class="api-key-token-reveal">
+                <code class="mono">${escapeHtml(r.token)}</code>
+                <button type="button" class="btn btn-ghost btn-sm" id="copyTokenBtn">Copy</button>
+              </div>
+              <div class="dim" style="font-size:0.8rem; margin-top:0.4rem;">${escapeHtml(r.note)}</div>
+            </div>`;
+          alertEl.querySelector('#copyTokenBtn')?.addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(r.token); window.toast?.('Token copied.', 'success'); } catch {}
+          });
+          $('set-api-name').value = '';
+          loadKeys();
+        } catch (err) {
+          alertEl.hidden = false;
+          alertEl.className = 'alert error';
+          alertEl.textContent = err.message || 'Could not create key';
+        }
+      });
+    }
   });
 })();

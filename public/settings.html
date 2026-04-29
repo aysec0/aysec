@@ -36,6 +36,7 @@
           <a href="#password">Password</a>
           <a href="#theme">Theme</a>
           <a href="#notifications">Notifications</a>
+          <a href="#api-keys">API keys</a>
           <a href="#account" style="margin-top:0.4rem; padding-top:0.6rem; border-top:1px solid var(--border); color:var(--hard);">Danger zone</a>
         </nav>
         <div>
@@ -151,6 +152,29 @@
               <button class="btn btn-ghost" data-theme-set="light" id="themeLight">Light</button>
               <button class="btn btn-ghost" data-theme-set="system" id="themeSystem">Match system</button>
             </div>
+          </section>
+
+          <!-- API keys -->
+          <section class="settings-card" id="api-keys">
+            <h2>Personal API keys</h2>
+            <p class="desc">
+              Use the public read-only API at <code>/api/v1</code> from scripts, dashboards, or
+              your own bots. <a href="/api-docs">Read the docs →</a>
+            </p>
+            <form class="form" id="apiKeyForm" style="display:flex; gap:0.5rem; align-items:flex-end; flex-wrap:wrap;">
+              <div class="field" style="flex:1; min-width:240px;">
+                <label class="field-label" for="set-api-name">New key name</label>
+                <input class="input mono" id="set-api-name" maxlength="60" placeholder="e.g. status-page-bot" required />
+              </div>
+              <button type="submit" class="btn btn-primary">Create key</button>
+            </form>
+            <div id="apiKeyAlert" hidden style="margin-top:0.6rem;"></div>
+            <div id="apiKeysList" class="api-keys-list" style="margin-top:1rem;">
+              <p class="muted" style="font-size:0.85rem;">Loading…</p>
+            </div>
+            <p class="field-hint" style="margin-top:1rem;">
+              Tokens are only shown once at creation — copy them somewhere safe. Revoke any time. Limits: 10 active keys, 60 requests/min/key.
+            </p>
           </section>
 
           <!-- Danger zone -->

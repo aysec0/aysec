@@ -285,6 +285,7 @@
               <li><a href="/challenges">CTF challenges</a></li>
               <li><a href="/cheatsheets">Cheatsheets</a></li>
               <li><a href="/community?cat=writeups">Writeups</a></li>
+              <li><a href="/api-docs">Public API</a></li>
             </ul>
           </div>
           <div>

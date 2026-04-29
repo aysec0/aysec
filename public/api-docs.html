@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>API docs — aysec</title>
+  <meta name="description" content="Public read-only API for aysec. Bearer-token auth, 60 rpm, stable v1." />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs">
+        <a href="/">~</a><span class="sep">/</span><span>api-docs</span>
+      </div>
+      <span class="page-eyebrow">// /api-docs</span>
+      <h1 class="page-title">Public API</h1>
+      <p class="page-subtitle">
+        Read-only HTTP API for aysec. Use it to build status pages, badge generators, scoreboard mirrors,
+        notification bots — anything that needs platform data without scraping HTML.
+      </p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <article class="prose api-docs">
+        <h2 id="auth">Authentication</h2>
+        <p>
+          Every <code>/api/v1/*</code> request needs an
+          <code>Authorization: Bearer &lt;token&gt;</code> header. Tokens look like
+          <code>aysec_pk_…</code> and are created in
+          <a href="/settings#api-keys">Settings → API keys</a>. They are read-only and
+          tied to your account; revoke any time.
+        </p>
+        <pre><code>curl https://aysec.me/api/v1/me \
+  -H "Authorization: Bearer aysec_pk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</code></pre>
+
+        <h2 id="rate-limit">Rate limit</h2>
+        <p>60 requests/minute per key. A bucket refills at 1 token/sec. When you exceed it you'll get
+          <code>429 Too Many Requests</code> with a <code>Retry-After: 5</code> header.</p>
+
+        <h2 id="versioning">Versioning</h2>
+        <p>This is <strong>v1</strong>. Breaking changes (renames, removals, type changes) ship as <code>/api/v2</code>;
+          additive changes (new fields, new endpoints) land in v1 in place. Build against the documented fields,
+          ignore unknown ones.</p>
+
+        <h2 id="endpoints">Endpoints</h2>
+
+        <h3 class="api-endpoint"><span class="api-method get">GET</span> <code>/api/v1/me</code></h3>
+        <p>Who's behind this token.</p>
+        <pre><code>{
+  "user": { "username": "ammar", "display_name": "Ammar", "avatar_url": null },
+  "scopes": ["read"]
+}</code></pre>
+
+        <h3 class="api-endpoint"><span class="api-method get">GET</span> <code>/api/v1/challenges</code></h3>
+        <p>List published challenges. Query: <code>?category=web</code>, <code>?limit=50</code>, <code>?offset=0</code> (limit max 100).</p>
+        <pre><code>{
+  "challenges": [
+    { "slug": "alg-none", "title": "alg=none", "category": "web", "difficulty": "easy", "points": 100, "solves": 47, "author": "ammar", "created_at": "2026-04-01 12:34:56" }
+  ],
+  "total": 23, "limit": 50, "offset": 0
+}</code></pre>
+
+        <h3 class="api-endpoint"><span class="api-method get">GET</span> <code>/api/v1/challenges/:slug</code></h3>
+        <p>Single challenge metadata + solve count. (No flag, obviously.)</p>
+
+        <h3 class="api-endpoint"><span class="api-method get">GET</span> <code>/api/v1/leaderboard</code></h3>
+        <p>Top 50 users by CTF score.</p>
+
+        <h3 class="api-endpoint"><span class="api-method get">GET</span> <code>/api/v1/users/:username</code></h3>
+        <p>Public profile: handle, avatar, bio, total solves, total score.</p>
+
+        <h3 class="api-endpoint"><span class="api-method get">GET</span> <code>/api/v1/users/:username/solves</code></h3>
+        <p>That user's solves, newest first. Query: <code>?limit=50</code> (max 100).</p>
+
+        <h3 class="api-endpoint"><span class="api-method get">GET</span> <code>/api/v1/duels</code></h3>
+        <p>Recent duels. Query: <code>?status=open|active|finished</code>.</p>
+
+        <h3 class="api-endpoint"><span class="api-method get">GET</span> <code>/api/v1/activity</code></h3>
+        <p>Most recent 100 public activity events — feeds nicely into a status board.</p>
+
+        <h2 id="errors">Errors</h2>
+        <p>JSON object, never bare strings:</p>
+        <pre><code>{ "error": "Invalid or revoked token." }</code></pre>
+        <p>Codes: <code>401</code> bad token, <code>404</code> unknown resource, <code>429</code> rate-limited, <code>500</code> server error.</p>
+
+        <h2 id="example">Quick example</h2>
+        <pre><code>#!/usr/bin/env bash
+TOKEN=aysec_pk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+curl -s https://aysec.me/api/v1/leaderboard \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.leaderboard[0:3]'</code></pre>
+
+        <h2 id="next">What's missing?</h2>
+        <p>The first version is intentionally tiny. Want webhooks? Write access? Per-team scopes? Tell me on
+          <a href="/community">/community</a> and I'll prioritise.</p>
+      </article>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+</body>
+</html>
