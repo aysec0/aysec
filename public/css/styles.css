@@ -9279,8 +9279,43 @@ body.admin-modal-open { overflow: hidden; }
   animation: none;
 }
 
-/* ---- Avatar life: eyes blink, track cursor, react to chat state ---- */
-.ask-fab-avatar { overflow: visible; }
+/* ---- Avatar life: full body, blinking eyes, tracking, waving arm ---- */
+.ask-fab-avatar {
+  overflow: visible;
+  /* The figure is taller than the button — let the head + raised hand
+     extend outside the circle bounds. */
+  width: 44px;
+  height: 56px;
+  margin-top: -10px; /* nudge up so head pokes above the button rim */
+}
+.ask-fab-btn { overflow: visible; }
+
+/* Waving arm — rotates around the shoulder pivot (32, 26) in viewBox space */
+.ask-fab-arm {
+  transform-origin: 32px 26px;
+  transform-box: view-box;
+}
+.ask-fab-avatar.is-waving .ask-fab-arm {
+  animation: ask-fab-wave 1.6s ease-in-out 1;
+}
+.ask-fab-avatar.is-waving .ask-fab-sparkle {
+  animation: ask-fab-sparkle 1.6s ease-out 1;
+}
+
+@keyframes ask-fab-wave {
+  0%   { transform: rotate(0deg); }
+  10%  { transform: rotate(-22deg); }
+  30%  { transform: rotate(8deg); }
+  50%  { transform: rotate(-22deg); }
+  70%  { transform: rotate(8deg); }
+  90%  { transform: rotate(-15deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes ask-fab-sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.8); }
+  30%      { opacity: 0.9; }
+  60%      { opacity: 0.6; transform: scale(1.1); }
+}
 
 .ask-fab-eyes {
   /* Set by JS: translate(x, y); fast transition makes tracking smooth */

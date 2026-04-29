@@ -254,16 +254,37 @@
     root.id = 'askFab';
     root.innerHTML = [
       '<button type="button" id="askFabBtn" class="ask-fab-btn" aria-label="Talk to aysec" aria-expanded="false" title="aysec — your friend on the inside">',
-      '  <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true" class="ask-fab-avatar">',
-      // Hooded figure outline (cloak fill, soft)
-      '    <path class="ask-fab-cloak" d="M16 2c-6 0-10 4-10 10v3c-2 1-3 3-3 5v8c0 1 1 2 2 2h22c1 0 2-1 2-2v-8c0-2-1-4-3-5v-3c0-6-4-10-10-10z" fill="currentColor" opacity="0.18"/>',
-      '    <path class="ask-fab-cloak-line" d="M16 2c-6 0-10 4-10 10v3c-2 1-3 3-3 5v8c0 1 1 2 2 2h22c1 0 2-1 2-2v-8c0-2-1-4-3-5v-3c0-6-4-10-10-10z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
-      // Face cavity (dark)
-      '    <path class="ask-fab-face" d="M9 16c0-3.5 3-6 7-6s7 2.5 7 6c0 2.5-1.5 4-3.5 5l-2 1.5h-3l-2-1.5C10.5 20 9 18.5 9 16z" fill="#0a0d12"/>',
-      // Two eye dots — group is translated by JS for cursor-tracking
+      '  <svg viewBox="0 0 44 56" width="44" height="56" aria-hidden="true" class="ask-fab-avatar" overflow="visible">',
+      // Cloaked body — torso under the hood, slightly flared at the bottom
+      '    <path class="ask-fab-body" d="M14 24 C12 24 10 26 10 30 V48 C10 50 11 51 13 51 H31 C33 51 34 50 34 48 V30 C34 26 32 24 30 24 Z" fill="currentColor" opacity="0.22"/>',
+      '    <path class="ask-fab-body-line" d="M14 24 C12 24 10 26 10 30 V48 C10 50 11 51 13 51 H31 C33 51 34 50 34 48 V30 C34 26 32 24 30 24 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
+      // Left arm at side
+      '    <path class="ask-fab-arm-left" d="M12 26 L10.5 38" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" opacity="0.85"/>',
+      // Right arm — raised and waving. Group rotates around the shoulder (33,26).
+      '    <g class="ask-fab-arm">',
+      '      <path d="M32 26 Q37 22 38 14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
+      '      <g class="ask-fab-hand">',
+      '        <circle cx="38" cy="14" r="3.2" fill="currentColor"/>',
+      // Three faint finger creases — sells "hand" not "ball"
+      '        <path d="M36.4 12.2 L36.4 11" stroke="#0a0d12" stroke-width="0.6" stroke-linecap="round" opacity="0.55"/>',
+      '        <path d="M38 11.4 L38 10.2" stroke="#0a0d12" stroke-width="0.6" stroke-linecap="round" opacity="0.55"/>',
+      '        <path d="M39.6 12.2 L39.6 11" stroke="#0a0d12" stroke-width="0.6" stroke-linecap="round" opacity="0.55"/>',
+      '      </g>',
+      '    </g>',
+      // Hood + head — the silhouette you already had, repositioned for the body
+      '    <path class="ask-fab-cloak" d="M22 4 c-7 0-11 4-11 11 v3 c-2 1-3 2.5-3 4.5 v3 c0 1 0.7 1.5 1.5 1.5 H35.5 c0.8 0 1.5-0.5 1.5-1.5 v-3 c0-2-1-3.5-3-4.5 v-3 c0-7-4-11-11-11 z" fill="currentColor" opacity="0.18"/>',
+      '    <path class="ask-fab-cloak-line" d="M22 4 c-7 0-11 4-11 11 v3 c-2 1-3 2.5-3 4.5 v3 c0 1 0.7 1.5 1.5 1.5 H35.5 c0.8 0 1.5-0.5 1.5-1.5 v-3 c0-2-1-3.5-3-4.5 v-3 c0-7-4-11-11-11 z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
+      // Face cavity
+      '    <path class="ask-fab-face" d="M14 18 c0-4 3.5-7 8-7 s8 3 8 7 c0 3-2 5-4 6 l-2 1.5 h-4 l-2-1.5 c-2-1-4-3-4-6 z" fill="#0a0d12"/>',
+      // Eyes (preserved from previous version, repositioned for new face)
       '    <g class="ask-fab-eyes">',
-      '      <circle class="ask-fab-eye ask-fab-eye-l" cx="13.5" cy="16.5" r="1.1" fill="#39ff7a"/>',
-      '      <circle class="ask-fab-eye ask-fab-eye-r" cx="18.5" cy="16.5" r="1.1" fill="#39ff7a"/>',
+      '      <circle class="ask-fab-eye ask-fab-eye-l" cx="19" cy="19.5" r="1.3" fill="#39ff7a"/>',
+      '      <circle class="ask-fab-eye ask-fab-eye-r" cx="25" cy="19.5" r="1.3" fill="#39ff7a"/>',
+      '    </g>',
+      // Subtle "speech sparkle" near the hand on first wave (CSS-controlled visibility)
+      '    <g class="ask-fab-sparkle" opacity="0">',
+      '      <circle cx="42" cy="9" r="0.6" fill="#39ff7a"/>',
+      '      <circle cx="44" cy="11" r="0.4" fill="#39ff7a"/>',
       '    </g>',
       '  </svg>',
       '</button>',
@@ -300,9 +321,31 @@
     let open = false;
     let greeted = false;
 
-    // ---- Avatar life — blinks, tracks cursor, reacts to chat state ----
+    // ---- Avatar life — blinks, tracks cursor, waves, reacts to chat state ----
     const avatar = btn.querySelector('.ask-fab-avatar');
     const eyes   = btn.querySelector('.ask-fab-eyes');
+
+    // Trigger the wave: arm rotates back-and-forth a few times, eyes brighten.
+    // Re-entrant — re-applying the class restarts the keyframe.
+    let waveTimer = null;
+    function wave() {
+      if (!avatar) return;
+      avatar.classList.remove('is-waving');
+      // Force a reflow so the class re-add restarts the animation
+      void avatar.offsetWidth;
+      avatar.classList.add('is-waving');
+      clearTimeout(waveTimer);
+      waveTimer = setTimeout(() => avatar.classList.remove('is-waving'), 1700);
+    }
+
+    // Wave on first mount (after a small settle delay so the page lands first)
+    setTimeout(wave, 600);
+    // Wave again ~14s later on the very first visit ever, like a "you still there?"
+    if (!mem.firstSeen) setTimeout(wave, 14000);
+    // Brief wave on hover (only when chat is closed and not already waving)
+    btn.addEventListener('mouseenter', () => {
+      if (!open && !avatar?.classList.contains('is-waving')) wave();
+    });
 
     // Blink loop: random 3.5–7s gap, 110ms blink
     function scheduleBlink() {
