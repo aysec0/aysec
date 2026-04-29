@@ -926,6 +926,22 @@
     loadBookmarkHelper();
     loadPresenceHelper();
     loadShortcutsHelper();
+    loadPageTransitionHelper();
+  }
+
+  // Page transition — Accenture-style slide + dim between same-origin pages.
+  // Skip on /admin and /site-editor where you're editing live data and a
+  // 280ms outgoing animation would just feel laggy.
+  function loadPageTransitionHelper() {
+    if (location.pathname.startsWith('/admin')) return;
+    if (location.pathname.startsWith('/site-editor')) return;
+    if (document.querySelector('script[data-page-transition]')) return;
+    const s = document.createElement('script');
+    s.src = '/js/page-transition.js';
+    s.dataset.pageTransition = '1';
+    // No defer — we want this to attach the click handler ASAP so the
+    // very first click on the page also gets the transition.
+    document.head.appendChild(s);
   }
 
   // Power-user keyboard shortcuts (?, g h, t, b, …) + help overlay.

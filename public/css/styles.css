@@ -11169,3 +11169,70 @@ kbd, .footer-kbd {
   font-size: 0.8rem;
   font-family: var(--font-mono);
 }
+
+/* ============================================================
+   Page transition — Accenture-style horizontal slide + dim.
+   See /js/page-transition.js for the click-intercept logic.
+   The overlay is a single fixed dark sheet that fades in during
+   the outgoing leg so the network gap between request and new
+   paint never flashes white.
+   ============================================================ */
+.page-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;            /* above page chrome, below modals/toasts */
+  background: var(--bg, #0a0d12);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s cubic-bezier(0.6, 0, 0.2, 1);
+}
+.page-transition-overlay.is-shown {
+  opacity: 1;
+}
+
+/* Outgoing — current page slides slightly left and fades.
+   Translate is intentionally small (3vw) so it reads as "lifting
+   off" rather than "swiping away" — premium calm, not snappy. */
+@keyframes pageOutgoing {
+  from { transform: translateX(0);    opacity: 1; filter: brightness(1); }
+  to   { transform: translateX(-3vw); opacity: 0.5; filter: brightness(0.85); }
+}
+
+html.is-page-leaving body {
+  animation: pageOutgoing 0.28s cubic-bezier(0.6, 0, 0.2, 1) forwards;
+  /* Lock pointer events while leaving so a fast double-click can't
+     fire a second navigation mid-transition */
+  pointer-events: none;
+}
+
+/* Incoming — new page starts shifted right and slightly dim, then
+   eases back to settled. Slightly longer than outgoing (360ms vs
+   280ms) so the "arrival" feels confident, not just a reverse. */
+@keyframes pageIncoming {
+  from { transform: translateX(2.5vw); opacity: 0; filter: brightness(0.92); }
+  to   { transform: translateX(0);     opacity: 1; filter: brightness(1); }
+}
+
+html.is-page-entering body {
+  animation: pageIncoming 0.36s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+/* Respect reduced motion — kill everything; navigation works
+   normally with no visual transition. JS already short-circuits
+   the click interceptor when reduce-motion is set, but if the user
+   toggles it after page load this CSS makes sure no orphan classes
+   hang animations on the body. */
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-overlay { display: none !important; }
+  html.is-page-leaving body,
+  html.is-page-entering body { animation: none !important; }
+}
+
+/* Keep modal-like overlays (kbd shortcuts overlay, modals, FAB
+   panel, etc.) above the transition overlay so they don't get
+   clipped if a user managed to open one mid-transition. */
+.kbd-overlay,
+.modal,
+.modal-backdrop,
+.toast-host,
+#askFab .ask-fab-panel { z-index: 10000; }
