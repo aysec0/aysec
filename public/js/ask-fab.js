@@ -278,46 +278,154 @@
     root.id = 'askFab';
     root.innerHTML = [
       '<button type="button" id="askFabBtn" class="ask-fab-btn" aria-label="Talk to aysec" aria-expanded="false" title="aysec — your friend on the inside">',
+      // Stylised aysec portrait — short fade, mustache + light beard, navy hoodie, sitting at glowing laptop.
+      // Eyes stay luminous green (the brand signature). Animation contract preserved:
+      //   .ask-fab-eyes        — JS translates (cursor tracking)
+      //   .ask-fab-eye-l/-r    — CSS scales for blink + listen + think states
+      //   .ask-fab-arm         — CSS rotates from rest 135° to wave 20°, pivot (32,30)
+      //   .ask-fab-hand        — wraps the right hand circle
+      //   .ask-fab-sparkle     — pulses during wave
+      //   .ask-fab-laptop-*    — kept identical so flicker keyframes still target them
       '  <svg viewBox="0 0 48 56" width="48" height="56" aria-hidden="true" class="ask-fab-avatar" overflow="visible">',
-      // ---- Body (drawn first, sits behind hands and laptop) ----
-      '    <path class="ask-fab-body" d="M18 26 C16 26 14 28 14 31 V44 H34 V31 C34 28 32 26 30 26 Z" fill="currentColor" opacity="0.22"/>',
-      '    <path class="ask-fab-body-line" d="M18 26 C16 26 14 28 14 31 V44 H34 V31 C34 28 32 26 30 26 Z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>',
-      // ---- Hood + head ----
-      '    <path class="ask-fab-cloak" d="M24 2 C16 2 11 6 11 14 v3 c-2 1-3 3-3 5 v3 c0 1 0.7 1.5 1.5 1.5 H38.5 c0.8 0 1.5-0.5 1.5-1.5 v-3 c0-2-1-4-3-5 v-3 C37 6 32 2 24 2 z" fill="currentColor" opacity="0.18"/>',
-      '    <path class="ask-fab-cloak-line" d="M24 2 C16 2 11 6 11 14 v3 c-2 1-3 3-3 5 v3 c0 1 0.7 1.5 1.5 1.5 H38.5 c0.8 0 1.5-0.5 1.5-1.5 v-3 c0-2-1-4-3-5 v-3 C37 6 32 2 24 2 z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
-      // Face cavity (dark inside the hood)
-      '    <path class="ask-fab-face" d="M14 17 c0-4 4-7 10-7 s10 3 10 7 c0 3-2 5-4 6 l-2.5 1.5 h-7 l-2.5-1.5 c-2-1-4-3-4-6 z" fill="#0a0d12"/>',
-      // Eyes — JS translates this group for cursor-tracking
+      '    <defs>',
+      // Skin: warm tan, lit from camera-left so the right side falls into shadow
+      '      <linearGradient id="skinG" x1="0" y1="0.1" x2="1" y2="0.9">',
+      '        <stop offset="0" stop-color="#e0a36e"/>',
+      '        <stop offset="0.55" stop-color="#b87a48"/>',
+      '        <stop offset="1" stop-color="#7a4d2b"/>',
+      '      </linearGradient>',
+      // Hoodie: deep navy with a soft shoulder lift
+      '      <linearGradient id="hoodieG" x1="0.5" y1="0" x2="0.5" y2="1">',
+      '        <stop offset="0" stop-color="#1c2334"/>',
+      '        <stop offset="1" stop-color="#0a0e18"/>',
+      '      </linearGradient>',
+      // Hair: near-black with a slight cool sheen on top
+      '      <linearGradient id="hairG" x1="0.5" y1="0" x2="0.5" y2="1">',
+      '        <stop offset="0" stop-color="#1d1812"/>',
+      '        <stop offset="1" stop-color="#0a0705"/>',
+      '      </linearGradient>',
+      // Cheek bloom (warm flush on the lit side)
+      '      <radialGradient id="cheekG" cx="0.3" cy="0.5" r="0.7">',
+      '        <stop offset="0" stop-color="#c8794a" stop-opacity="0.55"/>',
+      '        <stop offset="1" stop-color="#c8794a" stop-opacity="0"/>',
+      '      </radialGradient>',
+      '    </defs>',
+
+      // ============== HOODIE / TORSO ==============
+      // Wide bottom, narrows up to shoulders — sits in front of the laptop's back
+      '    <path class="ask-fab-body" d="M12 32 C12 29 14.5 27 18 27 H30 C33.5 27 36 29 36 32 V44 H12 Z" fill="url(#hoodieG)"/>',
+      // Shoulder seam highlight (subtle warm edge from the rim light)
+      '    <path d="M12.5 31 C13 29.5 15 28 18.5 28 M35.5 31 C35 29.5 33 28 29.5 28" stroke="#2b3450" stroke-width="0.6" stroke-linecap="round" fill="none" opacity="0.85"/>',
+      // V-neck lining (hoodie strings + collar dip)
+      '    <path d="M19.5 27 L24 31.5 L28.5 27" stroke="#070b14" stroke-width="0.7" stroke-linejoin="round" fill="none"/>',
+      // Drawstrings
+      '    <path d="M22 30 V33 M26 30 V33" stroke="#3a4256" stroke-width="0.5" stroke-linecap="round"/>',
+      '    <circle cx="22" cy="33.4" r="0.45" fill="#4a5267"/>',
+      '    <circle cx="26" cy="33.4" r="0.45" fill="#4a5267"/>',
+
+      // ============== NECK ==============
+      '    <path d="M21 25 H27 V29 L24 30 L21 29 Z" fill="url(#skinG)"/>',
+      // Neck shadow under jaw
+      '    <path d="M21 25 Q24 27 27 25 V26.4 Q24 27.6 21 26.4 Z" fill="#000" opacity="0.18"/>',
+
+      // ============== HAIR — back layer (so face sits in front) ==============
+      // Sides + back of skull (the fade) — drawn before the face oval
+      '    <path d="M14.6 13 Q14 18 15.5 22 Q14 21 13.6 18 Q13.4 14.5 14.6 13 Z" fill="url(#hairG)"/>',
+      '    <path d="M33.4 13 Q34 18 32.5 22 Q34 21 34.4 18 Q34.6 14.5 33.4 13 Z" fill="url(#hairG)"/>',
+
+      // ============== HEAD / FACE ==============
+      // Face oval — slightly taller than wide, centered at (24, 17)
+      '    <ellipse cx="24" cy="17" rx="8.6" ry="9.6" fill="url(#skinG)"/>',
+      // Cheek bloom on the lit side
+      '    <ellipse cx="20" cy="19.5" rx="3.4" ry="3" fill="url(#cheekG)"/>',
+      // Jaw shadow on the cheek-shadow side
+      '    <path d="M30 19 Q31.5 22 30 24 Q28.5 22 30 19 Z" fill="#000" opacity="0.13"/>',
+      // Forehead shading (thin band under hairline)
+      '    <path d="M16.5 12.6 Q24 11 31.5 12.6 Q24 13.4 16.5 12.6 Z" fill="#000" opacity="0.10"/>',
+
+      // ============== HAIR — top crown (short fade, flat across top) ==============
+      // Crown — single smooth dome, no central notch. Reads as a uniform short crop.
+      '    <path d="M15.4 12.4 C15.6 7.4 18.6 4.4 24 4.4 C29.4 4.4 32.4 7.4 32.6 12.4 C32 11.6 30 11 28 11.1 C27 10.5 25.6 10.2 24 10.2 C22.4 10.2 21 10.5 20 11.1 C18 11 16 11.6 15.4 12.4 Z" fill="url(#hairG)"/>',
+      // Subtle hair grain — short diagonal strokes lay direction (no Disney-style flow)
+      '    <path d="M18 8.5 L18.7 7.5 M21 7 L21.5 6 M24 6.4 L24.5 5.4 M27 7 L27.5 6 M30 8.5 L30.7 7.5" stroke="#3a2c1d" stroke-width="0.4" stroke-linecap="round" fill="none" opacity="0.6"/>',
+      // Hairline transition (the fade edge — sharper at temples)
+      '    <path d="M15.5 11.5 Q15.4 13 16 14.4 M32.5 11.5 Q32.6 13 32 14.4" stroke="#000" stroke-width="0.4" stroke-linecap="round" fill="none" opacity="0.45"/>',
+
+      // ============== EYEBROWS — defined, slight smirk asymmetry ==============
+      '    <path d="M17.4 16.4 Q19.6 15.4 22.2 16.6" stroke="#1a1108" stroke-width="1.05" stroke-linecap="round" fill="none"/>',
+      '    <path d="M25.8 16.6 Q28.4 15.4 30.6 16.4" stroke="#1a1108" stroke-width="1.05" stroke-linecap="round" fill="none"/>',
+
+      // ============== EYE WHITES (under the green pupils, helps eyes pop) ==============
+      '    <ellipse cx="20" cy="19" rx="1.8" ry="1.3" fill="#1a2030"/>',
+      '    <ellipse cx="28" cy="19" rx="1.8" ry="1.3" fill="#1a2030"/>',
+
+      // ============== EYES (UNCHANGED — brand signature green, JS targets) ==============
       '    <g class="ask-fab-eyes">',
       '      <circle class="ask-fab-eye ask-fab-eye-l" cx="20" cy="19" r="1.3" fill="#39ff7a"/>',
       '      <circle class="ask-fab-eye ask-fab-eye-r" cx="28" cy="19" r="1.3" fill="#39ff7a"/>',
       '    </g>',
-      // ---- Left arm — always resting on the keyboard ----
-      '    <path class="ask-fab-arm-left" d="M16 30 Q14 38 16 44" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>',
-      '    <circle cx="16" cy="44" r="1.9" fill="currentColor" opacity="0.85"/>',
-      // ---- Right arm — drawn in "raised up" pose, rotated down to keyboard at rest, animates up to wave ----
+
+      // ============== NOSE ==============
+      // Soft bridge highlight + nostril hint (subtle — too dark and it reads as a moustache)
+      '    <path d="M24 17.5 Q24 20.4 23 21.6 Q24 22.1 25 21.6 Q24 20.4 24 17.5" fill="#a86b3d" opacity="0.55"/>',
+      '    <circle cx="23.4" cy="22" r="0.3" fill="#000" opacity="0.35"/>',
+      '    <circle cx="24.6" cy="22" r="0.3" fill="#000" opacity="0.35"/>',
+
+      // ============== MUSTACHE — thin, neat, straight ==============
+      // Pulled tighter than v1; the corners DON'T curl up so it reads as a simple
+      // bar above the lip rather than a comic handlebar.
+      '    <path d="M21.4 23.4 Q24 23.0 26.6 23.4 L26.4 24.0 Q24 23.7 21.6 24.0 Z" fill="#1a1108"/>',
+
+      // ============== MOUTH — closed lip line (kills the grinning-gap optical illusion) ==============
+      '    <path d="M22.4 24.7 Q24 25.0 25.6 24.7" stroke="#5a3823" stroke-width="0.45" stroke-linecap="round" fill="none" opacity="0.85"/>',
+      // Faint lower-lip highlight
+      '    <path d="M23.0 25.2 Q24 25.4 25.0 25.2" stroke="#a86b3d" stroke-width="0.3" stroke-linecap="round" fill="none" opacity="0.55"/>',
+
+      // ============== LIGHT BEARD — sparse jawline shading + sparse stubble dots ==============
+      // The reference photo shows a *light* beard — mostly cheek/jaw shading,
+      // not a full black beard. Use lower-opacity strands and let skin show through.
+      '    <path d="M17.0 21.0 Q16.6 23.5 18.6 25.6" stroke="#1a1108" stroke-width="0.55" stroke-linecap="round" fill="none" opacity="0.45"/>',
+      '    <path d="M31.0 21.0 Q31.4 23.5 29.4 25.6" stroke="#1a1108" stroke-width="0.55" stroke-linecap="round" fill="none" opacity="0.45"/>',
+      // A whisper of chin shadow under the lip — NOT a solid patch
+      '    <path d="M22.0 25.8 Q24 26.2 26.0 25.8" stroke="#1a1108" stroke-width="0.6" stroke-linecap="round" fill="none" opacity="0.5"/>',
+      // Stubble dots scattered along the jaw — sells "light beard, not painted-on shape"
+      '    <circle cx="18.3" cy="22.0" r="0.15" fill="#1a1108" opacity="0.55"/>',
+      '    <circle cx="18.9" cy="23.4" r="0.15" fill="#1a1108" opacity="0.55"/>',
+      '    <circle cx="19.6" cy="24.6" r="0.15" fill="#1a1108" opacity="0.55"/>',
+      '    <circle cx="29.7" cy="22.0" r="0.15" fill="#1a1108" opacity="0.55"/>',
+      '    <circle cx="29.1" cy="23.4" r="0.15" fill="#1a1108" opacity="0.55"/>',
+      '    <circle cx="28.4" cy="24.6" r="0.15" fill="#1a1108" opacity="0.55"/>',
+      '    <circle cx="22.6" cy="26.4" r="0.15" fill="#1a1108" opacity="0.5"/>',
+      '    <circle cx="25.4" cy="26.4" r="0.15" fill="#1a1108" opacity="0.5"/>',
+
+      // ============== LEFT ARM (resting on keyboard) ==============
+      '    <path class="ask-fab-arm-left" d="M15.5 30 Q13.5 38 15.5 44" fill="none" stroke="url(#hoodieG)" stroke-width="2.6" stroke-linecap="round"/>',
+      // Cuff trim
+      '    <path d="M14.4 43 Q15.5 43.6 16.6 43" stroke="#2b3450" stroke-width="0.6" stroke-linecap="round" fill="none"/>',
+      // Left hand (skin tone — peeking out of the cuff onto the keyboard)
+      '    <circle cx="15.5" cy="44" r="1.9" fill="url(#skinG)"/>',
+
+      // ============== RIGHT ARM (UNCHANGED — pivot/anim contract) ==============
       '    <g class="ask-fab-arm">',
-      '      <path d="M32 30 Q35 22 36 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+      '      <path d="M32 30 Q35 22 36 14" fill="none" stroke="url(#hoodieG)" stroke-width="2.6" stroke-linecap="round"/>',
+      // Cuff just before the hand
+      '      <path d="M35 16 Q36 16.6 37 16" stroke="#2b3450" stroke-width="0.6" stroke-linecap="round" fill="none"/>',
       '      <g class="ask-fab-hand">',
-      '        <circle cx="36" cy="14" r="2.6" fill="currentColor"/>',
-      // Three faint finger creases — sells "hand" not "ball"
-      '        <path d="M34.6 12.6 L34.6 11.4" stroke="#0a0d12" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/>',
-      '        <path d="M36 11.9 L36 10.7" stroke="#0a0d12" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/>',
-      '        <path d="M37.4 12.6 L37.4 11.4" stroke="#0a0d12" stroke-width="0.5" stroke-linecap="round" opacity="0.55"/>',
+      '        <circle cx="36" cy="14" r="2.6" fill="url(#skinG)"/>',
+      '        <path d="M34.6 12.6 L34.6 11.4" stroke="#7a4f2c" stroke-width="0.5" stroke-linecap="round" opacity="0.7"/>',
+      '        <path d="M36 11.9 L36 10.7" stroke="#7a4f2c" stroke-width="0.5" stroke-linecap="round" opacity="0.7"/>',
+      '        <path d="M37.4 12.6 L37.4 11.4" stroke="#7a4f2c" stroke-width="0.5" stroke-linecap="round" opacity="0.7"/>',
       '      </g>',
       '    </g>',
-      // ---- Laptop (drawn last so it sits in front of body + hands) ----
-      // Base
+
+      // ============== LAPTOP (UNCHANGED) ==============
       '    <path class="ask-fab-laptop-base" d="M5 49 L43 49 L41 53 L7 53 Z" fill="currentColor" opacity="0.28"/>',
       '    <path class="ask-fab-laptop-base-line" d="M5 49 L43 49 L41 53 L7 53 Z" fill="none" stroke="currentColor" stroke-width="1.1"/>',
-      // Screen
       '    <rect class="ask-fab-laptop-screen" x="9" y="36" width="30" height="13" rx="1" fill="#0a0d12" stroke="currentColor" stroke-width="1.1"/>',
-      // Code lines glowing on screen
       '    <line class="ask-fab-screen-line" x1="11.5" y1="39" x2="20" y2="39" stroke="#39ff7a" stroke-width="0.7" opacity="0.7"/>',
       '    <line class="ask-fab-screen-line" x1="11.5" y1="41" x2="26" y2="41" stroke="#39ff7a" stroke-width="0.7" opacity="0.5"/>',
       '    <line class="ask-fab-screen-line" x1="11.5" y1="43" x2="18" y2="43" stroke="#39ff7a" stroke-width="0.7" opacity="0.6"/>',
       '    <line class="ask-fab-screen-line" x1="11.5" y1="45" x2="22" y2="45" stroke="#39ff7a" stroke-width="0.7" opacity="0.4"/>',
-      // Sparkle near hand during wave
       '    <g class="ask-fab-sparkle" opacity="0">',
       '      <circle cx="40" cy="9" r="0.7" fill="#39ff7a"/>',
       '      <circle cx="42.5" cy="11.5" r="0.5" fill="#39ff7a"/>',
