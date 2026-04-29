@@ -1,16 +1,15 @@
 /* ============================================================
-   Duels — 1v1 challenge races.
+   Duels — chess.com-style 1v1 challenge races.
 
-   A player picks a published challenge they have NOT yet solved,
-   stakes XP, and either calls out a specific opponent or opens
-   the duel for anyone to accept.
+   Players pick a FORMAT (Recon / Burst / Blitz / Operation /
+   Long-form) — each format has its own time limit, difficulty
+   pool, and rating-points reward. The server picks a random
+   unsolved challenge from the format's pool. No XP staking up
+   front — winning bumps your rating in that format, losing drops
+   it. New players start at 1000.
 
-   Once accepted: 60-minute timer starts. First correct flag wins
-   the pot (winner +stake XP, loser -stake XP). Either side can
-   forfeit early. Unaccepted duels expire after 24h.
-
-   The duel never reveals the challenge flag — submissions are
-   hashed and compared just like the regular CTF endpoint.
+   Open formats wait for someone to click "Find a match" in the
+   same format. Direct calls-out work the same as before.
    ============================================================ */
 import { Router } from 'express';
 import { createHash } from 'node:crypto';
@@ -22,10 +21,71 @@ import { emitActivity } from './activity.js';
 const router = Router();
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 
-const ACTIVE_TIMEOUT_MIN = 60;
 const OPEN_TIMEOUT_HOURS = 24;
-const MIN_STAKE = 10;
-const MAX_STAKE = 500;
+const STARTING_RATING = 1000;
+
+/* ============================================================
+   Match formats — five flavors of 1v1, named after offensive
+   security stages so they read in-context for the audience.
+   ============================================================ */
+const FORMATS = {
+  recon: {
+    id: 'recon',
+    name: 'Recon',
+    desc: 'Snap challenge, fastest finger wins',
+    minutes: 3,
+    pool: ['easy'],
+    points_win: 25,
+    points_loss: 10,
+    icon: '🔍',
+    color: '#39ff7a',
+  },
+  burst: {
+    id: 'burst',
+    name: 'Burst',
+    desc: 'Quick speed-run',
+    minutes: 10,
+    pool: ['easy', 'medium'],
+    points_win: 50,
+    points_loss: 20,
+    icon: '⚡',
+    color: '#7aa2f7',
+  },
+  blitz: {
+    id: 'blitz',
+    name: 'Blitz',
+    desc: 'Mid-pressure shootout',
+    minutes: 30,
+    pool: ['medium', 'hard'],
+    points_win: 100,
+    points_loss: 40,
+    icon: '🔥',
+    color: '#ffb74d',
+  },
+  operation: {
+    id: 'operation',
+    name: 'Operation',
+    desc: 'Hard, focused engagement',
+    minutes: 60,
+    pool: ['hard'],
+    points_win: 200,
+    points_loss: 80,
+    icon: '🎯',
+    color: '#f25555',
+  },
+  longform: {
+    id: 'longform',
+    name: 'Long-form',
+    desc: 'Insane challenge, deep dive',
+    minutes: 180,
+    pool: ['insane'],
+    points_win: 400,
+    points_loss: 150,
+    icon: '🛡',
+    color: '#bb88ff',
+  },
+};
+const FORMAT_IDS = Object.keys(FORMATS);
 
 function nowIso() {
   // SQLite-friendly UTC string ("YYYY-MM-DD HH:MM:SS")
@@ -56,25 +116,46 @@ function expireStale() {
   `).run(now, now, now);
 }
 
-/* Counts user XP from CTF solves + lessons + certs so we can deny duels
-   that would put them underwater. We don't deduct XP from a real wallet —
-   we record duel results and the leaderboard sums the swing — but a sanity
-   floor is still nice. */
-function userCtfXp(userId) {
-  const row = db.prepare(`
-    SELECT COALESCE(SUM(c.points), 0) AS xp
-    FROM solves s JOIN challenges c ON c.id = s.challenge_id
-    WHERE s.user_id = ?
-  `).get(userId);
-  return row?.xp || 0;
+/* Get-or-create a duel_ratings row for (user, format). New users start at
+   STARTING_RATING (1000) — chess.com convention so the math is familiar. */
+function getRating(userId, formatId) {
+  let row = db.prepare(
+    'SELECT * FROM duel_ratings WHERE user_id = ? AND format = ?'
+  ).get(userId, formatId);
+  if (!row) {
+    db.prepare(`
+      INSERT INTO duel_ratings (user_id, format, rating)
+      VALUES (?, ?, ?)
+    `).run(userId, formatId, STARTING_RATING);
+    row = { user_id: userId, format: formatId, rating: STARTING_RATING, wins: 0, losses: 0, draws: 0 };
+  }
+  return row;
+}
+
+/* Apply +win/-loss to a rating row, with a soft floor at 0. */
+function applyRatingChange(userId, formatId, delta, outcome /* 'win' | 'loss' | 'draw' */) {
+  const r = getRating(userId, formatId);
+  const newRating = Math.max(0, r.rating + delta);
+  const winsInc = outcome === 'win' ? 1 : 0;
+  const lossInc = outcome === 'loss' ? 1 : 0;
+  const drawInc = outcome === 'draw' ? 1 : 0;
+  db.prepare(`
+    UPDATE duel_ratings
+    SET rating = ?, wins = wins + ?, losses = losses + ?, draws = draws + ?,
+        played_at = datetime('now')
+    WHERE user_id = ? AND format = ?
+  `).run(newRating, winsInc, lossInc, drawInc, userId, formatId);
+  return newRating;
 }
 
 function rowToDto(row) {
   if (!row) return null;
+  const fmt = row.format ? FORMATS[row.format] : null;
   return {
     id: row.id,
     status: row.status,
-    stake: row.stake,
+    format: fmt ? { id: fmt.id, name: fmt.name, icon: fmt.icon, color: fmt.color, minutes: fmt.minutes, points_win: fmt.points_win } : null,
+    stake: row.stake,                 // legacy field, kept so old duels still display
     message: row.message,
     started_at: row.started_at,
     finished_at: row.finished_at,
@@ -146,30 +227,53 @@ router.get('/', optionalAuth, (req, res) => {
   res.json({ open, active, mine, recent, viewer: req.user ? { id: req.user.id, username: req.user.username } : null });
 });
 
-/* GET /api/duels/leaderboard — W-L records sorted by net XP swing. */
-router.get('/leaderboard', (_req, res) => {
+/* GET /api/duels/leaderboard — top duelists by overall rating. By default
+   sums every format. Pass ?format=blitz to scope to one. */
+router.get('/leaderboard', (req, res) => {
   expireStale();
+  const formatId = req.query.format;
+  const where = formatId && FORMAT_IDS.includes(formatId) ? `WHERE r.format = ?` : '';
+  const params = formatId && FORMAT_IDS.includes(formatId) ? [formatId] : [];
   const rows = db.prepare(`
-    WITH parts AS (
-      SELECT challenger_id AS uid, winner_id, stake, status FROM duels WHERE status = 'finished'
-      UNION ALL
-      SELECT opponent_id   AS uid, winner_id, stake, status FROM duels WHERE status = 'finished' AND opponent_id IS NOT NULL
-    ),
-    agg AS (
-      SELECT uid,
-             SUM(CASE WHEN winner_id = uid THEN 1 ELSE 0 END) AS wins,
-             SUM(CASE WHEN winner_id IS NOT NULL AND winner_id <> uid THEN 1 ELSE 0 END) AS losses,
-             SUM(CASE WHEN winner_id = uid THEN stake
-                      WHEN winner_id IS NOT NULL AND winner_id <> uid THEN -stake
-                      ELSE 0 END) AS xp_swing
-      FROM parts GROUP BY uid
-    )
-    SELECT u.username, u.display_name, u.avatar_url, a.wins, a.losses, a.xp_swing
-    FROM agg a JOIN users u ON u.id = a.uid
-    ORDER BY a.xp_swing DESC, a.wins DESC, u.username ASC
+    SELECT u.username, u.display_name, u.avatar_url,
+           SUM(r.rating - 1000) AS rating_swing,
+           SUM(r.wins)          AS wins,
+           SUM(r.losses)        AS losses
+    FROM duel_ratings r JOIN users u ON u.id = r.user_id
+    ${where}
+    GROUP BY u.id
+    HAVING wins + losses > 0
+    ORDER BY rating_swing DESC, wins DESC, u.username ASC
     LIMIT 20
-  `).all();
-  res.json({ leaderboard: rows });
+  `).all(...params);
+  // Keep `xp_swing` field name for backward compat with the existing client
+  res.json({ leaderboard: rows.map((r) => ({ ...r, xp_swing: r.rating_swing })) });
+});
+
+/* GET /api/duels/formats — config used by the client to render the picker.
+   Defined BEFORE /:id so Express matches the literal "formats" path first. */
+router.get('/formats', (_req, res) => {
+  res.json({
+    formats: FORMAT_IDS.map((id) => {
+      const f = FORMATS[id];
+      // Count open + active duels per format so the picker can show a "live" badge
+      const open = db.prepare(`SELECT COUNT(*) AS c FROM duels WHERE format = ? AND status = 'open' AND opponent_id IS NULL`).get(id).c;
+      const active = db.prepare(`SELECT COUNT(*) AS c FROM duels WHERE format = ? AND status = 'active'`).get(id).c;
+      return { ...f, open_count: open, active_count: active };
+    }),
+  });
+});
+
+/* GET /api/duels/rating/:username — show a user's per-format rating. */
+router.get('/rating/:username', (req, res) => {
+  const u = db.prepare('SELECT id, username FROM users WHERE username = ?').get(req.params.username);
+  if (!u) return res.status(404).json({ error: 'No such user' });
+  const ratings = {};
+  for (const id of FORMAT_IDS) {
+    const r = db.prepare('SELECT rating, wins, losses, draws FROM duel_ratings WHERE user_id = ? AND format = ?').get(u.id, id);
+    ratings[id] = r || { rating: STARTING_RATING, wins: 0, losses: 0, draws: 0 };
+  }
+  res.json({ user: { username: u.username }, ratings });
 });
 
 /* GET /api/duels/:id — full duel detail incl. submission timeline. */
@@ -212,72 +316,149 @@ router.get('/:id', optionalAuth, (req, res) => {
   });
 });
 
+/* Pick a random unsolved challenge from a format's difficulty pool that
+   neither player has already solved. Returns null if the pool is empty. */
+function pickChallengeForFormat(formatId, userIds = []) {
+  const fmt = FORMATS[formatId];
+  if (!fmt) return null;
+  const placeholders = fmt.pool.map(() => '?').join(',');
+  // Exclude challenges any of the listed users has already solved.
+  const exclude = userIds.length
+    ? `AND id NOT IN (SELECT challenge_id FROM solves WHERE user_id IN (${userIds.map(() => '?').join(',')}))`
+    : '';
+  const rows = db.prepare(`
+    SELECT id, slug, title, difficulty, points
+    FROM challenges
+    WHERE published = 1 AND difficulty IN (${placeholders}) ${exclude}
+    ORDER BY RANDOM()
+    LIMIT 1
+  `).all(...fmt.pool, ...userIds);
+  return rows[0] || null;
+}
+
 /* ============================================================
-   POST /api/duels — issue a new duel.
-   Body: { challenge_slug, opponent_username?, stake?, message? }
+   POST /api/duels — issue a new duel by FORMAT.
+   Body: { format, opponent_username?, message? }
+     format          — required. one of: recon | burst | blitz | operation | longform
+     opponent_username — optional, calls them out by handle
+     message         — optional 280-char trash talk
+   No XP staking. Server picks the challenge from the format pool.
    ============================================================ */
 router.post('/', requireAuth, (req, res) => {
-  const { challenge_slug, opponent_username, stake, message } = req.body || {};
-  if (!challenge_slug) return res.status(400).json({ error: 'Pick a challenge.' });
-
-  const stakeN = Math.max(MIN_STAKE, Math.min(MAX_STAKE, Number(stake) || 50));
-  const ch = db.prepare(`SELECT id, slug, title FROM challenges WHERE slug = ? AND published = 1`).get(challenge_slug);
-  if (!ch) return res.status(404).json({ error: 'Challenge not found.' });
-
-  // Block challenges the issuer has already solved — they'd race with prior
-  // knowledge. (We DO let them re-issue against same challenge in different duels.)
-  const alreadySolved = db.prepare('SELECT 1 FROM solves WHERE user_id = ? AND challenge_id = ?').get(req.user.id, ch.id);
-  if (alreadySolved) return res.status(400).json({ error: 'You already solved this challenge — pick another.' });
-
-  // XP-floor sanity: don't let people stake more than they have.
-  const xp = userCtfXp(req.user.id);
-  if (stakeN > xp + MIN_STAKE) {
-    return res.status(400).json({ error: `You only have ${xp} XP — stake at most ${xp + MIN_STAKE}.` });
+  const { format, opponent_username, message } = req.body || {};
+  if (!FORMAT_IDS.includes(format)) {
+    return res.status(400).json({ error: `Pick a format: ${FORMAT_IDS.join(', ')}.` });
   }
+  const fmt = FORMATS[format];
 
-  // Enforce one open + one active duel per user at a time (prevents flooding).
+  // Cap concurrent duels so one player can't flood the queue
   const existing = db.prepare(`
     SELECT COUNT(*) AS c FROM duels
     WHERE challenger_id = ? AND status IN ('open', 'active')
   `).get(req.user.id).c;
-  if (existing >= 3) return res.status(400).json({ error: 'You already have 3 active or open duels. Wait for one to resolve.' });
+  if (existing >= 3) {
+    return res.status(400).json({ error: 'You already have 3 active or open duels. Resolve one first.' });
+  }
 
   let opponentId = null;
   if (opponent_username) {
     const op = db.prepare('SELECT id, username FROM users WHERE username = ?').get(opponent_username);
     if (!op) return res.status(404).json({ error: 'No user with that username.' });
-    if (op.id === req.user.id) return res.status(400).json({ error: "You can't duel yourself."});
-    // Don't auto-accept on their behalf — they still see this on /duels and
-    // click Accept. Same for open duels. Avoids surprise XP loss.
+    if (op.id === req.user.id) return res.status(400).json({ error: "You can't duel yourself." });
     opponentId = op.id;
-    // Also block if opponent has already solved the challenge.
-    const opSolved = db.prepare('SELECT 1 FROM solves WHERE user_id = ? AND challenge_id = ?').get(op.id, ch.id);
-    if (opSolved) return res.status(400).json({ error: 'That opponent has already solved this challenge — pick another.' });
+  }
+
+  // Pick a challenge that none of the listed players have already solved.
+  const userIds = opponentId ? [req.user.id, opponentId] : [req.user.id];
+  const ch = pickChallengeForFormat(format, userIds);
+  if (!ch) {
+    return res.status(400).json({ error: `No unsolved ${fmt.pool.join('/')} challenges available — try a different format.` });
   }
 
   const expiresAt = plusHoursIso(OPEN_TIMEOUT_HOURS);
   const info = db.prepare(`
-    INSERT INTO duels (challenger_id, opponent_id, challenge_id, stake, message, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(req.user.id, opponentId, ch.id, stakeN, (message || '').slice(0, 280) || null, expiresAt);
+    INSERT INTO duels (challenger_id, opponent_id, challenge_id, format, stake, message, expires_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(req.user.id, opponentId, ch.id, format, fmt.points_win, (message || '').slice(0, 280) || null, expiresAt);
 
-  // Notify the called-out user (if any). Open duels don't notify.
+  // Pre-create rating rows so the leaderboard finds everyone
+  getRating(req.user.id, format);
+  if (opponentId) getRating(opponentId, format);
+
   if (opponentId) {
     emitNotification({
       userId: opponentId,
       kind: 'duel:invited',
-      title: `${req.user.display_name || req.user.username} challenged you to a duel`,
-      body:  `${ch.title} · ${stakeN} XP at stake`,
+      title: `${req.user.display_name || req.user.username} challenged you — ${fmt.name}`,
+      body:  `${fmt.minutes}-min ${fmt.name} · +${fmt.points_win} on win`,
       link:  `/duels/${info.lastInsertRowid}`,
       icon:  'duel',
     });
   }
 
-  res.json({ id: info.lastInsertRowid });
+  res.json({ id: info.lastInsertRowid, format, challenge: { slug: ch.slug, title: ch.title } });
+});
+
+/* ============================================================
+   POST /api/duels/quick-match/:format — chess.com-style "find game"
+   Joins the oldest open duel in this format that the user can take,
+   OR creates a new open duel and returns it for someone else to find.
+   ============================================================ */
+router.post('/quick-match/:format', requireAuth, (req, res) => {
+  expireStale();
+  const formatId = req.params.format;
+  if (!FORMAT_IDS.includes(formatId)) {
+    return res.status(400).json({ error: 'Unknown format.' });
+  }
+  const fmt = FORMATS[formatId];
+
+  // Try to find a matching open duel where I can be the opponent
+  const candidate = db.prepare(`
+    SELECT d.* FROM duels d
+    WHERE d.format = ?
+      AND d.status = 'open'
+      AND d.opponent_id IS NULL
+      AND d.challenger_id != ?
+      AND NOT EXISTS (SELECT 1 FROM solves s WHERE s.user_id = ? AND s.challenge_id = d.challenge_id)
+    ORDER BY d.created_at ASC
+    LIMIT 1
+  `).get(formatId, req.user.id, req.user.id);
+
+  if (candidate) {
+    // Auto-accept it, kick off the active timer
+    const now = nowIso();
+    db.prepare(`
+      UPDATE duels SET opponent_id = ?, status = 'active', started_at = ?, updated_at = ?, expires_at = ?
+      WHERE id = ?
+    `).run(req.user.id, now, now, plusMinutesIso(fmt.minutes), candidate.id);
+
+    getRating(req.user.id, formatId);
+    emitNotification({
+      userId: candidate.challenger_id,
+      kind: 'duel:accepted',
+      title: `Match found — ${fmt.name}`,
+      body:  `${fmt.minutes}-minute clock. Race is on.`,
+      link:  `/duels/${candidate.id}`,
+      icon:  'duel',
+    });
+    return res.json({ id: candidate.id, matched: true });
+  }
+
+  // No open duel — create a new one and let the caller wait
+  const ch = pickChallengeForFormat(formatId, [req.user.id]);
+  if (!ch) {
+    return res.status(400).json({ error: `No unsolved ${fmt.pool.join('/')} challenges available.` });
+  }
+  const info = db.prepare(`
+    INSERT INTO duels (challenger_id, opponent_id, challenge_id, format, stake, message, expires_at)
+    VALUES (?, NULL, ?, ?, ?, NULL, ?)
+  `).run(req.user.id, ch.id, formatId, fmt.points_win, plusHoursIso(OPEN_TIMEOUT_HOURS));
+  getRating(req.user.id, formatId);
+  res.json({ id: info.lastInsertRowid, matched: false });
 });
 
 /* POST /api/duels/:id/accept — opponent (or any signed-in user, for an
-   open duel) takes the bet. Starts the 60-minute clock. */
+   open duel) takes the match. Starts the format's clock. */
 router.post('/:id/accept', requireAuth, (req, res) => {
   expireStale();
   const id = Number(req.params.id);
@@ -293,24 +474,23 @@ router.post('/:id/accept', requireAuth, (req, res) => {
   const solved = db.prepare('SELECT 1 FROM solves WHERE user_id = ? AND challenge_id = ?').get(req.user.id, d.challenge_id);
   if (solved) return res.status(400).json({ error: "You've already solved this challenge — that wouldn't be a fair race." });
 
-  // Stake floor for the acceptor too.
-  const xp = userCtfXp(req.user.id);
-  if (d.stake > xp + MIN_STAKE) {
-    return res.status(400).json({ error: `You only have ${xp} XP — can't cover the ${d.stake} XP stake.` });
-  }
+  // Format determines the active timer. Legacy duels (format IS NULL) use 60 min.
+  const fmt = d.format ? FORMATS[d.format] : null;
+  const minutes = fmt ? fmt.minutes : 60;
 
   const now = nowIso();
   db.prepare(`
     UPDATE duels SET opponent_id = ?, status = 'active', started_at = ?, updated_at = ?, expires_at = ?
     WHERE id = ?
-  `).run(req.user.id, now, now, plusMinutesIso(ACTIVE_TIMEOUT_MIN), id);
+  `).run(req.user.id, now, now, plusMinutesIso(minutes), id);
 
-  // Notify the challenger that the duel is live.
+  if (d.format) getRating(req.user.id, d.format);
+
   emitNotification({
     userId: d.challenger_id,
     kind: 'duel:accepted',
     title: `${req.user.display_name || req.user.username} accepted your duel`,
-    body:  `Race is on — 60 minutes`,
+    body:  fmt ? `${fmt.name} · ${fmt.minutes}-min clock` : 'Race is on — 60 minutes',
     link:  `/duels/${id}`,
     icon:  'duel',
   });
@@ -346,11 +526,22 @@ router.post('/:id/forfeit', requireAuth, (req, res) => {
     WHERE id = ?
   `).run(winnerId, now, now, id);
 
+  // Apply rating change
+  let ratingDelta = null;
+  if (d.format && winnerId) {
+    const fmt = FORMATS[d.format];
+    if (fmt) {
+      applyRatingChange(winnerId, d.format, fmt.points_win, 'win');
+      applyRatingChange(req.user.id, d.format, -fmt.points_loss, 'loss');
+      ratingDelta = { win: fmt.points_win, loss: fmt.points_loss };
+    }
+  }
+
   emitNotification({
     userId: winnerId,
     kind: 'duel:won',
     title: 'Duel forfeit — you won',
-    body:  `+${d.stake} XP`,
+    body:  ratingDelta ? `+${ratingDelta.win} rating` : `+${d.stake} XP`,
     link:  `/duels/${id}`,
     icon:  'duel',
   });
@@ -416,12 +607,20 @@ router.post('/:id/submit', requireAuth, (req, res) => {
 
   // Notify the loser so they know it's over.
   const loserId = req.user.id === d.challenger_id ? d.opponent_id : d.challenger_id;
+  const fmt = d.format ? FORMATS[d.format] : null;
+  let ratingDelta = null;
+  if (fmt) {
+    applyRatingChange(req.user.id, d.format, fmt.points_win, 'win');
+    if (loserId) applyRatingChange(loserId, d.format, -fmt.points_loss, 'loss');
+    ratingDelta = { win: fmt.points_win, loss: fmt.points_loss };
+  }
+
   if (loserId) {
     emitNotification({
       userId: loserId,
       kind: 'duel:lost',
       title: 'Duel — opponent flagged first',
-      body:  `-${d.stake} XP`,
+      body:  ratingDelta ? `-${ratingDelta.loss} rating` : `-${d.stake} XP`,
       link:  `/duels/${id}`,
       icon:  'duel',
     });
@@ -429,26 +628,29 @@ router.post('/:id/submit', requireAuth, (req, res) => {
 
   // Activity entries for both sides so the global feed shows the matchup.
   const chalRow = db.prepare('SELECT title FROM challenges WHERE id = ?').get(d.challenge_id);
+  const formatLabel = fmt ? `${fmt.icon} ${fmt.name}` : 'duel';
+  const winLabel  = ratingDelta ? `+${ratingDelta.win} rating` : `+${d.stake} XP`;
+  const lossLabel = ratingDelta ? `−${ratingDelta.loss} rating` : `−${d.stake} XP`;
   emitActivity({
     userId: req.user.id, kind: 'duel_won',
-    title: `Won a duel · +${d.stake} XP`,
+    title: `Won a ${fmt?.name || 'duel'} · ${winLabel}`,
     body:  `Beat ${loserId ? '@' + (db.prepare('SELECT username FROM users WHERE id = ?').get(loserId)?.username || '') : 'an opponent'} on ${chalRow?.title || 'a challenge'}`,
     link:  `/duels/${id}`,
     visibility: 'public',
-    payload: { stake: d.stake, duel_id: id },
+    payload: { format: d.format, duel_id: id, ...ratingDelta },
   });
   if (loserId) {
     emitActivity({
       userId: loserId, kind: 'duel_lost',
-      title: `Lost a duel · −${d.stake} XP`,
+      title: `Lost a ${fmt?.name || 'duel'} · ${lossLabel}`,
       body:  `Beaten by @${req.user.username} on ${chalRow?.title || 'a challenge'}`,
       link:  `/duels/${id}`,
       visibility: 'self',
-      payload: { stake: d.stake, duel_id: id },
+      payload: { format: d.format, duel_id: id, ...ratingDelta },
     });
   }
 
-  res.json({ correct: true, won: true, stake: d.stake });
+  res.json({ correct: true, won: true, format: d.format, ...(ratingDelta || {}), stake: d.stake });
 });
 
 export default router;

@@ -29,6 +29,10 @@ export function migrate() {
   // can 301 to the corresponding /community/post/:id without a second lookup.
   tryAdd(`ALTER TABLE posts ADD COLUMN migrated_to_forum_id INTEGER`);
 
+  // Duels v2: format-based matches (chess.com-style). The legacy `stake`
+  // column stays for backward compat but is now optional.
+  tryAdd(`ALTER TABLE duels ADD COLUMN format TEXT`);
+
   // Idempotent migration: blog posts -> community/forum posts under a
   // dedicated "Writeups & blog" category. Runs on every startup but only
   // touches posts whose migrated_to_forum_id is NULL.

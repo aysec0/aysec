@@ -66,7 +66,10 @@
         <a class="duel-card-link" href="/duels/${d.id}" aria-label="Open duel ${d.id}"></a>
         <div class="duel-card-head">
           ${statusBadge(d)}
-          <span class="duel-stake"><span class="duel-stake-num">${d.stake}</span> XP</span>
+          ${d.format
+            ? `<span class="duel-format-badge" style="--fmt-c:${d.format.color};">${d.format.icon} ${escapeHtml(d.format.name)}</span>
+               <span class="duel-stake duel-stake-rating">+${d.format.points_win}</span>`
+            : `<span class="duel-stake"><span class="duel-stake-num">${d.stake}</span> XP</span>`}
           ${d.status === 'open'   ? `<span class="duel-clock">expires ${escapeHtml(fmtRemaining(d.expires_at))}</span>` : ''}
           ${d.status === 'active' ? `<span class="duel-clock duel-clock-live" data-expires="${escapeHtml(d.expires_at || '')}">${escapeHtml(fmtRemaining(d.expires_at))} left</span>` : ''}
         </div>
@@ -243,105 +246,132 @@
     });
   }
 
-  // Issue-duel modal --------------------------------------------------------
-  // Cache the populated dropdown so reopening the modal is instant and so
-  // the very first paint never shows an empty select.
-  let challengeOptionsCache = null;
+  // Format picker modal — chess.com-style ----------------------------------
+  let formatsCache = null;
+  let myRatings = null;        // { recon: {rating, wins, losses}, ... }
+  let pickedFormat = null;     // currently-highlighted format card
 
   function openModal() {
     $('#duelModal').hidden = false;
     $('#duelModalBackdrop').hidden = false;
     $('#duelFormAlert').hidden = true;
-    // If we already populated, the cached HTML is already on the select.
-    // Re-fetch in the background so the list stays fresh after the user
-    // solves new challenges.
-    populateChallengeOptions(challengeOptionsCache == null);
-    setTimeout(() => $('#duelChallenge').focus(), 50);
+    $('#duelChallengeBox').hidden = true;
+    pickedFormat = null;
+    populateFormatGrid();
   }
   function closeModal() {
     $('#duelModal').hidden = true;
     $('#duelModalBackdrop').hidden = true;
   }
 
-  async function populateChallengeOptions(showLoading = true) {
-    const sel = $('#duelChallenge');
-    if (!sel) return;
-    if (showLoading && !sel.options.length) {
-      sel.innerHTML = `<option value="">Loading challenges…</option>`;
-    }
+  async function populateFormatGrid() {
+    const grid = $('#duelFormatGrid');
+    if (!grid) return;
     try {
-      const { challenges } = await window.api.get('/api/challenges');
-      const eligible = (challenges || []).filter((c) => !c.solved);
-      if (!eligible.length) {
-        const why = challenges?.length
-          ? `— You've solved every challenge. Add more to duel —`
-          : `— No challenges available yet —`;
-        sel.innerHTML = `<option value="">${why}</option>`;
-        challengeOptionsCache = sel.innerHTML;
-        return;
-      }
-      // Group by category for readability. optgroup labels render in the
-      // native dropdown; the closed select shows the selected option text.
-      const byCat = {};
-      for (const c of eligible) (byCat[c.category] ||= []).push(c);
-      const html = `<option value="">Choose a challenge…</option>` +
-        Object.entries(byCat).map(([cat, list]) => `
-          <optgroup label="${escapeHtml(cat)}">
-            ${list.map((c) => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.title)} · ${escapeHtml(c.difficulty)} · ${c.points}pt</option>`).join('')}
-          </optgroup>
-        `).join('');
-      sel.innerHTML = html;
-      challengeOptionsCache = html;
+      const [{ formats }, ratings] = await Promise.all([
+        formatsCache ? Promise.resolve({ formats: formatsCache }) : window.api.get('/api/duels/formats'),
+        viewer ? window.api.get(`/api/duels/rating/${viewer.username}`).catch(() => ({ ratings: {} })) : { ratings: {} },
+      ]);
+      formatsCache = formats;
+      myRatings = ratings.ratings || {};
+      grid.innerHTML = formats.map((f) => {
+        const r = myRatings[f.id] || { rating: 1000, wins: 0, losses: 0 };
+        const liveBadge = f.active_count > 0
+          ? `<span class="duel-format-live"><span class="presence-dot is-live"></span> ${f.active_count} live</span>`
+          : f.open_count > 0
+            ? `<span class="duel-format-open">${f.open_count} waiting</span>`
+            : '';
+        return `
+          <button type="button" class="duel-format-card" data-format="${f.id}" style="--fmt-c:${f.color};">
+            <div class="duel-format-head">
+              <span class="duel-format-icon">${f.icon}</span>
+              <span class="duel-format-name">${escapeHtml(f.name)}</span>
+              <span class="duel-format-mins">${f.minutes} min</span>
+            </div>
+            <div class="duel-format-desc">${escapeHtml(f.desc)}</div>
+            <div class="duel-format-meta">
+              <span class="duel-format-pool">${f.pool.join(' · ')}</span>
+              <span class="duel-format-pts">+${f.points_win} / −${f.points_loss}</span>
+            </div>
+            <div class="duel-format-rating">
+              <span>Your rating: <strong>${r.rating}</strong></span>
+              <span class="dim">${r.wins}W · ${r.losses}L</span>
+              ${liveBadge}
+            </div>
+          </button>`;
+      }).join('');
+      grid.querySelectorAll('.duel-format-card').forEach((b) => {
+        b.addEventListener('click', () => choosePicked(b.dataset.format));
+      });
     } catch (err) {
-      console.warn('duels: populateChallengeOptions failed', err);
-      // Only overwrite the dropdown with the error if we don't already
-      // have cached options (so a flaky refresh doesn't wipe a working list).
-      if (!challengeOptionsCache) {
-        sel.innerHTML = `<option value="">Could not load challenges — refresh and try again</option>`;
-      }
+      grid.innerHTML = `<div class="alert error">${escapeHtml(err.message || 'Could not load formats')}</div>`;
     }
+  }
+
+  function choosePicked(formatId) {
+    pickedFormat = formatId;
+    document.querySelectorAll('.duel-format-card').forEach((c) => {
+      c.classList.toggle('is-picked', c.dataset.format === formatId);
+    });
+    $('#duelChallengeBox').hidden = false;
+    const fmt = (formatsCache || []).find((f) => f.id === formatId);
+    $('#duelSubmitBtn').textContent = `Find ${fmt?.name || ''} match`;
+    setTimeout(() => $('#duelOpponent')?.focus(), 50);
   }
 
   function wireModal() {
     $('#newDuelBtn').addEventListener('click', () => {
-      if (!viewer) {
-        location.href = '/login?next=/duels';
-        return;
-      }
+      if (!viewer) { location.href = '/login?next=/duels'; return; }
       openModal();
     });
     $('#duelModalClose').addEventListener('click', closeModal);
-    $('#duelCancelBtn').addEventListener('click', closeModal);
+    $('#duelBackBtn').addEventListener('click', () => {
+      $('#duelChallengeBox').hidden = true;
+      pickedFormat = null;
+      document.querySelectorAll('.duel-format-card').forEach((c) => c.classList.remove('is-picked'));
+    });
     $('#duelModalBackdrop').addEventListener('click', closeModal);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !$('#duelModal').hidden) closeModal();
     });
-    $('#duelForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
+
+    $('#duelSubmitBtn').addEventListener('click', async () => {
       const alertEl = $('#duelFormAlert');
       const btn = $('#duelSubmitBtn');
-      const challenge_slug = $('#duelChallenge').value;
-      const opponent_username = $('#duelOpponent').value.trim() || null;
-      const stake = Number($('#duelStake').value) || 50;
-      const message = $('#duelMessage').value.trim();
-      if (!challenge_slug) {
+      alertEl.hidden = true;
+      if (!pickedFormat) {
         alertEl.hidden = false;
         alertEl.className = 'alert error';
-        alertEl.textContent = 'Pick a challenge first.';
+        alertEl.textContent = 'Pick a format first.';
         return;
       }
+      const opponent_username = $('#duelOpponent').value.trim() || null;
+      const message = $('#duelMessage').value.trim();
       btn.disabled = true;
       const idle = btn.textContent;
-      btn.textContent = 'Issuing…';
+      btn.innerHTML = `<span class="spinner"></span> Searching…`;
       try {
-        const { id } = await window.api.post('/api/duels', { challenge_slug, opponent_username, stake, message });
+        let res;
+        if (opponent_username) {
+          // Direct call-out — POST to /api/duels with format + opponent
+          res = await window.api.post('/api/duels', { format: pickedFormat, opponent_username, message });
+          window.toast?.(`Duel sent to @${opponent_username}.`, 'success');
+        } else {
+          // Quick-match — server either pairs us with a waiting open duel
+          // OR creates a new open one we wait on
+          res = await window.api.post(`/api/duels/quick-match/${pickedFormat}`);
+          if (res.matched) {
+            window.toast?.('Match found — race is on.', 'success');
+          } else {
+            window.toast?.('Posted as open — waiting for an opponent.', 'info');
+          }
+        }
         closeModal();
-        window.toast?.(opponent_username ? `Duel issued to @${opponent_username}.` : 'Open duel posted.', 'success');
-        location.href = `/duels/${id}`;
+        location.href = `/duels/${res.id}`;
       } catch (err) {
         alertEl.hidden = false;
         alertEl.className = 'alert error';
-        alertEl.textContent = err.message || 'Could not issue duel';
+        alertEl.textContent = err.message || 'Could not start the match';
         btn.disabled = false;
         btn.textContent = idle;
       }
@@ -363,8 +393,5 @@
     wireTabs();
     wireModal();
     load();
-    // Pre-populate the challenge dropdown immediately so opening the modal
-    // is instant — no race window where the select shows empty.
-    populateChallengeOptions(false);
   });
 })();

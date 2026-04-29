@@ -11507,3 +11507,153 @@ select.input optgroup {
   font-style: normal;
   font-weight: 600;
 }
+
+/* ============================================================
+   Duel format picker (chess.com-style) + format badges.
+   Grid of 5 format cards in the issue-duel modal. Each card is
+   a button — clicking one expands the opponent + trash-talk
+   fields and re-labels the submit button.
+   ============================================================ */
+.duel-picker-modal { width: min(94vw, 640px); }
+
+.duel-format-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.duel-format-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--fmt-c, var(--accent));
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.1s;
+  position: relative;
+}
+.duel-format-card:hover {
+  background: color-mix(in srgb, var(--fmt-c) 6%, var(--bg-elev));
+  border-color: var(--fmt-c, var(--accent));
+}
+.duel-format-card.is-picked {
+  border-color: var(--fmt-c);
+  box-shadow: 0 0 0 1px var(--fmt-c), 0 0 24px -8px var(--fmt-c);
+  background: color-mix(in srgb, var(--fmt-c) 10%, var(--bg-elev));
+}
+
+.duel-format-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.25rem;
+}
+.duel-format-icon { font-size: 1.2rem; line-height: 1; }
+.duel-format-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--fmt-c);
+}
+.duel-format-mins {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.duel-format-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.duel-format-meta {
+  display: flex;
+  gap: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-dim);
+}
+.duel-format-pool { text-transform: lowercase; }
+.duel-format-pts {
+  margin-left: auto;
+  color: var(--fmt-c);
+}
+
+.duel-format-rating {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin-top: 0.45rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.78rem;
+}
+.duel-format-rating strong { color: var(--text); font-family: var(--font-mono); }
+.duel-format-live, .duel-format-open {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+}
+.duel-format-live {
+  background: color-mix(in srgb, var(--terminal) 12%, transparent);
+  color: var(--terminal);
+  border: 1px solid color-mix(in srgb, var(--terminal) 35%, transparent);
+}
+.duel-format-open {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* Format badge — used on duel list cards + detail header */
+.duel-format-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--fmt-c) 14%, transparent);
+  color: var(--fmt-c);
+  border: 1px solid color-mix(in srgb, var(--fmt-c) 40%, transparent);
+}
+
+.duel-stake-rating {
+  background: color-mix(in srgb, var(--terminal) 14%, transparent);
+  color: var(--terminal);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+/* Pot pill on the duel detail arena (uses --pot-c set inline by JS) */
+.duel-arena-stake[style*="--pot-c"] {
+  background: color-mix(in srgb, var(--pot-c) 14%, transparent);
+  border-color: color-mix(in srgb, var(--pot-c) 45%, transparent);
+}
+.duel-arena-stake[style*="--pot-c"] .duel-stake-num { color: var(--pot-c); }
+
+/* ============================================================
+   Hidden-attribute restoration — `display: flex` on .modal,
+   .modal-backdrop, etc. accidentally beats the user-agent
+   [hidden] rule, leaving "hidden" elements visible. Re-assert.
+   ============================================================ */
+.modal[hidden],
+.modal-backdrop[hidden],
+.kbd-overlay[hidden],
+.duel-panel[hidden],
+.field[hidden],
+[hidden] { display: none !important; }

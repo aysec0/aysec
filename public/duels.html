@@ -24,13 +24,14 @@
       <span class="page-eyebrow">// /duels</span>
       <h1 class="page-title">Duels</h1>
       <p class="page-subtitle">
-        1v1 challenge races. Stake XP, pick an unsolved CTF, race the clock —
-        first correct flag wins the pot. Open duels are accept-on-sight.
+        1v1 challenge races, chess.com-style. Pick a format — Recon, Burst,
+        Blitz, Operation, or Long-form — and we pair you with the next
+        person up. Win bumps your rating; loss drops it.
       </p>
       <div class="duels-cta-row">
         <button class="btn btn-primary" id="newDuelBtn" type="button">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
-          Issue a duel
+          Find a match
         </button>
         <a class="btn btn-ghost" href="#leaderboard">View leaderboard</a>
       </div>
@@ -97,40 +98,40 @@
     </div>
   </section>
 
-  <!-- Issue-duel modal -->
+  <!-- Format picker modal — chess.com style -->
   <div class="modal-backdrop" id="duelModalBackdrop" hidden></div>
-  <div class="modal" id="duelModal" role="dialog" aria-modal="true" aria-labelledby="duelModalTitle" hidden>
+  <div class="modal duel-picker-modal" id="duelModal" role="dialog" aria-modal="true" aria-labelledby="duelModalTitle" hidden>
     <div class="modal-head">
-      <h2 id="duelModalTitle">Issue a duel</h2>
+      <h2 id="duelModalTitle">Pick a format</h2>
       <button class="modal-close" id="duelModalClose" type="button" aria-label="Close">×</button>
     </div>
     <div class="modal-body">
-      <form id="duelForm" class="form">
-        <div id="duelFormAlert" hidden></div>
+      <p class="muted" style="margin:-0.4rem 0 1rem; font-size:0.88rem;">
+        Five flavours. Each picks a random unsolved challenge from its pool —
+        win bumps your rating, loss drops it. No XP staking up front.
+      </p>
+      <div id="duelFormatGrid" class="duel-format-grid">
+        <div class="skeleton" style="height:120px;border-radius:14px;margin-bottom:0.6rem"></div>
+        <div class="skeleton" style="height:120px;border-radius:14px;margin-bottom:0.6rem"></div>
+        <div class="skeleton" style="height:120px;border-radius:14px"></div>
+      </div>
+
+      <div id="duelChallengeBox" hidden style="margin-top:1rem;">
         <div class="field">
-          <label class="field-label" for="duelChallenge">Challenge</label>
-          <select class="input" id="duelChallenge" required></select>
-          <span class="field-hint">Only unsolved challenges show up — you can't race something you've already broken.</span>
-        </div>
-        <div class="field">
-          <label class="field-label" for="duelOpponent">Opponent (optional)</label>
-          <input class="input mono" id="duelOpponent" type="text" placeholder="username — leave blank for open duel" autocomplete="off" />
-          <span class="field-hint">Leave empty to publish as <em>Open</em> — first to accept becomes the opponent.</span>
-        </div>
-        <div class="field">
-          <label class="field-label" for="duelStake">Stake (XP)</label>
-          <input class="input mono" id="duelStake" type="number" min="10" max="500" step="10" value="50" required />
-          <span class="field-hint">Min 10 · Max 500. Loser drops it, winner gains it.</span>
+          <label class="field-label" for="duelOpponent">Call out an opponent (optional)</label>
+          <input class="input mono" id="duelOpponent" type="text" placeholder="username — leave blank to find a match" autocomplete="off" />
+          <span class="field-hint">Leave empty for quick-match. We'll pair you with the next person who picks the same format.</span>
         </div>
         <div class="field">
           <label class="field-label" for="duelMessage">Trash talk (optional)</label>
           <textarea class="input" id="duelMessage" rows="2" maxlength="280" placeholder="Free shot. Make it count."></textarea>
         </div>
+        <div id="duelFormAlert" hidden></div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" type="button" id="duelCancelBtn">Cancel</button>
-          <button class="btn btn-primary" type="submit" id="duelSubmitBtn">Issue duel</button>
+          <button class="btn btn-ghost" type="button" id="duelBackBtn">← Back to formats</button>
+          <button class="btn btn-primary" type="button" id="duelSubmitBtn">Find match</button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 

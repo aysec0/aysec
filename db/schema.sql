@@ -706,6 +706,25 @@ CREATE TABLE IF NOT EXISTS duel_submissions (
 CREATE INDEX IF NOT EXISTS idx_duel_subs_duel ON duel_submissions(duel_id, submitted_at);
 
 -- ============================================================
+-- Duel ratings — chess.com-style, one row per (user, format).
+-- Winning a duel gives +points_win for the format; losing
+-- subtracts points_loss. No staking up front — you don't need
+-- prior XP to compete.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS duel_ratings (
+  user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  format   TEXT    NOT NULL,                                  -- recon | burst | blitz | operation | longform
+  rating   INTEGER NOT NULL DEFAULT 1000,
+  wins     INTEGER NOT NULL DEFAULT 0,
+  losses   INTEGER NOT NULL DEFAULT 0,
+  draws    INTEGER NOT NULL DEFAULT 0,
+  played_at TEXT,                                             -- last match timestamp
+  PRIMARY KEY (user_id, format)
+);
+
+CREATE INDEX IF NOT EXISTS idx_duel_ratings_format ON duel_ratings(format, rating DESC);
+
+-- ============================================================
 -- Live presence — "X people working on this right now"
 -- Heartbeat-driven: clients POST to /api/presence every ~25s while
 -- they're on a challenge/duel/lab/etc. page. Rows older than 60s

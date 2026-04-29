@@ -62,14 +62,20 @@
     $('#crumbId').textContent = `#${d.id}`;
 
     const labels = { open: 'OPEN', active: 'LIVE', finished: 'FINISHED', cancelled: 'CANCELLED', expired: 'EXPIRED' };
+    const fmt = d.format;
+    const stakeLabel = fmt ? `+${fmt.points_win} rating · ${fmt.minutes}-min clock` : `${d.stake} XP at stake`;
+    const formatBadge = fmt
+      ? `<span class="duel-format-badge" style="--fmt-c:${fmt.color};">${fmt.icon} ${escapeHtml(fmt.name)}</span>`
+      : '';
     $('#duelHead').innerHTML = `
       <div class="detail-meta">
         <span class="duel-status duel-status-${d.status}">${labels[d.status] || d.status}</span>
-        <span class="card-meta-item">${d.stake} XP at stake</span>
+        ${formatBadge}
+        <span class="card-meta-item">${escapeHtml(stakeLabel)}</span>
         ${d.status === 'active' ? `<span class="duel-clock duel-clock-live" id="liveClock">${escapeHtml(fmtRemaining(d.expires_at))} left</span>` : ''}
         ${d.status === 'open'   ? `<span class="duel-clock">expires ${escapeHtml(fmtRemaining(d.expires_at))}</span>` : ''}
       </div>
-      <h1 class="detail-title">Duel #${d.id}</h1>
+      <h1 class="detail-title">${fmt ? `${fmt.name} duel` : 'Duel'} #${d.id}</h1>
       ${d.message ? `<p class="duel-message">"${escapeHtml(d.message)}"</p>` : ''}
       <div style="margin-top:0.6rem;">
         <span data-presence-scope="duel" data-presence-id="${d.id}"></span>
@@ -80,6 +86,12 @@
   function renderArena() {
     const d = state.duel;
     const winner = d.winner_id;
+    const fmt = d.format;
+    // Rating-based labels for new format duels; XP labels for legacy duels.
+    const winLbl  = fmt ? `+${fmt.points_win} rating` : `+${d.stake} XP`;
+    const lossLbl = fmt ? `−${Math.round(fmt.points_win * 0.4)} rating` : `−${d.stake} XP`;
+    const potLbl  = fmt ? fmt.points_win : d.stake;
+    const potCap  = fmt ? 'rating on win' : 'XP pot';
 
     $('#duelArena').innerHTML = `
       <div class="duel-arena-grid">
@@ -92,15 +104,15 @@
               <div class="duel-arena-handle">@${escapeHtml(d.challenger.username)}</div>
             </div>
           </a>
-          ${winner === d.challenger.id ? `<div class="duel-trophy">🏆 +${d.stake} XP</div>` : ''}
-          ${winner && winner !== d.challenger.id ? `<div class="duel-loss">−${d.stake} XP</div>` : ''}
+          ${winner === d.challenger.id ? `<div class="duel-trophy">🏆 ${escapeHtml(winLbl)}</div>` : ''}
+          ${winner && winner !== d.challenger.id ? `<div class="duel-loss">${escapeHtml(lossLbl)}</div>` : ''}
         </div>
 
         <div class="duel-arena-mid">
           <div class="duel-arena-vs">VS</div>
-          <div class="duel-arena-stake">
-            <span class="duel-stake-num">${d.stake}</span>
-            <span class="duel-stake-label">XP pot</span>
+          <div class="duel-arena-stake" ${fmt ? `style="--pot-c:${fmt.color};"` : ''}>
+            <span class="duel-stake-num">${potLbl}</span>
+            <span class="duel-stake-label">${escapeHtml(potCap)}</span>
           </div>
           ${d.started_at && d.status === 'active' ? `<div class="duel-arena-elapsed" id="elapsedClock">${escapeHtml(fmtElapsed(d.started_at, null))}</div>` : ''}
           ${d.started_at && d.status !== 'active' && d.finished_at ? `<div class="duel-arena-elapsed">Took ${escapeHtml(fmtElapsed(d.started_at, d.finished_at))}</div>` : ''}
@@ -122,8 +134,8 @@
               <div><div class="duel-arena-name dim"><em>Awaiting acceptor</em></div></div>
             </div>
           `}
-          ${winner && d.opponent && winner === d.opponent.id ? `<div class="duel-trophy">🏆 +${d.stake} XP</div>` : ''}
-          ${winner && d.opponent && winner !== d.opponent.id ? `<div class="duel-loss">−${d.stake} XP</div>` : ''}
+          ${winner && d.opponent && winner === d.opponent.id ? `<div class="duel-trophy">🏆 ${escapeHtml(winLbl)}</div>` : ''}
+          ${winner && d.opponent && winner !== d.opponent.id ? `<div class="duel-loss">${escapeHtml(lossLbl)}</div>` : ''}
         </div>
       </div>`;
   }
