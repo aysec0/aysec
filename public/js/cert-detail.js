@@ -14,9 +14,16 @@
     return `${m}m`;
   }
 
+  // Sanitize markdown HTML before insertion (description / topics / tips often
+  // come from admin markdown which marked.parse renders to HTML server-side).
+  function safeHtml(html) {
+    if (!html) return '';
+    return window.DOMPurify ? window.DOMPurify.sanitize(html) : html;
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     try {
-      const { certification: c, courses, challenges, summary } = await window.api.get(`/api/certifications/${slug}`);
+      const { certification: c, courses, challenges, modules, summary } = await window.api.get(`/api/certifications/${slug}`);
 
       document.title = `${c.cert_name} prep — aysec`;
       document.getElementById('crumbSlug').textContent = c.slug;
@@ -27,7 +34,7 @@
       document.getElementById('certTagline').textContent = c.tagline || '';
 
       // Description
-      document.getElementById('certDescription').innerHTML = c.description_html || '';
+      document.getElementById('certDescription').innerHTML = safeHtml(c.description_html);
 
       // Side panel
       document.getElementById('certSide').innerHTML = `
@@ -79,8 +86,11 @@
       // Tips — markdown HTML already rendered server-side
       if (c.exam_tips_html) {
         document.getElementById('tipsSection').hidden = false;
-        document.getElementById('certTips').innerHTML = c.exam_tips_html;
+        document.getElementById('certTips').innerHTML = safeHtml(c.exam_tips_html);
       }
+
+      // Week-by-week syllabus modules
+      if (modules?.length) renderModules(modules, summary);
 
       // Curriculum
       document.getElementById('curriculumMeta').textContent =
@@ -129,4 +139,94 @@
       document.getElementById('certTagline').textContent = err.message || '';
     }
   });
+
+  // ---- Week-by-week syllabus rendering ----
+  function renderModules(modules, summary) {
+    const section = document.getElementById('modulesSection');
+    if (!section) return;
+    section.hidden = false;
+
+    // localStorage fallback for anonymous users
+    const localKey = `cert.${slug}.completed`;
+    const local = new Set(JSON.parse(localStorage.getItem(localKey) || '[]'));
+
+    function isDone(m) { return m.completed || local.has(m.id); }
+    function setDone(m, done) {
+      m.completed = done;
+      if (done) local.add(m.id); else local.delete(m.id);
+      localStorage.setItem(localKey, JSON.stringify([...local]));
+    }
+
+    function progress() {
+      const done = modules.filter(isDone).length;
+      const total = modules.length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      const wrap = document.getElementById('modulesProgress');
+      const fill = document.getElementById('modulesProgressFill');
+      const meta = document.getElementById('modulesProgressMeta');
+      if (wrap) wrap.hidden = false;
+      if (fill) fill.style.width = `${pct}%`;
+      if (meta) meta.textContent = `${done} of ${total} done · ${pct}%`;
+    }
+
+    const grid = document.getElementById('certModules');
+    grid.innerHTML = modules.map((m, i) => `
+      <article class="cert-module ${isDone(m) ? 'is-done' : ''}" data-id="${m.id}">
+        <header class="cert-module-head">
+          <label class="cert-module-check" title="Mark week complete">
+            <input type="checkbox" data-toggle="${m.id}" ${isDone(m) ? 'checked' : ''} />
+            <span class="cert-module-check-box"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          </label>
+          <div class="cert-module-head-text">
+            <span class="cert-module-week">Week ${m.week_num}</span>
+            <h3 class="cert-module-title">${escapeHtml(m.title)}</h3>
+            ${m.goal ? `<p class="cert-module-goal">${escapeHtml(m.goal)}</p>` : ''}
+          </div>
+          <button class="cert-module-toggle" aria-label="Expand" data-expand="${m.id}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </header>
+        <div class="cert-module-body" hidden>
+          ${m.topics_html       ? `<section class="cert-module-block"><h4>Topics &amp; commands</h4><div class="prose">${safeHtml(m.topics_html)}</div></section>` : ''}
+          ${m.daily_tasks_html  ? `<section class="cert-module-block"><h4>Daily checklist</h4><div class="prose">${safeHtml(m.daily_tasks_html)}</div></section>` : ''}
+          ${m.lab_targets_html  ? `<section class="cert-module-block"><h4>Lab targets this week</h4><div class="prose">${safeHtml(m.lab_targets_html)}</div></section>` : ''}
+          ${m.resources_html    ? `<section class="cert-module-block"><h4>Resources</h4><div class="prose">${safeHtml(m.resources_html)}</div></section>` : ''}
+        </div>
+      </article>`).join('');
+
+    // Wire expand toggles + completion checkboxes
+    grid.querySelectorAll('[data-expand]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const card = b.closest('.cert-module');
+        const body = card.querySelector('.cert-module-body');
+        body.hidden = !body.hidden;
+        b.classList.toggle('is-open', !body.hidden);
+      });
+    });
+    // Click anywhere in head except the checkbox toggles expand
+    grid.querySelectorAll('.cert-module-head').forEach((h) => {
+      h.addEventListener('click', (e) => {
+        if (e.target.closest('.cert-module-check') || e.target.closest('[data-expand]')) return;
+        h.querySelector('[data-expand]')?.click();
+      });
+    });
+    grid.querySelectorAll('[data-toggle]').forEach((cb) => {
+      cb.addEventListener('change', async (e) => {
+        const id = Number(cb.dataset.toggle);
+        const m = modules.find((x) => x.id === id);
+        const card = cb.closest('.cert-module');
+        const done = cb.checked;
+        setDone(m, done);
+        card.classList.toggle('is-done', done);
+        progress();
+        // Best-effort server-side persistence (silent if not signed in)
+        try {
+          await window.api.post(`/api/certifications/modules/${id}/toggle`, { completed: done });
+        } catch (err) {
+          if (err.status !== 401) window.toast?.(err.message || 'sync failed', 'error');
+        }
+      });
+    });
+    progress();
+  }
 })();

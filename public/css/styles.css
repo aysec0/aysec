@@ -5067,6 +5067,144 @@ kbd {
   margin-bottom: 1rem;
 }
 
+/* ============================================================
+   Cert syllabus modules — week-by-week prep with check-off
+   ============================================================ */
+.cert-modules-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem 2rem;
+  align-items: end;
+  margin-bottom: 1.25rem;
+}
+.cert-modules-progress {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  min-width: 240px;
+}
+.cert-modules-progress-bar {
+  position: relative;
+  height: 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.cert-modules-progress-fill {
+  position: absolute; inset: 0 auto 0 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 50%, var(--terminal, #39ff7a)));
+  transition: width 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.cert-modules-progress-meta {
+  font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim);
+  text-align: right;
+}
+
+.cert-modules-grid {
+  display: flex; flex-direction: column; gap: 0.7rem;
+}
+.cert-module {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.cert-module:hover { border-color: color-mix(in srgb, var(--accent) 30%, var(--border)); }
+.cert-module.is-done { border-color: color-mix(in srgb, var(--terminal, #39ff7a) 32%, var(--border)); }
+.cert-module.is-done .cert-module-title { text-decoration: line-through; color: var(--text-dim); }
+
+.cert-module-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.95rem 1.1rem;
+  cursor: pointer;
+}
+
+.cert-module-head-text { min-width: 0; }
+.cert-module-week {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  padding: 0.1rem 0.5rem; border-radius: 4px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.cert-module-title {
+  margin: 0; font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em;
+}
+.cert-module-goal {
+  margin: 0.25rem 0 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.45;
+}
+
+.cert-module-toggle {
+  background: transparent; border: 0; color: var(--text-dim);
+  width: 32px; height: 32px; border-radius: 6px;
+  display: inline-grid; place-items: center;
+  cursor: pointer; transition: transform 0.18s, color 0.18s, background 0.18s;
+}
+.cert-module-toggle:hover { background: var(--bg-elev); color: var(--text); }
+.cert-module-toggle.is-open { transform: rotate(180deg); color: var(--accent); }
+
+/* Custom checkbox for "I finished this week" */
+.cert-module-check {
+  position: relative;
+  width: 22px; height: 22px;
+  cursor: pointer;
+}
+.cert-module-check input { position: absolute; opacity: 0; pointer-events: none; }
+.cert-module-check-box {
+  position: absolute; inset: 0;
+  background: var(--bg-elev);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  display: grid; place-items: center;
+  color: transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.cert-module-check input:checked ~ .cert-module-check-box {
+  background: var(--terminal, #39ff7a);
+  border-color: var(--terminal, #39ff7a);
+  color: var(--bg);
+}
+.cert-module-check:hover .cert-module-check-box { border-color: var(--accent); }
+
+.cert-module-body {
+  padding: 0 1.1rem 1.1rem 3.7rem;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.cert-module-body[hidden] { display: none; }
+.cert-module-block h4 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
+  color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase;
+}
+.cert-module-body .prose { font-size: 0.92rem; line-height: 1.6; }
+.cert-module-body .prose pre {
+  background: var(--bg-elev); padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-sm); overflow-x: auto;
+  font-size: 0.82rem;
+  border: 1px solid var(--border);
+}
+.cert-module-body .prose code {
+  font-family: var(--font-mono); font-size: 0.86em;
+  background: var(--bg-elev); padding: 0.05em 0.4em; border-radius: 3px;
+}
+.cert-module-body .prose pre code { background: transparent; padding: 0; }
+.cert-module-body .prose ul,
+.cert-module-body .prose ol { padding-left: 1.4rem; }
+.cert-module-body .prose li { margin: 0.2rem 0; }
+
+@media (max-width: 700px) {
+  .cert-modules-head { grid-template-columns: 1fr; }
+  .cert-modules-progress { min-width: 0; }
+  .cert-module-head { grid-template-columns: auto 1fr auto; }
+  .cert-module-body { padding: 0 1rem 1rem 1rem; }
+}
+
 .cert-section-eyebrow {
   font-family: var(--font-mono);
   font-size: 0.74rem;

@@ -263,6 +263,33 @@ CREATE TABLE IF NOT EXISTS cert_prep_challenges (
 CREATE INDEX IF NOT EXISTS idx_cert_prep_courses    ON cert_prep_courses(cert_id, position);
 CREATE INDEX IF NOT EXISTS idx_cert_prep_challenges ON cert_prep_challenges(cert_id, position);
 
+-- Week-by-week syllabus modules for a cert (e.g. the OSCP+ 12-week plan).
+-- Rendered on /certifications/<slug> as an interactive curriculum.
+CREATE TABLE IF NOT EXISTS cert_prep_modules (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  cert_id         INTEGER NOT NULL REFERENCES cert_prep(id) ON DELETE CASCADE,
+  week_num        INTEGER NOT NULL,
+  title           TEXT NOT NULL,
+  goal            TEXT,                                     -- one-line objective
+  topics_md       TEXT,                                     -- techniques, tools, commands
+  daily_tasks_md  TEXT,                                     -- checklist of daily tasks
+  resources_md    TEXT,                                     -- links + reference PDFs
+  lab_targets_md  TEXT,                                     -- HTB / PG / lab boxes to do this week
+  position        INTEGER NOT NULL DEFAULT 0,
+  created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_cert_prep_modules ON cert_prep_modules(cert_id, week_num);
+
+-- Per-user completion of a module (so the "checked" state survives logins).
+-- Anonymous users get localStorage-only state.
+CREATE TABLE IF NOT EXISTS cert_prep_module_progress (
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  module_id   INTEGER NOT NULL REFERENCES cert_prep_modules(id) ON DELETE CASCADE,
+  completed_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, module_id)
+);
+
 -- Cybersecurity events calendar (CTFs, conferences, bug-bounty live events)
 CREATE TABLE IF NOT EXISTS events (
   id                    INTEGER PRIMARY KEY AUTOINCREMENT,

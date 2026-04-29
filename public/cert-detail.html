@@ -66,9 +66,24 @@
         </div>
       </div>
 
+      <div class="cert-section" id="modulesSection" hidden>
+        <span class="cert-section-eyebrow">// syllabus</span>
+        <div class="cert-modules-head">
+          <div>
+            <h2 class="cert-section-title">Week-by-week syllabus</h2>
+            <p class="muted" style="margin: 0.4rem 0 0;">A structured plan you can follow. Tick off each week as you finish it — your progress is saved when you're signed in.</p>
+          </div>
+          <div class="cert-modules-progress" id="modulesProgress" hidden>
+            <div class="cert-modules-progress-bar"><div class="cert-modules-progress-fill" id="modulesProgressFill"></div></div>
+            <span class="cert-modules-progress-meta" id="modulesProgressMeta">0 of 0 done</span>
+          </div>
+        </div>
+        <div class="cert-modules-grid" id="certModules"></div>
+      </div>
+
       <div class="cert-section">
         <span class="cert-section-eyebrow">// curriculum</span>
-        <h2 class="cert-section-title">The prep path</h2>
+        <h2 class="cert-section-title">Aysec course path</h2>
         <p class="muted" id="curriculumMeta" style="margin-bottom:1.25rem;"></p>
         <div id="certCourses"></div>
       </div>
@@ -101,6 +116,7 @@
 
   <script src="/js/api.js"></script>
   <script src="/js/layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <script src="/js/cert-detail.js"></script>
 </body>
 </html>

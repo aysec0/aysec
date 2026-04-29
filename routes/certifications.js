@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { marked } from 'marked';
 import { db } from '../db/index.js';
+import { optionalAuth } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -17,7 +18,7 @@ router.get('/', (_req, res) => {
   res.json({ certifications: certs });
 });
 
-router.get('/:slug', (req, res) => {
+router.get('/:slug', optionalAuth, (req, res) => {
   const cert = db.prepare(
     'SELECT * FROM cert_prep WHERE slug = ? AND published = 1'
   ).get(req.params.slug);
@@ -44,6 +45,33 @@ router.get('/:slug', (req, res) => {
 
   // Render markdown fields
   const md = (s) => s ? marked.parse(s) : '';
+
+  // Pull the week-by-week syllabus, plus per-user completion if signed in.
+  const modules = db.prepare(`
+    SELECT id, week_num, title, goal, topics_md, daily_tasks_md, resources_md, lab_targets_md
+    FROM cert_prep_modules WHERE cert_id = ?
+    ORDER BY week_num ASC, position ASC
+  `).all(cert.id);
+  let completedSet = new Set();
+  if (req.user) {
+    completedSet = new Set(
+      db.prepare(
+        'SELECT module_id FROM cert_prep_module_progress WHERE user_id = ?'
+      ).all(req.user.id).map((r) => r.module_id)
+    );
+  }
+  const modulesOut = modules.map((m) => ({
+    id: m.id,
+    week_num: m.week_num,
+    title: m.title,
+    goal: m.goal,
+    topics_html:      md(m.topics_md),
+    daily_tasks_html: md(m.daily_tasks_md),
+    resources_html:   md(m.resources_md),
+    lab_targets_html: md(m.lab_targets_md),
+    completed:        completedSet.has(m.id),
+  }));
+
   res.json({
     certification: {
       ...cert,
@@ -54,12 +82,45 @@ router.get('/:slug', (req, res) => {
     },
     courses,
     challenges,
+    modules: modulesOut,
     summary: {
       total_lessons: courses.reduce((s, c) => s + c.lesson_count, 0),
       total_minutes: courses.reduce((s, c) => s + c.total_minutes, 0),
       paid_courses_total_cents: courses.reduce((s, c) => s + (c.is_paid ? c.price_cents : 0), 0),
+      total_modules: modulesOut.length,
+      completed_modules: modulesOut.filter((m) => m.completed).length,
     },
   });
+});
+
+// Toggle a module's completed state for the signed-in user.
+// Body: { completed: true|false } — if true, upsert; if false, delete the row.
+router.post('/modules/:moduleId/toggle', optionalAuth, (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'sign in to track progress' });
+  const moduleId = Number(req.params.moduleId);
+  if (!Number.isInteger(moduleId) || moduleId <= 0) {
+    return res.status(400).json({ error: 'bad module id' });
+  }
+  const completed = req.body?.completed === true;
+  if (completed) {
+    db.prepare(
+      `INSERT OR IGNORE INTO cert_prep_module_progress (user_id, module_id) VALUES (?, ?)`
+    ).run(req.user.id, moduleId);
+  } else {
+    db.prepare(
+      `DELETE FROM cert_prep_module_progress WHERE user_id = ? AND module_id = ?`
+    ).run(req.user.id, moduleId);
+  }
+  // Recompute progress for this module's cert
+  const row = db.prepare(`
+    SELECT m.cert_id,
+      (SELECT COUNT(*) FROM cert_prep_modules WHERE cert_id = m.cert_id) AS total,
+      (SELECT COUNT(*) FROM cert_prep_module_progress p
+       JOIN cert_prep_modules mm ON mm.id = p.module_id
+       WHERE mm.cert_id = m.cert_id AND p.user_id = ?) AS done
+    FROM cert_prep_modules m WHERE m.id = ?
+  `).get(req.user.id, moduleId);
+  res.json({ ok: true, completed, progress: { done: row?.done ?? 0, total: row?.total ?? 0 } });
 });
 
 export default router;
