@@ -926,6 +926,12 @@ const SITE_DEFAULTS = {
   about_short_title:   'I help people break things — properly.',
   hire_page_title:     'Hire me.',
   hire_page_subtitle:  'Pentests, AI/LLM red-team engagements, training for engineering teams, and one-off advisory work. Direct, small-team, no junior bait-and-switch.',
+  community_title:     'Community.',
+  community_subtitle:  "A focused forum for cybersecurity — ask questions, share writeups, post finds. No memes-only feed, no drama. Up/downvote what's actually useful.",
+  levels_title:        'Levels.',
+  levels_subtitle:     '15 themed tiers from n00b to Legend. XP comes from every dimension of the platform — solve challenges, complete lessons, earn certificates, plant first bloods. Each level has its own colour, icon, and identity.',
+  blog_title:          'Blog & Writeups',
+  blog_subtitle:       'Field notes, CTF writeups, deep dives, and the occasional rant about the state of the industry.',
 };
 
 router.get('/site-settings', (_req, res) => {
