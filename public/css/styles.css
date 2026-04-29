@@ -11467,3 +11467,43 @@ html.is-page-entering body {
   .marquee-track { animation: none !important; }
   .btn-primary::after { display: none !important; }
 }
+
+/* ============================================================
+   <select class="input"> — force consistent dark-mode rendering.
+   Without `appearance: none` Chrome on macOS sometimes paints the
+   closed-state value text using OS-level theming that vanishes on
+   a dark background. We strip the native chrome and draw our own
+   chevron so the dropdown looks identical to the rest of the form.
+   ============================================================ */
+select.input {
+  -webkit-appearance: none;
+  appearance: none;
+  /* Custom chevron — small caret on the right, doesn't intercept clicks */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(-45deg, transparent 50%, var(--text-muted) 50%);
+  background-position:
+    calc(100% - 18px) calc(50% + 1px),
+    calc(100% - 13px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  /* Make room for the chevron */
+  padding-right: 2.2rem;
+  cursor: pointer;
+}
+select.input:focus {
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(-45deg, transparent 50%, var(--accent) 50%);
+}
+/* Native option dropdown re-styled via attribute selector */
+select.input option {
+  background: var(--bg-elev);
+  color: var(--text);
+}
+select.input optgroup {
+  background: var(--bg);
+  color: var(--text-muted);
+  font-style: normal;
+  font-weight: 600;
+}

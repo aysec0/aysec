@@ -243,12 +243,19 @@
     });
   }
 
-  // Issue-duel modal
+  // Issue-duel modal --------------------------------------------------------
+  // Cache the populated dropdown so reopening the modal is instant and so
+  // the very first paint never shows an empty select.
+  let challengeOptionsCache = null;
+
   function openModal() {
     $('#duelModal').hidden = false;
     $('#duelModalBackdrop').hidden = false;
     $('#duelFormAlert').hidden = true;
-    populateChallengeOptions();
+    // If we already populated, the cached HTML is already on the select.
+    // Re-fetch in the background so the list stays fresh after the user
+    // solves new challenges.
+    populateChallengeOptions(challengeOptionsCache == null);
     setTimeout(() => $('#duelChallenge').focus(), 50);
   }
   function closeModal() {
@@ -256,29 +263,42 @@
     $('#duelModalBackdrop').hidden = true;
   }
 
-  async function populateChallengeOptions() {
+  async function populateChallengeOptions(showLoading = true) {
     const sel = $('#duelChallenge');
-    sel.innerHTML = `<option value="">Loading…</option>`;
+    if (!sel) return;
+    if (showLoading && !sel.options.length) {
+      sel.innerHTML = `<option value="">Loading challenges…</option>`;
+    }
     try {
       const { challenges } = await window.api.get('/api/challenges');
-      const eligible = challenges.filter((c) => !c.solved);
+      const eligible = (challenges || []).filter((c) => !c.solved);
       if (!eligible.length) {
-        sel.innerHTML = `<option value="">— You've solved everything! —</option>`;
+        const why = challenges?.length
+          ? `— You've solved every challenge. Add more to duel —`
+          : `— No challenges available yet —`;
+        sel.innerHTML = `<option value="">${why}</option>`;
+        challengeOptionsCache = sel.innerHTML;
         return;
       }
-      // Group by category for readability
+      // Group by category for readability. optgroup labels render in the
+      // native dropdown; the closed select shows the selected option text.
       const byCat = {};
-      for (const c of eligible) {
-        (byCat[c.category] ||= []).push(c);
-      }
-      sel.innerHTML = `<option value="">Choose a challenge…</option>` +
+      for (const c of eligible) (byCat[c.category] ||= []).push(c);
+      const html = `<option value="">Choose a challenge…</option>` +
         Object.entries(byCat).map(([cat, list]) => `
           <optgroup label="${escapeHtml(cat)}">
             ${list.map((c) => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.title)} · ${escapeHtml(c.difficulty)} · ${c.points}pt</option>`).join('')}
           </optgroup>
         `).join('');
+      sel.innerHTML = html;
+      challengeOptionsCache = html;
     } catch (err) {
-      sel.innerHTML = `<option value="">Could not load challenges</option>`;
+      console.warn('duels: populateChallengeOptions failed', err);
+      // Only overwrite the dropdown with the error if we don't already
+      // have cached options (so a flaky refresh doesn't wipe a working list).
+      if (!challengeOptionsCache) {
+        sel.innerHTML = `<option value="">Could not load challenges — refresh and try again</option>`;
+      }
     }
   }
 
@@ -343,5 +363,8 @@
     wireTabs();
     wireModal();
     load();
+    // Pre-populate the challenge dropdown immediately so opening the modal
+    // is instant — no race window where the select shows empty.
+    populateChallengeOptions(false);
   });
 })();
