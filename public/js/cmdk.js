@@ -11,7 +11,9 @@
     { type: 'page', title: 'Home',           url: '/' },
     { type: 'page', title: 'Courses',        url: '/courses' },
     { type: 'page', title: 'CTF Challenges', url: '/challenges' },
-    { type: 'page', title: 'Blog & Writeups', url: '/blog' },
+    { type: 'page', title: 'Duels',          url: '/duels' },
+    { type: 'page', title: 'Community',      url: '/community' },
+    { type: 'page', title: 'Writeups',       url: '/community?cat=writeups' },
     { type: 'page', title: 'Pricing',        url: '/pricing' },
     { type: 'page', title: 'About',          url: '/about' },
     { type: 'page', title: 'Talks',          url: '/talks' },
@@ -43,7 +45,7 @@
         ...STATIC_PAGES,
         ...(c.courses    || []).map((x) => ({ type: 'course',    title: x.title, sub: x.subtitle || '',   url: `/courses/${x.slug}` })),
         ...(ch.challenges|| []).map((x) => ({ type: 'challenge', title: x.title, sub: `${x.category} · ${x.difficulty} · ${x.points}pt`, url: `/challenges/${x.slug}` })),
-        ...(p.posts      || []).map((x) => ({ type: 'post',      title: x.title, sub: x.excerpt || '',    url: `/blog/${x.slug}` })),
+        ...(p.posts      || []).map((x) => ({ type: 'post',      title: x.title, sub: x.excerpt || '',    url: x.migrated_to_forum_id ? `/community/post/${x.migrated_to_forum_id}` : `/blog/${x.slug}` })),
       ];
     } catch {
       cache = STATIC_PAGES.slice();
@@ -76,7 +78,7 @@
       (groups[r.type] = groups[r.type] || []).push(r);
     });
     const groupOrder = ['course', 'challenge', 'post', 'page'];
-    const groupLabel = { course: 'Courses', challenge: 'CTF Challenges', post: 'Blog & writeups', page: 'Pages' };
+    const groupLabel = { course: 'Courses', challenge: 'CTF Challenges', post: 'Writeups', page: 'Pages' };
 
     let idx = -1;
     let html = '';

@@ -8,8 +8,10 @@ marked.setOptions({ gfm: true, breaks: false });
 
 router.get('/', (req, res) => {
   const { kind } = req.query;
+  // Include migrated_to_forum_id so callers can link straight to the new
+  // home (/community/post/:id) rather than chasing the /blog/:slug redirect.
   const sql = `
-    SELECT id, slug, title, excerpt, cover_url, tags, kind, published_at
+    SELECT id, slug, title, excerpt, cover_url, tags, kind, published_at, migrated_to_forum_id
     FROM posts
     WHERE published = 1 ${kind ? 'AND kind = ?' : ''}
     ORDER BY published_at DESC

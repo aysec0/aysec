@@ -3,7 +3,22 @@
   const $ = (id) => document.getElementById(id);
   const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
-  let state = { sort: 'hot', cat: null, categories: [] };
+  // Honor ?cat=<slug> in the URL so deep links (and the /blog redirect)
+  // land directly in the right category. Sort persists across cat changes.
+  const _qs = new URLSearchParams(location.search);
+  let state = {
+    sort: _qs.get('sort') || 'hot',
+    cat:  _qs.get('cat')  || null,
+    categories: [],
+  };
+
+  function syncUrl() {
+    const p = new URLSearchParams();
+    if (state.sort !== 'hot') p.set('sort', state.sort);
+    if (state.cat)            p.set('cat', state.cat);
+    const qs = p.toString();
+    history.replaceState(null, '', '/community' + (qs ? '?' + qs : ''));
+  }
 
   function renderCats() {
     const list = $('forumCats');
@@ -16,6 +31,7 @@
     list.querySelectorAll('.forum-cat').forEach((b) => {
       b.addEventListener('click', () => {
         state.cat = b.dataset.cat || null;
+        syncUrl();
         renderCats(); loadPosts();
       });
     });
@@ -103,11 +119,16 @@
     } catch (e) {
       $('forumPosts').innerHTML = `<div class="card" style="padding:1.5rem;"><p class="dim">Couldn’t load: ${escapeHtml(e.message)}</p></div>`;
     }
+    // Reflect URL-driven sort in the chip row
+    document.querySelectorAll('#forumSort .chip').forEach((c) => {
+      c.classList.toggle('is-active', c.dataset.sort === state.sort);
+    });
     document.querySelectorAll('#forumSort .chip').forEach((b) => {
       b.addEventListener('click', () => {
         document.querySelectorAll('#forumSort .chip').forEach((x) => x.classList.remove('is-active'));
         b.classList.add('is-active');
         state.sort = b.dataset.sort;
+        syncUrl();
         loadPosts();
       });
     });

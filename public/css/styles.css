@@ -9954,6 +9954,18 @@ html, body {
 }
 
 .tools-nav-trigger.is-open { color: var(--accent); }
+/* Highlights the dropdown trigger when the current page belongs to its catalog
+   (e.g. you're on /challenges -> Compete glows). Same treatment as a regular
+   active nav-link. */
+.tools-nav-trigger.is-active { color: var(--text); position: relative; }
+.tools-nav-trigger.is-active::after {
+  content: '';
+  position: absolute;
+  left: 12px; right: 12px; bottom: -2px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+}
 
 .tools-dd {
   position: absolute;

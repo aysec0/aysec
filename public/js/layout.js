@@ -5,18 +5,66 @@
    Loaded on every page after theme.js + api.js.
    ============================================================ */
 (() => {
+  // Top-level navbar — kept tight on purpose. Learn / Compete / Tools are
+  // dropdowns with their own catalogs below; everything else is a direct link.
   const NAV_ITEMS = [
     { href: '/',               label: 'Home' },
-    { href: '/courses',        label: 'Courses' },
-    { href: '/certifications', label: 'Certs' },
-    { href: '/challenges',     label: 'CTF' },
-    { href: '/duels',          label: 'Duels' },
-    { href: '/daily',          label: 'Daily' },
-    { type: 'tools',           label: 'Tools' },
-    { href: '/events',         label: 'Events' },
+    { type: 'dropdown', id: 'learn',   label: 'Learn' },
+    { type: 'dropdown', id: 'compete', label: 'Compete' },
+    { type: 'dropdown', id: 'tools',   label: 'Tools' },
     { href: '/community',      label: 'Community' },
-    { href: '/blog',           label: 'Blog' },
     { href: '/search',         label: '🔍', srOnly: 'Search' },
+  ];
+
+  // ---- Learn dropdown ----
+  // Everything that's a structured learning resource lives here. Cheatsheets
+  // are technically reference, not a course, but they belong with the rest of
+  // the "study material" cluster rather than with tools.
+  const LEARN_CATALOG = [
+    {
+      group: 'Featured',
+      items: [
+        { name: 'All courses',     href: '/courses',        desc: 'Browse the full library' },
+        { name: 'Cert prep',       href: '/certifications', desc: 'OSCP, CRTO, PNPT, more' },
+        { name: 'Cheatsheets',     href: '/cheatsheets',    desc: 'Quick references' },
+      ],
+    },
+    {
+      group: 'Paths',
+      items: [
+        { name: 'Learning paths',  href: '/courses#paths',  desc: 'Curated multi-course tracks' },
+      ],
+    },
+  ];
+
+  // ---- Compete dropdown ----
+  // Anything where you race / score / climb a board. Order matters — the
+  // first item in Featured is what new visitors see first when scanning.
+  const COMPETE_CATALOG = [
+    {
+      group: 'Solo play',
+      items: [
+        { name: 'CTF challenges',  href: '/challenges',  desc: 'Web, crypto, pwn, AI…' },
+        { name: 'Daily challenge', href: '/daily',       desc: 'One per day · streaks' },
+        { name: 'Pro Labs',        href: '/pro-labs',    desc: 'Multi-host scenarios' },
+        { name: 'Skill assessments', href: '/assessments', desc: 'Timed proficiency tests' },
+      ],
+    },
+    {
+      group: 'Head-to-head',
+      items: [
+        { name: 'Duels',           href: '/duels',       desc: '1v1 races · stake XP' },
+        { name: 'Live events',     href: '/live',        desc: 'Scheduled live CTFs' },
+        { name: 'Teams',           href: '/teams',       desc: 'Squad up & climb' },
+      ],
+    },
+    {
+      group: 'Calendar',
+      items: [
+        { name: 'Events',          href: '/events',      desc: 'CTFs, conferences, drops' },
+        { name: 'Levels & XP',     href: '/levels',      desc: '15 tiers · n00b → Legend' },
+      ],
+    },
   ];
 
   // Catalog used by the navbar Tools dropdown. Each item links to a panel
@@ -90,8 +138,19 @@
     },
   ];
 
-  function toolsNavHTML() {
-    const groups = TOOLS_CATALOG.map((g) => `
+  // All three navbar dropdowns (Learn / Compete / Tools) share the same
+  // markup + behaviour. The catalog defines what shows up; the id wires
+  // up the open/close button + filter input.
+  const DROPDOWN_CATALOGS = {
+    learn:   { catalog: LEARN_CATALOG,   label: 'Learn',   placeholder: 'Search courses & guides…' },
+    compete: { catalog: COMPETE_CATALOG, label: 'Compete', placeholder: 'Search modes…' },
+    tools:   { catalog: TOOLS_CATALOG,   label: 'Tools',   placeholder: 'Search tools…' },
+  };
+
+  function dropdownNavHTML(id) {
+    const def = DROPDOWN_CATALOGS[id];
+    if (!def) return '';
+    const groups = def.catalog.map((g) => `
       <div class="tools-dd-group">
         <div class="tools-dd-group-title">${g.group}</div>
         ${g.items.map((it) => `
@@ -102,15 +161,15 @@
       </div>
     `).join('');
     return `
-      <li class="tools-nav-wrap">
-        <button type="button" class="nav-link tools-nav-trigger" id="toolsNavBtn" aria-haspopup="true" aria-expanded="false">Tools</button>
-        <div class="tools-dd" id="toolsDd" hidden role="menu" aria-label="Tools">
+      <li class="tools-nav-wrap" data-dd="${id}">
+        <button type="button" class="nav-link tools-nav-trigger" id="${id}NavBtn" aria-haspopup="true" aria-expanded="false">${def.label}</button>
+        <div class="tools-dd" id="${id}Dd" hidden role="menu" aria-label="${def.label}">
           <div class="tools-dd-search-wrap">
             <svg class="tools-dd-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input class="tools-dd-search" id="toolsDdSearch" type="text" placeholder="Search tools…" autocomplete="off" />
+            <input class="tools-dd-search" id="${id}DdSearch" type="text" placeholder="${def.placeholder}" autocomplete="off" />
           </div>
-          <div class="tools-dd-list" id="toolsDdList">${groups}</div>
-          <div class="tools-dd-empty" id="toolsDdEmpty" hidden>No tools match.</div>
+          <div class="tools-dd-list" id="${id}DdList">${groups}</div>
+          <div class="tools-dd-empty" id="${id}DdEmpty" hidden>Nothing matches.</div>
         </div>
       </li>`;
   }
@@ -127,8 +186,9 @@
         <nav aria-label="Primary">
           <ul class="nav-links">
             ${NAV_ITEMS.map((item) => {
-              if (item.type === 'tools') return toolsNavHTML();
-              return `<li><a class="nav-link" href="${item.href}" data-href="${item.href}">${item.label}</a></li>`;
+              if (item.type === 'dropdown') return dropdownNavHTML(item.id);
+              const sr = item.srOnly ? ` aria-label="${item.srOnly}"` : '';
+              return `<li><a class="nav-link" href="${item.href}" data-href="${item.href}"${sr}>${item.label}</a></li>`;
             }).join('')}
           </ul>
         </nav>
@@ -168,30 +228,34 @@
       </div>
       <div class="mobile-backdrop" id="mobileBackdrop" hidden></div>
       <nav class="mobile-nav drawer" id="mobileNav" aria-label="Mobile" aria-hidden="true">
-        <div class="mobile-section-title">Learn</div>
         <a class="nav-link" href="/" data-href="/">Home</a>
+
+        <div class="mobile-section-title">Learn</div>
         <a class="nav-link" href="/courses" data-href="/courses">Courses &amp; paths</a>
         <a class="nav-link" href="/certifications" data-href="/certifications">Cert prep</a>
-        <a class="nav-link" href="/challenges" data-href="/challenges">CTF</a>
-        <a class="nav-link" href="/blog" data-href="/blog">Blog</a>
+        <a class="nav-link" href="/cheatsheets" data-href="/cheatsheets">Cheatsheets</a>
 
         <div class="mobile-section-title">Compete</div>
+        <a class="nav-link" href="/challenges" data-href="/challenges">CTF challenges</a>
         <a class="nav-link" href="/daily" data-href="/daily">Daily challenge</a>
         <a class="nav-link" href="/duels" data-href="/duels">Duels (1v1)</a>
-        <a class="nav-link" href="/live" data-href="/live">Live events</a>
         <a class="nav-link" href="/pro-labs" data-href="/pro-labs">Pro Labs</a>
         <a class="nav-link" href="/assessments" data-href="/assessments">Skill assessments</a>
+        <a class="nav-link" href="/live" data-href="/live">Live events</a>
         <a class="nav-link" href="/teams" data-href="/teams">Teams</a>
+        <a class="nav-link" href="/events" data-href="/events">Events calendar</a>
+        <a class="nav-link" href="/levels" data-href="/levels">Levels &amp; XP</a>
 
         <div class="mobile-section-title">Tools</div>
         <a class="nav-link" href="/tools" data-href="/tools">Security toolbox</a>
         <a class="nav-link" href="/tools#oss" data-href="/tools">OSS projects</a>
-        <a class="nav-link" href="/cheatsheets" data-href="/cheatsheets">Cheatsheets</a>
-        <a class="nav-link" href="/events" data-href="/events">Events</a>
+
+        <div class="mobile-section-title">Talk</div>
+        <a class="nav-link" href="/community" data-href="/community">Community forum</a>
+        <a class="nav-link" href="/community?cat=writeups" data-href="/community">Writeups &amp; blog</a>
 
         <div class="mobile-section-title">Account</div>
         <a class="nav-link" href="/dashboard" data-href="/dashboard">Dashboard</a>
-        <a class="nav-link" href="/levels" data-href="/levels">Levels</a>
         <a class="nav-link" href="/settings" data-href="/settings">Settings</a>
 
         <div class="mobile-section-title">More</div>
@@ -219,7 +283,8 @@
               <li><a href="/courses">Courses</a></li>
               <li><a href="/certifications">Cert prep</a></li>
               <li><a href="/challenges">CTF challenges</a></li>
-              <li><a href="/blog">Writeups</a></li>
+              <li><a href="/cheatsheets">Cheatsheets</a></li>
+              <li><a href="/community?cat=writeups">Writeups</a></li>
             </ul>
           </div>
           <div>
@@ -318,13 +383,16 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && nav.classList.contains('open')) close(); });
   }
 
-  // ---- Tools dropdown (navbar) ----
-  function wireToolsDropdown() {
-    const btn   = document.getElementById('toolsNavBtn');
-    const panel = document.getElementById('toolsDd');
-    const input = document.getElementById('toolsDdSearch');
-    const list  = document.getElementById('toolsDdList');
-    const empty = document.getElementById('toolsDdEmpty');
+  // ---- Navbar dropdowns (Learn / Compete / Tools) ----
+  // One generic wirer per dropdown id, kept identical to the original
+  // single-dropdown behaviour: filter input, Enter follows first match,
+  // Escape closes, popover-open events close the others.
+  function wireNavDropdown(id) {
+    const btn   = document.getElementById(`${id}NavBtn`);
+    const panel = document.getElementById(`${id}Dd`);
+    const input = document.getElementById(`${id}DdSearch`);
+    const list  = document.getElementById(`${id}DdList`);
+    const empty = document.getElementById(`${id}DdEmpty`);
     if (!btn || !panel || !input || !list) return;
 
     let open = false;
@@ -334,20 +402,17 @@
       btn.setAttribute('aria-expanded', v ? 'true' : 'false');
       btn.classList.toggle('is-open', v);
       if (v) {
-        // close any other floating popover (Ask FAB, avatar dropdown)
-        document.dispatchEvent(new CustomEvent('aysec:popover-open', { detail: { id: 'tools' } }));
-        // reset filter on open
+        // Close any other floating popover (other dropdowns, Ask FAB, avatar dropdown)
+        document.dispatchEvent(new CustomEvent('aysec:popover-open', { detail: { id } }));
         input.value = '';
         applyFilter('');
-        // first match highlight cleared
         clearHighlight();
         setTimeout(() => input.focus(), 0);
       }
     }
 
-    // Close the dropdown if another popover opens
     document.addEventListener('aysec:popover-open', (e) => {
-      if (e.detail?.id !== 'tools' && open) setOpen(false);
+      if (e.detail?.id !== id && open) setOpen(false);
     });
 
     function clearHighlight() {
@@ -369,7 +434,6 @@
           if (!firstMatch) firstMatch = it;
         }
       });
-      // Hide a group header if all its items are hidden
       groups.forEach((g) => {
         const visible = g.querySelectorAll('.tools-dd-item:not([hidden])').length;
         g.hidden = visible === 0;
@@ -390,9 +454,7 @@
       if (e.key === 'Enter') {
         e.preventDefault();
         const first = list.querySelector('.tools-dd-item:not([hidden])');
-        if (first) {
-          window.location.href = first.getAttribute('href');
-        }
+        if (first) window.location.href = first.getAttribute('href');
       } else if (e.key === 'Escape') {
         setOpen(false);
         btn.focus();
@@ -408,6 +470,19 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && open) setOpen(false);
     });
+
+    // Active-state highlight: button glows if the current path is in this catalog.
+    const cat = DROPDOWN_CATALOGS[id]?.catalog || [];
+    const here = location.pathname.replace(/\/$/, '') || '/';
+    const matchesHere = cat.some((g) => g.items.some((it) => {
+      const href = it.href.split('#')[0].replace(/\/$/, '') || '/';
+      return href !== '/' && (here === href || here.startsWith(href + '/'));
+    }));
+    if (matchesHere) btn.classList.add('is-active');
+  }
+
+  function wireNavDropdowns() {
+    Object.keys(DROPDOWN_CATALOGS).forEach(wireNavDropdown);
   }
 
 
@@ -832,7 +907,7 @@
     setActiveLink();
     wireThemeToggle();
     wireMobileDrawer();
-    wireToolsDropdown();
+    wireNavDropdowns();
     setYear();
     syncAuthNav();
     reveal();

@@ -166,7 +166,8 @@
     if (p === '/dashboard')                      return "your dashboard. anything you want to focus on?";
     if (p === '/levels')                         return "the level ladder. xp from solves, course completions, daily streaks. tier shows on your profile.";
     if (p === '/tools' || p.startsWith('/tools/')) return "you're in the toolbox. need a specific tool? say what you're decoding/encoding.";
-    if (p === '/blog')                           return "writeups + opinion pieces. fresh ones at the top.";
+    if (p.startsWith('/community'))              return "the community forum. writeups + questions live here now.";
+    if (p === '/duels')                          return "1v1 races. stake xp, pick a challenge, first flag wins the pot.";
     if (p === '/about' || p === '/hire')         return "real-world stuff. if you're curious about engagements, /hire has the breakdown.";
     return null;
   }

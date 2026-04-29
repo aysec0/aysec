@@ -30,12 +30,26 @@ export function rebuildSearchIndex() {
       ).all()) {
         insert.run('lesson', r.title, r.body.slice(0, 4000), r.lslug, `/courses/${r.cslug}#${r.lslug}`);
       }
-      // Posts
+      // Posts (writeups) — link to the migrated forum-post URL when available;
+      // legacy unmigrated rows still resolve via the /blog/:slug redirect.
       for (const r of db.prepare(
-        `SELECT slug, title, COALESCE(excerpt, '') || ' ' || COALESCE(content_md, '') AS body
+        `SELECT slug, title, migrated_to_forum_id,
+                COALESCE(excerpt, '') || ' ' || COALESCE(content_md, '') AS body
          FROM posts WHERE published = 1`
       ).all()) {
-        insert.run('post', r.title, r.body.slice(0, 4000), r.slug, `/blog/${r.slug}`);
+        const url = r.migrated_to_forum_id
+          ? `/community/post/${r.migrated_to_forum_id}`
+          : `/blog/${r.slug}`;
+        insert.run('post', r.title, r.body.slice(0, 4000), r.slug, url);
+      }
+      // Forum posts that DON'T come from the blog migration — community-native
+      // threads should also be searchable.
+      for (const r of db.prepare(
+        `SELECT fp.id, fp.title, fp.body_md AS body
+         FROM forum_posts fp
+         WHERE fp.id NOT IN (SELECT migrated_to_forum_id FROM posts WHERE migrated_to_forum_id IS NOT NULL)`
+      ).all()) {
+        insert.run('post', r.title, (r.body || '').slice(0, 4000), String(r.id), `/community/post/${r.id}`);
       }
       // Challenges
       for (const r of db.prepare(

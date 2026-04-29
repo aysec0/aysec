@@ -41,11 +41,12 @@ KEY ROUTES (use these as real markdown links when relevant — never invent path
 - **/assessments** — cert-aligned exams
 - **/certifications** — cert prep paths; **/certifications/oscp** has a 12-week syllabus
 - **/vault** — meta-CTF, 7 flags hidden across this very site
-- **/community** — Reddit-style forum
+- **/community** — Reddit-style forum (writeups + discussions live here, blog merged in)
+- **/community?cat=writeups** — long-form writeups & post-mortems
+- **/duels** — 1v1 challenge races, stake XP
 - **/tools** — security toolbox (jwt decoder, hash id/gen, cipher, encoders, cidr, etc.)
 - **/levels** — XP tier ladder, n00b → Legend
 - **/dashboard** — user's progress
-- **/blog** — writeups
 - **/about**, **/hire**
 
 VOICE PATTERNS WORTH ECHOING:

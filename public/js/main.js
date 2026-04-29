@@ -39,8 +39,14 @@
   }
 
   function postCard(p) {
+    // Posts now live in the community forum under "writeups". If the migration
+    // has run, link straight to the new permalink; otherwise fall back to the
+    // /blog/:slug redirect.
+    const href = p.migrated_to_forum_id
+      ? `/community/post/${p.migrated_to_forum_id}`
+      : `/blog/${escapeHtml(p.slug)}`;
     return `
-      <a class="card" href="/blog/${escapeHtml(p.slug)}">
+      <a class="card" href="${href}">
         <div class="card-accent blog"></div>
         <div class="card-body">
           <span class="card-type blog">${escapeHtml(p.kind || 'post')}</span>

@@ -24,4 +24,61 @@ export function migrate() {
   tryAdd(`ALTER TABLE users ADD COLUMN social_twitter   TEXT`);
   tryAdd(`ALTER TABLE users ADD COLUMN social_linkedin  TEXT`);
   tryAdd(`ALTER TABLE users ADD COLUMN social_website   TEXT`);
+
+  // Track which forum_post each migrated blog post became, so /blog/:slug
+  // can 301 to the corresponding /community/post/:id without a second lookup.
+  tryAdd(`ALTER TABLE posts ADD COLUMN migrated_to_forum_id INTEGER`);
+
+  // Idempotent migration: blog posts -> community/forum posts under a
+  // dedicated "Writeups & blog" category. Runs on every startup but only
+  // touches posts whose migrated_to_forum_id is NULL.
+  migrateBlogToForum();
+}
+
+/* Mirror the legacy `posts` rows into `forum_posts` so the community is
+   the single home for long-form writing. Idempotent — re-running is a no-op
+   for any post that's already been migrated. */
+function migrateBlogToForum() {
+  // Find or create the writeups category. Position 0 puts it at the top.
+  let cat = db.prepare(`SELECT id FROM forum_categories WHERE slug = 'writeups'`).get();
+  if (!cat) {
+    db.prepare(`
+      INSERT INTO forum_categories (slug, name, description, color, position)
+      VALUES (?, ?, ?, ?, ?)
+    `).run('writeups', 'Writeups & blog', 'Long-form writeups, field notes, and CTF post-mortems.', '#7aa2f7', 0);
+    cat = db.prepare(`SELECT id FROM forum_categories WHERE slug = 'writeups'`).get();
+  }
+
+  // Pick an owner: prefer the original post-author table-less posts ascribed
+  // to admin (id=1), but fall back to any admin if id=1 is gone.
+  let owner = db.prepare(`SELECT id FROM users WHERE id = 1`).get()
+           || db.prepare(`SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1`).get();
+  if (!owner) return; // Nothing to attribute to — skip until an admin exists.
+
+  const pending = db.prepare(`
+    SELECT id, slug, title, content_md, excerpt, published, published_at, created_at, updated_at
+    FROM posts
+    WHERE migrated_to_forum_id IS NULL AND published = 1
+  `).all();
+
+  if (!pending.length) return;
+
+  const insertForum = db.prepare(`
+    INSERT INTO forum_posts (category_id, user_id, title, body_md, score, comment_count, pinned, locked, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, 0, 0, 0, ?, ?)
+  `);
+  const markMigrated = db.prepare(`UPDATE posts SET migrated_to_forum_id = ? WHERE id = ?`);
+
+  const tx = db.transaction((rows) => {
+    for (const p of rows) {
+      // Body keeps the original markdown intact; if there's an excerpt, prepend
+      // it as a TL;DR so feed scanners get the gist.
+      const tldr = p.excerpt ? `> **TL;DR** — ${p.excerpt}\n\n` : '';
+      const body = `${tldr}${p.content_md || ''}`.trim();
+      const created = p.published_at || p.created_at;
+      const info = insertForum.run(cat.id, owner.id, p.title, body, 1, created, p.updated_at || created);
+      markMigrated.run(info.lastInsertRowid, p.id);
+    }
+  });
+  tx(pending);
 }

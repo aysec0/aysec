@@ -99,7 +99,9 @@
   const PAGES = {
     courses: '/courses',  course: '/courses',
     ctf: '/challenges',   challenges: '/challenges',
-    blog: '/blog',        posts: '/blog',  writeups: '/blog',
+    blog: '/community?cat=writeups', posts: '/community?cat=writeups', writeups: '/community?cat=writeups',
+    community: '/community', forum: '/community',
+    duels: '/duels',      duel: '/duels',
     home: '/',            about: '/about',
     hire: '/hire',        talks: '/talks',
     newsletter: '/newsletter',

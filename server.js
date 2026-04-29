@@ -162,7 +162,7 @@ Policy: ${SITE_URL}/terms
 
 app.get('/sitemap.xml', (_req, res) => {
   const urls = [
-    '/', '/courses', '/certifications', '/challenges', '/blog',
+    '/', '/courses', '/certifications', '/challenges',
     '/daily', '/live', '/pro-labs', '/assessments', '/teams',
     '/tools', '/cheatsheets', '/events', '/community', '/about',
     '/hire', '/talks', '/terms', '/privacy', '/refunds',
@@ -170,17 +170,29 @@ app.get('/sitemap.xml', (_req, res) => {
   ];
   const courses    = db.prepare('SELECT slug, updated_at FROM courses    WHERE published = 1').all();
   const challenges = db.prepare('SELECT slug, updated_at FROM challenges WHERE published = 1').all();
-  const posts      = db.prepare('SELECT slug, updated_at FROM posts      WHERE published = 1').all();
-  let certs = [], cheatsheets = [], tools = [];
+  // Blog rows now live under /community/post/:forum_id — link the migrated id directly.
+  const writeups   = db.prepare(`
+    SELECT migrated_to_forum_id AS fid, updated_at FROM posts
+    WHERE published = 1 AND migrated_to_forum_id IS NOT NULL
+  `).all();
+  const forumPosts = db.prepare(`
+    SELECT id, updated_at FROM forum_posts ORDER BY id DESC LIMIT 200
+  `).all();
+  let certs = [], cheatsheets = [];
   try { certs       = db.prepare('SELECT slug FROM cert_prep   WHERE published = 1').all(); } catch {}
   try { cheatsheets = db.prepare('SELECT slug FROM cheatsheets WHERE published = 1').all(); } catch {}
+
+  // De-duplicate forum-post URLs so migrated writeups don't appear twice.
+  const writeupIds = new Set(writeups.map((w) => w.fid));
+  const xtraForum  = forumPosts.filter((p) => !writeupIds.has(p.id));
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map((u) => `  <url><loc>${SITE_URL}${u}</loc></url>`).join('\n')}
 ${courses.map((c) =>    `  <url><loc>${SITE_URL}/courses/${c.slug}</loc><lastmod>${(c.updated_at || '').slice(0,10)}</lastmod></url>`).join('\n')}
 ${challenges.map((c) => `  <url><loc>${SITE_URL}/challenges/${c.slug}</loc><lastmod>${(c.updated_at || '').slice(0,10)}</lastmod></url>`).join('\n')}
-${posts.map((p) =>      `  <url><loc>${SITE_URL}/blog/${p.slug}</loc><lastmod>${(p.updated_at || '').slice(0,10)}</lastmod></url>`).join('\n')}
+${writeups.map((w) =>   `  <url><loc>${SITE_URL}/community/post/${w.fid}</loc><lastmod>${(w.updated_at || '').slice(0,10)}</lastmod></url>`).join('\n')}
+${xtraForum.map((p) =>  `  <url><loc>${SITE_URL}/community/post/${p.id}</loc><lastmod>${(p.updated_at || '').slice(0,10)}</lastmod></url>`).join('\n')}
 ${certs.map((c) =>      `  <url><loc>${SITE_URL}/certifications/${c.slug}</loc></url>`).join('\n')}
 ${cheatsheets.map((c) =>`  <url><loc>${SITE_URL}/cheatsheets/${c.slug}</loc></url>`).join('\n')}
 </urlset>`;
@@ -199,10 +211,8 @@ const OG_BY_PATH = {
                         desc: 'Web hacking, AI red-teaming, OSCP prep, bug bounty. Hands-on labs that make the theory stick.' },
   '/challenges':      { title: 'CTF challenges — aysec',
                         desc: 'Cybersecurity challenges across web, crypto, pwn, AI, and forensics. Climb the leaderboard.' },
-  '/blog':            { title: 'Blog & writeups — aysec',
-                        desc: 'Field notes, CTF writeups, deep dives on cybersecurity.' },
   '/community':       { title: 'Community — aysec',
-                        desc: 'A focused forum for cybersecurity. Ask, share writeups, post finds.' },
+                        desc: 'A focused forum for cybersecurity. Ask questions, share writeups, post finds.' },
   '/certifications':  { title: 'Cert prep — aysec',
                         desc: 'OSCP, OSEP, OSWE, CRTO, CRTP, PNPT, Security+, CEH — mapped courses + CTF challenges.' },
   '/vault':           { title: 'The vault — aysec',
@@ -270,15 +280,20 @@ function readHtmlWithOg(filePath, ogPath, override) {
 }
 
 app.get('/rss.xml', (_req, res) => {
+  // Pull from the legacy `posts` table (still the source of truth for
+  // long-form writing) but link straight to the migrated forum-post URL
+  // so subscribers land in the new home.
   const posts = db.prepare(`
-    SELECT slug, title, excerpt, content_md, published_at, kind, tags
+    SELECT slug, title, excerpt, content_md, published_at, kind, tags, migrated_to_forum_id
     FROM posts WHERE published = 1 ORDER BY published_at DESC LIMIT 50
   `).all();
   const escapeXml = (s = '') => String(s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
   const items = posts.map((p) => {
-    const link = `${SITE_URL}/blog/${p.slug}`;
+    const link = p.migrated_to_forum_id
+      ? `${SITE_URL}/community/post/${p.migrated_to_forum_id}`
+      : `${SITE_URL}/community?cat=writeups`;
     const html = p.content_md ? marked.parse(p.content_md) : '';
     const pubDate = new Date((p.published_at || '').replace(' ', 'T') + 'Z').toUTCString();
     const cats = (p.tags || '').split(',').filter(Boolean)
@@ -296,10 +311,10 @@ ${cats}
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>aysec — blog &amp; writeups</title>
-    <link>${SITE_URL}/blog</link>
+    <title>aysec — writeups &amp; community</title>
+    <link>${SITE_URL}/community?cat=writeups</link>
     <atom:link href="${SITE_URL}/rss.xml" rel="self" type="application/rss+xml" />
-    <description>Posts, notes, and CTF writeups from aysec.</description>
+    <description>Writeups, notes, and CTF post-mortems from aysec.</description>
     <language>en</language>
 ${items}
   </channel>
@@ -345,7 +360,8 @@ const toolOg = (req) => ({ title: `${req.params.slug} — aysec tools`, desc: `F
 
 app.get('/courses/:slug',    sendDetail('course-detail.html', courseOg));
 app.get('/challenges/:slug', sendDetail('challenge-detail.html', challengeOg));
-app.get('/blog/:slug',       sendDetail('post-detail.html', postOg));
+// /blog/:slug redirects to /community/post/:id — handler defined further down
+// alongside other legacy redirects so it can read the posts.migrated_to_forum_id mapping.
 app.get('/cert/:code',       sendDetail('certificate.html'));
 app.get('/tracks/:slug',          sendDetail('track-detail.html'));
 app.get('/tools/:slug',           sendDetail('tool-detail.html', toolOg));
@@ -371,6 +387,20 @@ app.get('/duels/:id',             sendDetail('duel-detail.html'));
 app.get(['/pricing', '/pricing/', '/pricing.html'], (_req, res) => res.redirect(301, '/courses'));
 app.get(['/lab',     '/lab/',     '/lab.html'],     (_req, res) => res.redirect(301, '/tools'));
 app.get(['/tracks',  '/tracks/',  '/tracks.html'],  (_req, res) => res.redirect(301, '/courses#paths'));
+
+// Blog → Community/Writeups. Old /blog and /blog/:slug links keep working,
+// but the canonical home is now the community forum. Per-post redirects
+// look up the migrated forum_post id.
+app.get(['/blog', '/blog/', '/blog.html'], (_req, res) => res.redirect(301, '/community?cat=writeups'));
+app.get('/blog/:slug', (req, res) => {
+  const row = db.prepare(
+    'SELECT migrated_to_forum_id FROM posts WHERE slug = ?'
+  ).get(req.params.slug);
+  if (row?.migrated_to_forum_id) {
+    return res.redirect(301, `/community/post/${row.migrated_to_forum_id}`);
+  }
+  return res.redirect(301, '/community?cat=writeups');
+});
 
 // Strip trailing slashes — keeps bookmarked/shared URLs like /courses/ from
 // 404'ing because express.static can't find /courses/.html. Skip the root
