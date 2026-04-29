@@ -30,6 +30,7 @@ import adminRoutes from './routes/admin.js';
 import forumRoutes from './routes/forum.js';
 import vaultRoutes from './routes/vault.js';
 import uploadsRoutes from './routes/uploads.js';
+import chatRoutes from './routes/chat.js';
 import { marked } from 'marked';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -68,6 +69,7 @@ app.use('/api/admin',          adminRoutes);
 app.use('/api/forum',          forumRoutes);
 app.use('/api/vault',          vaultRoutes);
 app.use('/api/uploads',        uploadsRoutes);
+app.use('/api/chat',           chatRoutes);
 
 // Public site settings — readable by anyone so landing/footer can populate
 app.get('/api/site-settings', (_req, res) => {

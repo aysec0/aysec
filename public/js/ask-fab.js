@@ -246,7 +246,30 @@
     for (const r of RULES) {
       if (r.p.some((p) => p.test(t))) return r;
     }
-    return FALLBACK;
+    return null; // signal to caller: no rule matched, try LLM
+  }
+
+  // ---- LLM fallback ----
+  // Keeps a small rolling history so the model has context. Failures
+  // (no API key, upstream timeout, etc.) gracefully fall back to the
+  // canned FALLBACK reply so the bot is never silent.
+  const llmHistory = [];
+  async function callLLM(text) {
+    try {
+      const r = await window.api.post('/api/chat/aysec', {
+        message: text,
+        history: llmHistory.slice(-6),
+      });
+      const reply = String(r.reply || '').trim();
+      if (!reply) return null;
+      llmHistory.push({ role: 'user', content: text });
+      llmHistory.push({ role: 'assistant', content: reply });
+      return reply;
+    } catch (err) {
+      // 503 = no provider configured. Anything else = upstream blip.
+      // Both fall back to FALLBACK; we don't log noise here.
+      return null;
+    }
   }
 
   function makeFab() {
@@ -439,15 +462,32 @@
       avatar?.classList.remove('is-thinking');
     }
 
-    async function reply(rule) {
+    async function replyWithRule(rule) {
       typing();
-      // Slightly longer pause for multi-message replies — reads more like
-      // a person thinking, not a script firing.
       await new Promise((r) => setTimeout(r, 380 + Math.random() * 200));
       clearTyping();
       for (const m of rule.m) {
         bubble('bot', m);
         await new Promise((r) => setTimeout(r, 180));
+      }
+    }
+
+    // Pipeline: try local rules first (instant, branded). If no rule
+    // matches, ask the LLM. If the LLM is unreachable, use the canned
+    // FALLBACK so the user always gets *something*.
+    async function reply(text) {
+      const rule = findRule(text);
+      if (rule) return replyWithRule(rule);
+      typing();
+      const llmReply = await callLLM(text);
+      clearTyping();
+      if (llmReply) {
+        bubble('bot', llmReply);
+      } else {
+        for (const m of FALLBACK.m) {
+          bubble('bot', m);
+          await new Promise((r) => setTimeout(r, 180));
+        }
       }
     }
 
@@ -458,7 +498,7 @@
       mem.chats = (mem.chats || 0) + 1;
       mem.lastSeen = Date.now();
       saveMem();
-      reply(findRule(t));
+      reply(t);
     }
 
     async function greet() {
