@@ -4423,6 +4423,19 @@ kbd {
 }
 .vault-hint-btn:disabled { opacity: 0.5; cursor: wait; }
 
+/* Bell ping — fires when a real-time notification arrives via SSE */
+.bell-btn.is-pinged {
+  animation: bell-ping 1.2s ease-in-out 1;
+}
+@keyframes bell-ping {
+  0%, 100% { transform: rotate(0deg); }
+  15%      { transform: rotate(-12deg); }
+  30%      { transform: rotate(10deg); }
+  45%      { transform: rotate(-8deg); }
+  60%      { transform: rotate(6deg); }
+  75%      { transform: rotate(-3deg); }
+}
+
 /* Lesson code-block copy button */
 .lesson-copy-btn {
   position: absolute; top: 0.4rem; right: 0.4rem;

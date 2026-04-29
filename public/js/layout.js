@@ -502,6 +502,44 @@
         document.getElementById('notifPanel')?.remove();
       }
     });
+
+    // Real-time push via SSE — replaces the per-page poll for signed-in users.
+    // Reconnect with backoff if the stream drops; toast on each new event.
+    if ('EventSource' in window) subscribeNotificationsStream();
+  }
+
+  let _es = null;
+  let _esBackoff = 1500;
+  function subscribeNotificationsStream() {
+    if (_es) return;
+    try { _es = new EventSource('/api/notifications/stream'); }
+    catch { return; }
+    _es.addEventListener('open', () => { _esBackoff = 1500; });
+    _es.addEventListener('message', (ev) => {
+      try {
+        const n = JSON.parse(ev.data);
+        // Bump bell count + flash the bell briefly
+        const dot = document.getElementById('bellDot');
+        if (dot) {
+          dot.hidden = false;
+          dot.textContent = String((Number(dot.textContent) || 0) + 1);
+        }
+        document.getElementById('bellBtn')?.classList.add('is-pinged');
+        setTimeout(() => document.getElementById('bellBtn')?.classList.remove('is-pinged'), 1400);
+        // Subtle toast — uses existing window.toast if present
+        if (n?.title) window.toast?.(n.title, 'info');
+        // If panel is open, refresh it
+        if (notifPanelOpen) loadNotifications().then(renderNotifPanel);
+      } catch {}
+    });
+    _es.addEventListener('error', () => {
+      _es?.close();
+      _es = null;
+      // Retry with exponential backoff up to 30s
+      const wait = Math.min(_esBackoff, 30000);
+      _esBackoff = Math.min(_esBackoff * 2, 30000);
+      setTimeout(subscribeNotificationsStream, wait);
+    });
   }
 
   // ---- Avatar dropdown ----
