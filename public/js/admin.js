@@ -104,6 +104,41 @@
     return `<div class="alert error" style="margin-top:0.7rem;">${escapeHtml(e.message || 'Request failed')}</div>`;
   }
 
+  // ----------------------- Modal -----------------------
+  // Generic overlay used by edit/new forms. The previous approach
+  // rendered forms under each table, which forced the user to scroll
+  // way down to edit a row near the top.
+  function openAdminModal(innerHTML) {
+    const modal = document.getElementById('adminModal');
+    const body  = document.getElementById('adminModalBody');
+    if (!modal || !body) return;
+    body.innerHTML = innerHTML;
+    modal.hidden = false;
+    document.body.classList.add('admin-modal-open');
+    // Focus the first focusable input
+    setTimeout(() => {
+      const focusable = body.querySelector('input, textarea, select, button');
+      focusable?.focus();
+    }, 50);
+  }
+  function closeAdminModal() {
+    const modal = document.getElementById('adminModal');
+    const body  = document.getElementById('adminModalBody');
+    if (!modal || !body) return;
+    modal.hidden = true;
+    body.innerHTML = '';
+    document.body.classList.remove('admin-modal-open');
+  }
+  // Backdrop click + close-button click
+  document.addEventListener('click', (e) => {
+    if (e.target.matches('[data-close-modal]')) closeAdminModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !document.getElementById('adminModal')?.hidden) {
+      closeAdminModal();
+    }
+  });
+
   function table(headers, rows, opts = {}) {
     const showSearch = opts.search !== false && rows.length >= 5;
     const search = showSearch ? `
@@ -1025,14 +1060,14 @@
   function renderCForm(c) {
     const isEdit = !!c.id;
     const dollars = ((c.price_cents || 0) / 100).toFixed(2);
-    $('#cForm').innerHTML = `
-      <div class="card admin-form-card" style="margin-top:1rem;">
+    openAdminModal(`
+      <div class="card admin-form-card">
         <header class="admin-form-head">
           <div>
             <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New course'}</span>
             <h3 class="admin-form-title">${isEdit ? escapeHtml(c.title || 'course') : 'Add a course'}</h3>
           </div>
-          <button class="admin-form-close" type="button" id="cCancel" aria-label="Close" title="Close">×</button>
+          <button class="admin-form-close" type="button" id="cCancel" aria-label="Close" title="Close" data-close-modal>×</button>
         </header>
 
         <form id="cSubForm" class="admin-form admin-form-sectioned admin-form-narrow">
@@ -1113,26 +1148,23 @@
           </section>
 
           <footer class="admin-form-foot">
-            <button class="btn btn-ghost" type="button" id="cCancel2">Cancel</button>
+            <button class="btn btn-ghost" type="button" id="cCancel2" data-close-modal>Cancel</button>
             <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create course'}</button>
           </footer>
         </form>
-      </div>`;
-    const close = () => { $('#cForm').innerHTML = ''; };
-    $('#cCancel').addEventListener('click', close);
-    $('#cCancel2').addEventListener('click', close);
+      </div>`);
 
     // Auto-fill the slug from the title until the user manually edits it
     const titleEl = $('#cTitle');
     const slugEl  = $('#cSlug');
-    let slugTouched = isEdit; // when editing, don't auto-overwrite an existing slug
+    let slugTouched = isEdit;
     slugEl.addEventListener('input', () => { slugTouched = true; });
     titleEl.addEventListener('input', () => {
       if (!slugTouched) slugEl.value = slugify(titleEl.value);
     });
 
     // Segmented control for difficulty (replaces the bare select)
-    main().querySelectorAll('.admin-segmented').forEach((seg) => {
+    document.querySelectorAll('#adminModal .admin-segmented').forEach((seg) => {
       const hidden = seg.querySelector('input[type="hidden"]');
       seg.querySelectorAll('.admin-seg').forEach((b) => {
         b.addEventListener('click', () => {
@@ -1149,7 +1181,7 @@
     isPaid.addEventListener('change', syncPaidUI);
     syncPaidUI();
 
-    wireMarkdownPreview($('#cForm'));
+    wireMarkdownPreview(document.getElementById('adminModalBody'));
 
     $('#cSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1171,6 +1203,7 @@
         if (c.id) await api.req('PATCH', `/api/admin/courses/${c.id}`, body);
         else      await api.post('/api/admin/courses', body);
         window.toast?.(c.id ? 'Course updated' : 'Course created', 'success');
+        closeAdminModal();
         courses();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });

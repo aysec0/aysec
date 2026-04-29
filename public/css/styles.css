@@ -8177,6 +8177,44 @@ button.admin-stat-card { width: 100%; }
 }
 
 /* ============================================================
+   Admin modal — full-viewport overlay used by every edit form
+   so the user doesn't have to scroll the page for distant rows
+   ============================================================ */
+.admin-modal {
+  position: fixed; inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: start center;
+  padding: 4vh 1rem;
+  overflow-y: auto;
+  animation: admin-modal-fade 0.18s ease-out;
+}
+.admin-modal[hidden] { display: none; }
+.admin-modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(5, 7, 12, 0.72);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+}
+.admin-modal-shell {
+  position: relative;
+  width: min(720px, 100%);
+  margin: auto 0;
+  animation: admin-modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.admin-modal-shell .admin-form-card { margin: 0; }
+body.admin-modal-open { overflow: hidden; }
+
+@keyframes admin-modal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes admin-modal-pop {
+  from { opacity: 0; transform: translateY(-8px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ============================================================
    Streamlined "Add a course" form — single-column flow,
    segmented difficulty, slug auto-derived from the title
    ============================================================ */
