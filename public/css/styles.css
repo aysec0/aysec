@@ -9279,26 +9279,64 @@ body.admin-modal-open { overflow: hidden; }
   animation: none;
 }
 
-/* The "?" glyph in the hood gently pulses so it draws the eye without nagging */
-.ask-fab-glyph {
-  animation: ask-fab-glyph-pulse 3s ease-in-out infinite;
-  transform-origin: center;
+/* ---- Avatar life: eyes blink, track cursor, react to chat state ---- */
+.ask-fab-avatar { overflow: visible; }
+
+.ask-fab-eyes {
+  /* Set by JS: translate(x, y); fast transition makes tracking smooth */
+  transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1);
   transform-box: fill-box;
+  transform-origin: center;
 }
-.ask-fab-btn:hover .ask-fab-glyph,
-.ask-fab-btn.is-open .ask-fab-glyph { animation: none; }
+
+.ask-fab-eye {
+  /* Soft glow — picks up the terminal-green fill color */
+  filter: drop-shadow(0 0 2px #39ff7a);
+  /* Smooth pulse at rest */
+  animation: ask-fab-eye-pulse 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Blink: vertical squash for ~110ms */
+.ask-fab-avatar.is-blinking .ask-fab-eye {
+  transform: scaleY(0.05);
+  animation-play-state: paused;
+}
+
+/* Listening: eyes brighten + slightly bigger when chat open */
+.ask-fab-avatar.is-listening .ask-fab-eye {
+  filter: drop-shadow(0 0 3.5px #39ff7a);
+  animation: none;
+  r: 1.25;
+}
+
+/* Thinking: eyes glance up-right while reply types */
+.ask-fab-avatar.is-thinking .ask-fab-eyes {
+  transform: translate(0.9px, -0.7px) !important;
+}
+.ask-fab-avatar.is-thinking .ask-fab-eye {
+  animation: ask-fab-eye-think 1s ease-in-out infinite;
+}
+
+@keyframes ask-fab-eye-pulse {
+  0%, 100% { opacity: 0.85; }
+  50%      { opacity: 1; }
+}
+@keyframes ask-fab-eye-think {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
 
 @keyframes ask-fab-breathe {
   0%, 100% { transform: translateY(0); box-shadow: 0 8px 24px -8px rgba(0,0,0,0.6); }
   50%      { transform: translateY(-1.5px); box-shadow: 0 12px 28px -8px rgba(0,0,0,0.65); }
 }
-@keyframes ask-fab-glyph-pulse {
-  0%, 100% { opacity: 0.7; }
-  50%      { opacity: 1; }
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .ask-fab-btn, .ask-fab-glyph { animation: none !important; }
+  .ask-fab-btn,
+  .ask-fab-eye,
+  .ask-fab-eyes { animation: none !important; transition: none !important; }
 }
 
 .ask-fab-panel {

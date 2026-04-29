@@ -254,12 +254,17 @@
     root.id = 'askFab';
     root.innerHTML = [
       '<button type="button" id="askFabBtn" class="ask-fab-btn" aria-label="Talk to aysec" aria-expanded="false" title="aysec — your friend on the inside">',
-      '  <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">',
-      // Hooded figure outline + glowing ? in face cavity
-      '    <path d="M16 2c-6 0-10 4-10 10v3c-2 1-3 3-3 5v8c0 1 1 2 2 2h22c1 0 2-1 2-2v-8c0-2-1-4-3-5v-3c0-6-4-10-10-10z" fill="currentColor" opacity="0.18"/>',
-      '    <path d="M16 2c-6 0-10 4-10 10v3c-2 1-3 3-3 5v8c0 1 1 2 2 2h22c1 0 2-1 2-2v-8c0-2-1-4-3-5v-3c0-6-4-10-10-10z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
-      '    <path d="M9 16c0-3.5 3-6 7-6s7 2.5 7 6c0 2.5-1.5 4-3.5 5l-2 1.5h-3l-2-1.5C10.5 20 9 18.5 9 16z" fill="#0a0d12"/>',
-      '    <text x="16" y="20" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="9" fill="#39ff7a" class="ask-fab-glyph">?</text>',
+      '  <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true" class="ask-fab-avatar">',
+      // Hooded figure outline (cloak fill, soft)
+      '    <path class="ask-fab-cloak" d="M16 2c-6 0-10 4-10 10v3c-2 1-3 3-3 5v8c0 1 1 2 2 2h22c1 0 2-1 2-2v-8c0-2-1-4-3-5v-3c0-6-4-10-10-10z" fill="currentColor" opacity="0.18"/>',
+      '    <path class="ask-fab-cloak-line" d="M16 2c-6 0-10 4-10 10v3c-2 1-3 3-3 5v8c0 1 1 2 2 2h22c1 0 2-1 2-2v-8c0-2-1-4-3-5v-3c0-6-4-10-10-10z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>',
+      // Face cavity (dark)
+      '    <path class="ask-fab-face" d="M9 16c0-3.5 3-6 7-6s7 2.5 7 6c0 2.5-1.5 4-3.5 5l-2 1.5h-3l-2-1.5C10.5 20 9 18.5 9 16z" fill="#0a0d12"/>',
+      // Two eye dots — group is translated by JS for cursor-tracking
+      '    <g class="ask-fab-eyes">',
+      '      <circle class="ask-fab-eye ask-fab-eye-l" cx="13.5" cy="16.5" r="1.1" fill="#39ff7a"/>',
+      '      <circle class="ask-fab-eye ask-fab-eye-r" cx="18.5" cy="16.5" r="1.1" fill="#39ff7a"/>',
+      '    </g>',
       '  </svg>',
       '</button>',
       '<div id="askFabPanel" class="ask-fab-panel" hidden role="dialog" aria-label="aysec">',
@@ -295,6 +300,67 @@
     let open = false;
     let greeted = false;
 
+    // ---- Avatar life — blinks, tracks cursor, reacts to chat state ----
+    const avatar = btn.querySelector('.ask-fab-avatar');
+    const eyes   = btn.querySelector('.ask-fab-eyes');
+
+    // Blink loop: random 3.5–7s gap, 110ms blink
+    function scheduleBlink() {
+      const wait = 3500 + Math.random() * 3500;
+      setTimeout(() => {
+        avatar?.classList.add('is-blinking');
+        setTimeout(() => avatar?.classList.remove('is-blinking'), 110);
+        // Occasional double-blink — feels more human
+        if (Math.random() < 0.18) {
+          setTimeout(() => {
+            avatar?.classList.add('is-blinking');
+            setTimeout(() => avatar?.classList.remove('is-blinking'), 110);
+          }, 280);
+        }
+        scheduleBlink();
+      }, wait);
+    }
+    scheduleBlink();
+
+    // Saccades — small idle eye movements every 2.5–5s when chat is closed
+    let sx = 0, sy = 0;
+    function applyEyeOffset(x, y) {
+      if (!eyes) return;
+      // Clamp so eyes never escape the face cavity (~1.5px range)
+      const cx = Math.max(-1.5, Math.min(1.5, x));
+      const cy = Math.max(-0.9, Math.min(0.9, y));
+      eyes.setAttribute('transform', `translate(${cx.toFixed(2)} ${cy.toFixed(2)})`);
+    }
+    function scheduleSaccade() {
+      const wait = 2500 + Math.random() * 2500;
+      setTimeout(() => {
+        if (!open && !mouseTracking) {
+          sx = (Math.random() - 0.5) * 2;   // -1..1
+          sy = (Math.random() - 0.5) * 1.2;
+          applyEyeOffset(sx, sy);
+        }
+        scheduleSaccade();
+      }, wait);
+    }
+    scheduleSaccade();
+
+    // Cursor tracking — eyes glance toward the mouse pointer (subtle)
+    let mouseTracking = false;
+    document.addEventListener('mousemove', (e) => {
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width / 2);
+      const dy = e.clientY - (r.top  + r.height / 2);
+      const dist = Math.hypot(dx, dy);
+      // Within 280px, track. Beyond, return to saccade idle.
+      if (dist > 280) { mouseTracking = false; return; }
+      mouseTracking = true;
+      // Normalize the direction into a small offset
+      const k = 1.5 / Math.max(60, dist);
+      applyEyeOffset(dx * k, dy * k);
+    }, { passive: true });
+    document.addEventListener('mouseleave', () => { mouseTracking = false; applyEyeOffset(0, 0); });
+
     function bubble(role, text) {
       const div = document.createElement('div');
       div.className = `ask-fab-msg ask-fab-${role}`;
@@ -310,10 +376,12 @@
       div.innerHTML = '<div class="ask-fab-typing"><span></span><span></span><span></span></div>';
       body.appendChild(div);
       body.scrollTop = body.scrollHeight;
+      avatar?.classList.add('is-thinking');
     }
 
     function clearTyping() {
       document.getElementById('askFabTyping')?.remove();
+      avatar?.classList.remove('is-thinking');
     }
 
     async function reply(rule) {
@@ -362,10 +430,13 @@
       panel.hidden = !v;
       btn.setAttribute('aria-expanded', v ? 'true' : 'false');
       btn.classList.toggle('is-open', v);
+      avatar?.classList.toggle('is-listening', v);
       if (v) {
         document.dispatchEvent(new CustomEvent('aysec:popover-open', { detail: { id: 'ask' } }));
         greet();
         setTimeout(() => input.focus(), 0);
+      } else {
+        applyEyeOffset(0, 0); // re-center when closing
       }
     }
 
