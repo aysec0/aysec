@@ -927,6 +927,20 @@
     loadPresenceHelper();
     loadShortcutsHelper();
     loadPageTransitionHelper();
+    loadMotionHelper();
+  }
+
+  // Motion system — stagger / tilt / magnetic / count-up / marquee / breathe.
+  // Same skip-list as the others (no point on /admin or /site-editor).
+  function loadMotionHelper() {
+    if (location.pathname.startsWith('/admin')) return;
+    if (location.pathname.startsWith('/site-editor')) return;
+    if (document.querySelector('script[data-motion]')) return;
+    const s = document.createElement('script');
+    s.src = '/js/motion.js';
+    s.dataset.motion = '1';
+    s.defer = true;
+    document.body.appendChild(s);
   }
 
   // Page transition — Accenture-style slide + dim between same-origin pages.

@@ -62,7 +62,7 @@
       : null;
 
     return `
-      <article class="duel-card ${d.status}" data-id="${d.id}">
+      <article class="duel-card ${d.status}" data-id="${d.id}" data-tilt="4">
         <a class="duel-card-link" href="/duels/${d.id}" aria-label="Open duel ${d.id}"></a>
         <div class="duel-card-head">
           ${statusBadge(d)}

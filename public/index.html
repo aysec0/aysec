@@ -70,22 +70,22 @@
   <section class="hero">
     <div class="container hero-inner">
       <div>
-        <span class="hero-eyebrow">
-          <span class="dot"></span>
+        <span class="hero-eyebrow" data-reveal-up>
+          <span class="dot glow-pulse"></span>
           <span data-site="hero_eyebrow">Now teaching: red-team operations</span>
         </span>
-        <h1 class="hero-title">
+        <h1 class="hero-title" data-reveal-up style="transition-delay:60ms">
           <span data-site="hero_title">Hack to learn.</span><br />
           <span class="terminal" data-site="hero_subtitle">Don't learn to hack.</span>
         </h1>
-        <p class="hero-tagline" data-site-tagline>
+        <p class="hero-tagline" data-site-tagline data-reveal-up style="transition-delay:120ms">
           <span data-site="hero_tagline">Hands-on cybersecurity training by <strong>Ammar Yasser</strong> — courses, CTF challenges, and writeups built from real engagements, not slideware.</span>
           Currently focused on
           <span class="hero-rotator" id="heroRotator" aria-live="polite">AI red-teaming</span>.
         </p>
-        <div class="hero-cta">
-          <a href="/courses" class="btn btn-primary" data-site-href="cta_primary_href"><span data-site="cta_primary_label">Browse courses</span></a>
-          <a href="/challenges" class="btn btn-terminal" data-site-href="cta_secondary_href"><span data-site="cta_secondary_label">$ ./play_ctf</span></a>
+        <div class="hero-cta" data-reveal-up style="transition-delay:180ms">
+          <a href="/courses" class="btn btn-primary" data-magnetic="6" data-site-href="cta_primary_href"><span data-site="cta_primary_label">Browse courses</span></a>
+          <a href="/challenges" class="btn btn-terminal" data-magnetic="5" data-site-href="cta_secondary_href"><span data-site="cta_secondary_label">$ ./play_ctf</span></a>
         </div>
 
         <div class="hero-stats">
@@ -116,7 +116,7 @@
         </div>
       </div>
 
-      <div class="terminal-window" aria-hidden="true">
+      <div class="terminal-window" aria-hidden="true" data-tilt="5">
         <div class="terminal-titlebar">
           <div class="terminal-dots">
             <span class="terminal-dot r"></span>

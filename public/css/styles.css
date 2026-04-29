@@ -11236,3 +11236,234 @@ html.is-page-entering body {
 .modal-backdrop,
 .toast-host,
 #askFab .ask-fab-panel { z-index: 10000; }
+
+/* ============================================================
+   Motion system — see /js/motion.js for the wiring.
+   Each primitive is opt-in via a data attribute. Nothing here
+   fires until you add the attribute to an element.
+   ============================================================ */
+
+/* ---- Reveal variants ----
+   Same idea as the existing [data-reveal] but with explicit
+   direction. The translate distance is generous (24px) so the
+   motion reads even on a fast scroll. */
+[data-reveal-up], [data-reveal-left], [data-reveal-right],
+[data-reveal-scale], [data-reveal-blur] {
+  opacity: 0;
+  transition: opacity 0.65s cubic-bezier(0.2, 0.7, 0.2, 1),
+              transform 0.65s cubic-bezier(0.2, 0.7, 0.2, 1),
+              filter   0.65s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: opacity, transform;
+}
+[data-reveal-up]    { transform: translateY(24px); }
+[data-reveal-left]  { transform: translateX(-24px); }
+[data-reveal-right] { transform: translateX(24px); }
+[data-reveal-scale] { transform: scale(0.94); }
+[data-reveal-blur]  { filter: blur(8px); transform: translateY(8px); }
+
+[data-reveal-up].is-visible,
+[data-reveal-left].is-visible,
+[data-reveal-right].is-visible,
+[data-reveal-scale].is-visible {
+  opacity: 1;
+  transform: none;
+}
+[data-reveal-blur].is-visible {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+}
+
+/* ---- Tilt ----
+   Element rotates following the cursor. CSS variables (set by JS)
+   feed the transform so the keyframe stays GPU-cheap. perspective
+   on the parent is what makes the rotation read as 3D. */
+[data-tilt] {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --tilt-px: 50%;
+  --tilt-py: 50%;
+  transform-style: preserve-3d;
+  transform: perspective(800px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  position: relative;
+}
+[data-tilt]:hover { transition: transform 0.06s linear; }
+/* Soft glare following the cursor — tints the card with a subtle
+   highlight without obscuring content */
+[data-tilt]::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--tilt-px) var(--tilt-py),
+              rgba(255, 255, 255, 0.08), transparent 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+[data-tilt]:hover::before { opacity: 1; }
+
+/* ---- Magnetic ----
+   Element drifts toward the cursor inside a soft radius. */
+[data-magnetic] {
+  --mag-x: 0px;
+  --mag-y: 0px;
+  transform: translate(var(--mag-x), var(--mag-y));
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+[data-magnetic]:hover { transition: transform 0.08s linear; }
+
+/* ---- Card hover lift ----
+   Universal refinement on .card — lifts on hover, shadow grows,
+   accent border edge appears. CTAs nudge right. Stack siblings
+   below if needed. */
+.card {
+  transition:
+    transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.28s cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 0.28s ease;
+  position: relative;
+  will-change: transform;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px -12px rgba(0, 0, 0, 0.55),
+              0 4px 10px -4px rgba(0, 0, 0, 0.45);
+}
+.card .card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: gap 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+              color 0.25s ease;
+}
+.card .card-cta::after {
+  content: '→';
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.card:hover .card-cta::after { transform: translateX(3px); }
+.card:hover .card-accent { transform: scaleX(1.05); }
+.card .card-accent {
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform-origin: left;
+}
+
+/* ---- Button micro ----
+   Primary buttons get a subtle press + a soft sheen sweep on hover.
+   Pure CSS, doesn't fight the existing button rules — only adds. */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  transition: left 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+.btn-primary:hover::after { left: 130%; }
+.btn-primary:active { transform: translateY(1px) scale(0.99); }
+
+/* ---- Continuous breathe ----
+   .breathe loops a gentle scale 0.985 ↔ 1.0 on a 5s cadence.
+   Apply to hero stats / accent dots / FAB ornaments — anything
+   that's supposed to feel alive without competing for attention. */
+@keyframes motion-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(0.985); }
+}
+.breathe {
+  animation: motion-breathe 5s ease-in-out infinite;
+}
+
+/* ---- Float ----
+   .float — gentle vertical bob, longer cadence so it doesn't
+   read as bouncy. Pair with .breathe for layered life. */
+@keyframes motion-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+.float {
+  animation: motion-float 4s ease-in-out infinite;
+}
+
+/* ---- Glow pulse ----
+   Used on accent elements that want to read as 'live data' — the
+   activity dot, presence pip, etc. */
+@keyframes motion-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); }
+  50%      { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+.glow-pulse {
+  animation: motion-glow-pulse 2s ease-in-out infinite;
+}
+
+/* ---- Marquee ----
+   [data-marquee] children scroll horizontally in an infinite loop.
+   The JS duplicates the content; we animate the wrapper. */
+[data-marquee] {
+  overflow: hidden;
+  width: 100%;
+}
+.marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: motion-marquee 40s linear infinite;
+}
+.marquee-track:hover { animation-play-state: paused; }
+.marquee-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2rem;
+  padding-right: 2rem;
+}
+@keyframes motion-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ---- Underline-grow on links ----
+   .link-underline draws an accent bar under the text on hover.
+   Width animates from 0 → 100%, anchored left. Perfect on nav
+   links and inline CTAs. */
+.link-underline {
+  position: relative;
+  display: inline-block;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: -2px;
+  width: 100%;
+  height: 1.5px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.link-underline:hover::after { transform: scaleX(1); }
+
+/* ---- Reduced motion ----
+   Strip every continuous animation + every hover transform. Reveals
+   are kept (they finish, then sit static) but the entrance distance
+   collapses so they don't slide on screen. */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal-up], [data-reveal-left], [data-reveal-right],
+  [data-reveal-scale], [data-reveal-blur] {
+    opacity: 1;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+  [data-tilt], [data-magnetic] {
+    transform: none !important;
+    transition: none !important;
+  }
+  .card:hover { transform: none !important; }
+  .breathe, .float, .glow-pulse,
+  .marquee-track { animation: none !important; }
+  .btn-primary::after { display: none !important; }
+}
