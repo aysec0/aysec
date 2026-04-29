@@ -246,22 +246,21 @@
     });
   }
 
-  // Format picker modal — chess.com-style ----------------------------------
+  // Single-click format picker — pick a format, server matches you instantly.
   let formatsCache = null;
-  let myRatings = null;        // { recon: {rating, wins, losses}, ... }
-  let pickedFormat = null;     // currently-highlighted format card
+  let myRatings = null;
+  let busyTile = null;     // the tile that's currently mid-search; lock it
 
   function openModal() {
     $('#duelModal').hidden = false;
     $('#duelModalBackdrop').hidden = false;
     $('#duelFormAlert').hidden = true;
-    $('#duelChallengeBox').hidden = true;
-    pickedFormat = null;
     populateFormatGrid();
   }
   function closeModal() {
     $('#duelModal').hidden = true;
     $('#duelModalBackdrop').hidden = true;
+    busyTile = null;
   }
 
   async function populateFormatGrid() {
@@ -275,48 +274,73 @@
       formatsCache = formats;
       myRatings = ratings.ratings || {};
       grid.innerHTML = formats.map((f) => {
-        const r = myRatings[f.id] || { rating: 1000, wins: 0, losses: 0 };
-        const liveBadge = f.active_count > 0
-          ? `<span class="duel-format-live"><span class="presence-dot is-live"></span> ${f.active_count} live</span>`
+        const r = myRatings[f.id] || { rating: 1000, provisional: true, tier: { color: '#aaa', name: 'Silver' } };
+        const ratingHtml = viewer
+          ? `<span class="duel-tile-rating" title="${escapeHtml(r.tier?.name || '')}">${r.rating}${r.provisional ? '?' : ''}</span>`
+          : '';
+        const liveDot = f.active_count > 0
+          ? `<span class="duel-tile-live" title="${f.active_count} live now"><span class="presence-dot is-live"></span></span>`
           : f.open_count > 0
-            ? `<span class="duel-format-open">${f.open_count} waiting</span>`
+            ? `<span class="duel-tile-open" title="${f.open_count} waiting">·${f.open_count}</span>`
             : '';
         return `
-          <button type="button" class="duel-format-card" data-format="${f.id}" style="--fmt-c:${f.color};">
-            <div class="duel-format-head">
-              <span class="duel-format-icon">${f.icon}</span>
-              <span class="duel-format-name">${escapeHtml(f.name)}</span>
-              <span class="duel-format-mins">${f.minutes} min</span>
-            </div>
-            <div class="duel-format-desc">${escapeHtml(f.desc)}</div>
-            <div class="duel-format-meta">
-              <span class="duel-format-pool">${f.pool.join(' · ')}</span>
-              <span class="duel-format-pts">+${f.points_win} / −${f.points_loss}</span>
-            </div>
-            <div class="duel-format-rating">
-              <span>Your rating: <strong>${r.rating}</strong></span>
-              <span class="dim">${r.wins}W · ${r.losses}L</span>
-              ${liveBadge}
-            </div>
+          <button type="button" class="duel-tile" data-format="${f.id}" role="listitem" style="--fmt-c:${f.color};" aria-label="${f.name} — ${f.minutes} minutes">
+            <span class="duel-tile-icon">${f.icon}</span>
+            <span class="duel-tile-body">
+              <span class="duel-tile-name">${escapeHtml(f.name)}</span>
+              <span class="duel-tile-time">${formatTimeLabel(f.minutes)}</span>
+            </span>
+            ${ratingHtml}
+            ${liveDot}
+            <span class="duel-tile-arrow" aria-hidden="true">→</span>
           </button>`;
       }).join('');
-      grid.querySelectorAll('.duel-format-card').forEach((b) => {
-        b.addEventListener('click', () => choosePicked(b.dataset.format));
+      grid.querySelectorAll('.duel-tile').forEach((b) => {
+        b.addEventListener('click', () => onTileClick(b));
       });
     } catch (err) {
       grid.innerHTML = `<div class="alert error">${escapeHtml(err.message || 'Could not load formats')}</div>`;
     }
   }
 
-  function choosePicked(formatId) {
-    pickedFormat = formatId;
-    document.querySelectorAll('.duel-format-card').forEach((c) => {
-      c.classList.toggle('is-picked', c.dataset.format === formatId);
-    });
-    $('#duelChallengeBox').hidden = false;
-    const fmt = (formatsCache || []).find((f) => f.id === formatId);
-    $('#duelSubmitBtn').textContent = `Find ${fmt?.name || ''} match`;
-    setTimeout(() => $('#duelOpponent')?.focus(), 50);
+  function formatTimeLabel(min) {
+    if (min < 60) return `${min} min`;
+    const h = min / 60;
+    return Number.isInteger(h) ? `${h} hr` : `${h} hr`;
+  }
+
+  async function onTileClick(tile) {
+    if (busyTile) return;
+    busyTile = tile;
+    const formatId = tile.dataset.format;
+    const opponent_username = $('#duelOpponent').value.trim() || null;
+    const message = $('#duelMessage').value.trim();
+    const alertEl = $('#duelFormAlert');
+    alertEl.hidden = true;
+
+    // Visual feedback — tile shows a spinner state while server picks/pairs
+    tile.classList.add('is-loading');
+    tile.querySelector('.duel-tile-arrow').innerHTML = '<span class="spinner"></span>';
+
+    try {
+      let res;
+      if (opponent_username) {
+        res = await window.api.post('/api/duels', { format: formatId, opponent_username, message });
+        window.toast?.(`Sent to @${opponent_username.replace(/^@/, '')}.`, 'success');
+      } else {
+        res = await window.api.post(`/api/duels/quick-match/${formatId}`);
+        window.toast?.(res.matched ? 'Match found — race is on.' : 'Open match posted — waiting…', res.matched ? 'success' : 'info');
+      }
+      closeModal();
+      location.href = `/duels/${res.id}`;
+    } catch (err) {
+      tile.classList.remove('is-loading');
+      tile.querySelector('.duel-tile-arrow').textContent = '→';
+      busyTile = null;
+      alertEl.hidden = false;
+      alertEl.className = 'alert error';
+      alertEl.textContent = err.message || 'Could not start the match';
+    }
   }
 
   function wireModal() {
@@ -325,56 +349,9 @@
       openModal();
     });
     $('#duelModalClose').addEventListener('click', closeModal);
-    $('#duelBackBtn').addEventListener('click', () => {
-      $('#duelChallengeBox').hidden = true;
-      pickedFormat = null;
-      document.querySelectorAll('.duel-format-card').forEach((c) => c.classList.remove('is-picked'));
-    });
     $('#duelModalBackdrop').addEventListener('click', closeModal);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !$('#duelModal').hidden) closeModal();
-    });
-
-    $('#duelSubmitBtn').addEventListener('click', async () => {
-      const alertEl = $('#duelFormAlert');
-      const btn = $('#duelSubmitBtn');
-      alertEl.hidden = true;
-      if (!pickedFormat) {
-        alertEl.hidden = false;
-        alertEl.className = 'alert error';
-        alertEl.textContent = 'Pick a format first.';
-        return;
-      }
-      const opponent_username = $('#duelOpponent').value.trim() || null;
-      const message = $('#duelMessage').value.trim();
-      btn.disabled = true;
-      const idle = btn.textContent;
-      btn.innerHTML = `<span class="spinner"></span> Searching…`;
-      try {
-        let res;
-        if (opponent_username) {
-          // Direct call-out — POST to /api/duels with format + opponent
-          res = await window.api.post('/api/duels', { format: pickedFormat, opponent_username, message });
-          window.toast?.(`Duel sent to @${opponent_username}.`, 'success');
-        } else {
-          // Quick-match — server either pairs us with a waiting open duel
-          // OR creates a new open one we wait on
-          res = await window.api.post(`/api/duels/quick-match/${pickedFormat}`);
-          if (res.matched) {
-            window.toast?.('Match found — race is on.', 'success');
-          } else {
-            window.toast?.('Posted as open — waiting for an opponent.', 'info');
-          }
-        }
-        closeModal();
-        location.href = `/duels/${res.id}`;
-      } catch (err) {
-        alertEl.hidden = false;
-        alertEl.className = 'alert error';
-        alertEl.textContent = err.message || 'Could not start the match';
-        btn.disabled = false;
-        btn.textContent = idle;
-      }
     });
   }
 

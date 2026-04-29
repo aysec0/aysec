@@ -712,13 +712,18 @@ CREATE INDEX IF NOT EXISTS idx_duel_subs_duel ON duel_submissions(duel_id, submi
 -- prior XP to compete.
 -- ============================================================
 CREATE TABLE IF NOT EXISTS duel_ratings (
-  user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  format   TEXT    NOT NULL,                                  -- recon | burst | blitz | operation | longform
-  rating   INTEGER NOT NULL DEFAULT 1000,
-  wins     INTEGER NOT NULL DEFAULT 0,
-  losses   INTEGER NOT NULL DEFAULT 0,
-  draws    INTEGER NOT NULL DEFAULT 0,
-  played_at TEXT,                                             -- last match timestamp
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  format      TEXT    NOT NULL,                               -- recon | burst | blitz | operation | longform
+  rating      INTEGER NOT NULL DEFAULT 1000,
+  rd          REAL    NOT NULL DEFAULT 350,                   -- Glicko-2 rating deviation (max 350, drops with play)
+  wins        INTEGER NOT NULL DEFAULT 0,
+  losses      INTEGER NOT NULL DEFAULT 0,
+  draws       INTEGER NOT NULL DEFAULT 0,
+  streak      INTEGER NOT NULL DEFAULT 0,                     -- current consecutive-win count, resets on loss
+  best_streak INTEGER NOT NULL DEFAULT 0,
+  peak_rating INTEGER NOT NULL DEFAULT 1000,
+  provisional INTEGER NOT NULL DEFAULT 1,                     -- 1 until 10 matches played
+  played_at   TEXT,                                           -- last match timestamp
   PRIMARY KEY (user_id, format)
 );
 

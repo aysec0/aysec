@@ -32,6 +32,19 @@ export function migrate() {
   // Duels v2: format-based matches (chess.com-style). The legacy `stake`
   // column stays for backward compat but is now optional.
   tryAdd(`ALTER TABLE duels ADD COLUMN format TEXT`);
+  // Record the ELO swing applied at the moment a duel finishes so we can
+  // display it on detail pages without recomputing it from current ratings.
+  tryAdd(`ALTER TABLE duels ADD COLUMN winner_rating_change INTEGER`);
+  tryAdd(`ALTER TABLE duels ADD COLUMN loser_rating_change INTEGER`);
+
+  // Duels v3: ELO bookkeeping per (user, format).
+  tryAdd(`ALTER TABLE duel_ratings ADD COLUMN streak INTEGER NOT NULL DEFAULT 0`);
+  tryAdd(`ALTER TABLE duel_ratings ADD COLUMN best_streak INTEGER NOT NULL DEFAULT 0`);
+  tryAdd(`ALTER TABLE duel_ratings ADD COLUMN peak_rating INTEGER NOT NULL DEFAULT 1000`);
+  // Glicko-2 RD (rating deviation). Default 350 = max uncertainty for new players.
+  tryAdd(`ALTER TABLE duel_ratings ADD COLUMN rd REAL NOT NULL DEFAULT 350`);
+  // True until the player has finished their first 10 matches in this format.
+  tryAdd(`ALTER TABLE duel_ratings ADD COLUMN provisional INTEGER NOT NULL DEFAULT 1`);
 
   // Idempotent migration: blog posts -> community/forum posts under a
   // dedicated "Writeups & blog" category. Runs on every startup but only

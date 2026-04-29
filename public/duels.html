@@ -98,40 +98,31 @@
     </div>
   </section>
 
-  <!-- Format picker modal — chess.com style -->
+  <!-- Format picker — single-click matchmaking -->
   <div class="modal-backdrop" id="duelModalBackdrop" hidden></div>
   <div class="modal duel-picker-modal" id="duelModal" role="dialog" aria-modal="true" aria-labelledby="duelModalTitle" hidden>
     <div class="modal-head">
-      <h2 id="duelModalTitle">Pick a format</h2>
+      <h2 id="duelModalTitle">Find a match</h2>
       <button class="modal-close" id="duelModalClose" type="button" aria-label="Close">×</button>
     </div>
     <div class="modal-body">
-      <p class="muted" style="margin:-0.4rem 0 1rem; font-size:0.88rem;">
-        Five flavours. Each picks a random unsolved challenge from its pool —
-        win bumps your rating, loss drops it. No XP staking up front.
-      </p>
-      <div id="duelFormatGrid" class="duel-format-grid">
-        <div class="skeleton" style="height:120px;border-radius:14px;margin-bottom:0.6rem"></div>
-        <div class="skeleton" style="height:120px;border-radius:14px;margin-bottom:0.6rem"></div>
-        <div class="skeleton" style="height:120px;border-radius:14px"></div>
+      <div id="duelFormatGrid" class="duel-format-grid-simple" role="list">
+        <div class="skeleton" style="height:64px;border-radius:12px;margin-bottom:0.45rem"></div>
+        <div class="skeleton" style="height:64px;border-radius:12px;margin-bottom:0.45rem"></div>
+        <div class="skeleton" style="height:64px;border-radius:12px"></div>
       </div>
 
-      <div id="duelChallengeBox" hidden style="margin-top:1rem;">
-        <div class="field">
-          <label class="field-label" for="duelOpponent">Call out an opponent (optional)</label>
-          <input class="input mono" id="duelOpponent" type="text" placeholder="username — leave blank to find a match" autocomplete="off" />
-          <span class="field-hint">Leave empty for quick-match. We'll pair you with the next person who picks the same format.</span>
+      <details class="duel-advanced">
+        <summary>Advanced — call out a specific user</summary>
+        <div class="field" style="margin-top:0.6rem;">
+          <input class="input mono" id="duelOpponent" type="text" placeholder="@username — leave blank for quick match" autocomplete="off" maxlength="40" />
         </div>
         <div class="field">
-          <label class="field-label" for="duelMessage">Trash talk (optional)</label>
-          <textarea class="input" id="duelMessage" rows="2" maxlength="280" placeholder="Free shot. Make it count."></textarea>
+          <textarea class="input" id="duelMessage" rows="2" maxlength="280" placeholder="Trash talk (optional)"></textarea>
         </div>
-        <div id="duelFormAlert" hidden></div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" type="button" id="duelBackBtn">← Back to formats</button>
-          <button class="btn btn-primary" type="button" id="duelSubmitBtn">Find match</button>
-        </div>
-      </div>
+      </details>
+
+      <div id="duelFormAlert" hidden style="margin-top:0.6rem;"></div>
     </div>
   </div>
 

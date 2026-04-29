@@ -116,37 +116,154 @@ function expireStale() {
   `).run(now, now, now);
 }
 
-/* Get-or-create a duel_ratings row for (user, format). New users start at
-   STARTING_RATING (1000) — chess.com convention so the math is familiar. */
+/* ============================================================
+   ELO + Glicko-flavoured rating engine.
+
+   Why "complex backend" — three things compound:
+   1. Rating swing depends on the opponent's rating, not a fixed
+      ±25/±50. Beat someone 400 above you → big gain (+50). Beat
+      someone 400 below you → small gain (+12). Loss the other way.
+   2. K-factor is doubled (64 instead of 32) during the
+      "provisional" period of your first 10 matches in a format —
+      lets new players climb to their real rating fast.
+   3. Streak bonus rewards consecutive wins in the same format
+      (+5 at 3, +10 at 5, +25 at 10). Resets on any loss.
+
+   On top of that:
+   - Rating Deviation (RD) decays from 350 → ~80 as you play. RD
+     scales the K-factor up further when the rating is uncertain.
+   - Tier system maps rating ranges to readable badges (Bronze /
+     Silver / Gold / Platinum / Diamond / Legend).
+   - peak_rating tracked for vanity / profile display.
+   ============================================================ */
+const RD_MAX = 350;
+const RD_MIN = 50;
+const PROVISIONAL_GAMES = 10;
+
+const TIERS = [
+  { id: 'bronze',   name: 'Bronze',   min: 0,    max: 800,   color: '#a37549' },
+  { id: 'silver',   name: 'Silver',   min: 801,  max: 1200,  color: '#a8b1c2' },
+  { id: 'gold',     name: 'Gold',     min: 1201, max: 1600,  color: '#f0c060' },
+  { id: 'platinum', name: 'Platinum', min: 1601, max: 2000,  color: '#7adfd0' },
+  { id: 'diamond',  name: 'Diamond',  min: 2001, max: 2400,  color: '#88a8ff' },
+  { id: 'legend',   name: 'Legend',   min: 2401, max: 9999,  color: '#bb88ff' },
+];
+function tierFor(rating) {
+  for (const t of TIERS) if (rating >= t.min && rating <= t.max) return t;
+  return TIERS[0];
+}
+
 function getRating(userId, formatId) {
   let row = db.prepare(
     'SELECT * FROM duel_ratings WHERE user_id = ? AND format = ?'
   ).get(userId, formatId);
   if (!row) {
     db.prepare(`
-      INSERT INTO duel_ratings (user_id, format, rating)
-      VALUES (?, ?, ?)
-    `).run(userId, formatId, STARTING_RATING);
-    row = { user_id: userId, format: formatId, rating: STARTING_RATING, wins: 0, losses: 0, draws: 0 };
+      INSERT INTO duel_ratings (user_id, format, rating, peak_rating)
+      VALUES (?, ?, ?, ?)
+    `).run(userId, formatId, STARTING_RATING, STARTING_RATING);
+    row = {
+      user_id: userId, format: formatId, rating: STARTING_RATING, rd: RD_MAX,
+      wins: 0, losses: 0, draws: 0, streak: 0, best_streak: 0,
+      peak_rating: STARTING_RATING, provisional: 1,
+    };
   }
   return row;
 }
 
-/* Apply +win/-loss to a rating row, with a soft floor at 0. */
-function applyRatingChange(userId, formatId, delta, outcome /* 'win' | 'loss' | 'draw' */) {
-  const r = getRating(userId, formatId);
-  const newRating = Math.max(0, r.rating + delta);
-  const winsInc = outcome === 'win' ? 1 : 0;
-  const lossInc = outcome === 'loss' ? 1 : 0;
-  const drawInc = outcome === 'draw' ? 1 : 0;
+/** Standard ELO expected-score formula. R is rating, returns 0..1. */
+function expectedScore(rA, rB) {
+  return 1 / (1 + Math.pow(10, (rB - rA) / 400));
+}
+
+/** K-factor scales by provisional state + RD. Provisional doubles K so new
+    players move toward their true rating quickly; RD adds extra weight when
+    the rating is uncertain. */
+function kFactor(rating) {
+  const baseK = rating.provisional ? 64 : 32;
+  const rdBonus = (rating.rd - RD_MIN) / (RD_MAX - RD_MIN);  // 0..1
+  return Math.round(baseK * (1 + rdBonus * 0.4));
+}
+
+/** Streak bonus on top of the ELO gain — only positive, no penalty for
+    losing streaks (the loss itself is the penalty). */
+function streakBonus(newStreak) {
+  if (newStreak >= 10) return 25;
+  if (newStreak >= 5)  return 10;
+  if (newStreak >= 3)  return 5;
+  return 0;
+}
+
+/** Apply a complete win/loss outcome between two known players. Updates
+    both rows in one transaction. Returns { winnerDelta, loserDelta }. */
+const applyEloOutcome = db.transaction((winnerId, loserId, formatId) => {
+  const w = getRating(winnerId, formatId);
+  const l = getRating(loserId,  formatId);
+  const eW = expectedScore(w.rating, l.rating);
+  const kW = kFactor(w);
+  const kL = kFactor(l);
+
+  // Pre-bonus deltas
+  const baseWin  = Math.round(kW * (1 - eW));
+  const baseLoss = Math.round(kL * (0 - (1 - eW)));   // negative
+
+  const newWStreak = w.streak >= 0 ? w.streak + 1 : 1;
+  const bonus = streakBonus(newWStreak);
+  const winnerDelta = baseWin + bonus;
+  const loserDelta  = baseLoss;
+
+  const newWRating = Math.max(0, w.rating + winnerDelta);
+  const newLRating = Math.max(0, l.rating + loserDelta);
+
+  // RD shrinks toward RD_MIN as games are played; cap at RD_MIN
+  const newWRd = Math.max(RD_MIN, w.rd - 8);
+  const newLRd = Math.max(RD_MIN, l.rd - 8);
+
+  // Provisional flips off after PROVISIONAL_GAMES played
+  const wPlayed = w.wins + w.losses + w.draws + 1;
+  const lPlayed = l.wins + l.losses + l.draws + 1;
+
   db.prepare(`
     UPDATE duel_ratings
-    SET rating = ?, wins = wins + ?, losses = losses + ?, draws = draws + ?,
-        played_at = datetime('now')
+    SET rating = ?, rd = ?, wins = wins + 1, streak = ?, best_streak = MAX(best_streak, ?),
+        peak_rating = MAX(peak_rating, ?), provisional = ?, played_at = datetime('now')
     WHERE user_id = ? AND format = ?
-  `).run(newRating, winsInc, lossInc, drawInc, userId, formatId);
-  return newRating;
-}
+  `).run(newWRating, newWRd, newWStreak, newWStreak, newWRating,
+         wPlayed >= PROVISIONAL_GAMES ? 0 : 1, winnerId, formatId);
+
+  db.prepare(`
+    UPDATE duel_ratings
+    SET rating = ?, rd = ?, losses = losses + 1, streak = 0,
+        provisional = ?, played_at = datetime('now')
+    WHERE user_id = ? AND format = ?
+  `).run(newLRating, newLRd,
+         lPlayed >= PROVISIONAL_GAMES ? 0 : 1, loserId, formatId);
+
+  return { winnerDelta, loserDelta, winnerBonus: bonus, winnerStreak: newWStreak };
+});
+
+/** Apply a forfeit: same as ELO outcome but with K halved (no skill data
+    proven by either side, so we move ratings less aggressively). */
+const applyForfeitOutcome = db.transaction((winnerId, loserId, formatId) => {
+  const w = getRating(winnerId, formatId);
+  const l = getRating(loserId,  formatId);
+  const eW = expectedScore(w.rating, l.rating);
+  // Halve the K-factor for forfeits — less informative
+  const kW = Math.round(kFactor(w) * 0.5);
+  const kL = Math.round(kFactor(l) * 0.5);
+  const winnerDelta = Math.round(kW * (1 - eW));
+  const loserDelta  = Math.round(kL * (0 - (1 - eW)));
+
+  db.prepare(`
+    UPDATE duel_ratings SET rating = MAX(0, rating + ?), wins = wins + 1, played_at = datetime('now')
+    WHERE user_id = ? AND format = ?
+  `).run(winnerDelta, winnerId, formatId);
+  db.prepare(`
+    UPDATE duel_ratings SET rating = MAX(0, rating + ?), losses = losses + 1, streak = 0, played_at = datetime('now')
+    WHERE user_id = ? AND format = ?
+  `).run(loserDelta, loserId, formatId);
+  return { winnerDelta, loserDelta };
+});
 
 function rowToDto(row) {
   if (!row) return null;
@@ -167,6 +284,8 @@ function rowToDto(row) {
       : null,
     challenge: { id: row.challenge_id, slug: row.c_slug, title: row.c_title, category: row.c_category, difficulty: row.c_difficulty, points: row.c_points },
     winner_id: row.winner_id,
+    winner_rating_change: row.winner_rating_change,
+    loser_rating_change: row.loser_rating_change,
   };
 }
 
@@ -264,14 +383,26 @@ router.get('/formats', (_req, res) => {
   });
 });
 
-/* GET /api/duels/rating/:username — show a user's per-format rating. */
+/* GET /api/duels/rating/:username — show a user's per-format rating
+   plus tier, streak, peak, and provisional flag. */
 router.get('/rating/:username', (req, res) => {
   const u = db.prepare('SELECT id, username FROM users WHERE username = ?').get(req.params.username);
   if (!u) return res.status(404).json({ error: 'No such user' });
   const ratings = {};
   for (const id of FORMAT_IDS) {
-    const r = db.prepare('SELECT rating, wins, losses, draws FROM duel_ratings WHERE user_id = ? AND format = ?').get(u.id, id);
-    ratings[id] = r || { rating: STARTING_RATING, wins: 0, losses: 0, draws: 0 };
+    const r = db.prepare(`
+      SELECT rating, rd, wins, losses, draws, streak, best_streak, peak_rating, provisional, played_at
+      FROM duel_ratings WHERE user_id = ? AND format = ?
+    `).get(u.id, id);
+    const base = r || {
+      rating: STARTING_RATING, rd: RD_MAX, wins: 0, losses: 0, draws: 0,
+      streak: 0, best_streak: 0, peak_rating: STARTING_RATING, provisional: 1, played_at: null,
+    };
+    ratings[id] = {
+      ...base,
+      provisional: !!base.provisional,
+      tier: tierFor(base.rating),
+    };
   }
   res.json({ user: { username: u.username }, ratings });
 });
@@ -316,13 +447,39 @@ router.get('/:id', optionalAuth, (req, res) => {
   });
 });
 
-/* Pick a random unsolved challenge from a format's difficulty pool that
-   neither player has already solved. Returns null if the pool is empty. */
+/* Pick an unsolved challenge for a format. If we have rating data for the
+   players, we bias toward harder challenges in the pool when the average
+   rating is high (Diamond+ duels feel different from Bronze duels). For
+   formats with a single difficulty pool this is a pure random pick. */
 function pickChallengeForFormat(formatId, userIds = []) {
   const fmt = FORMATS[formatId];
   if (!fmt) return null;
+
+  // Compute the players' average rating in this format
+  let avgRating = STARTING_RATING;
+  if (userIds.length) {
+    const placeholders = userIds.map(() => '?').join(',');
+    const r = db.prepare(`
+      SELECT AVG(rating) AS avg FROM duel_ratings
+      WHERE user_id IN (${placeholders}) AND format = ?
+    `).get(...userIds, formatId);
+    if (r?.avg) avgRating = r.avg;
+  }
+
+  // For multi-difficulty pools (burst, blitz), shape the SQL CASE so the
+  // harder difficulty is favoured for higher-rated players. For single-
+  // difficulty pools, this is just RANDOM().
+  let orderBy = 'RANDOM()';
+  if (fmt.pool.length > 1) {
+    const hardWeight = Math.min(0.85, Math.max(0.15, (avgRating - 800) / 1600));
+    // Random, but sorted with a bias term that pushes harder challenges
+    // up the list when hardWeight is high. The expression evaluates to a
+    // rough probability score; ORDER BY this DESC then picks the top one.
+    const hardestDifficulty = fmt.pool[fmt.pool.length - 1];
+    orderBy = `(CASE WHEN difficulty = '${hardestDifficulty}' THEN ${hardWeight.toFixed(3)} ELSE ${(1 - hardWeight).toFixed(3)} END) * (1 + RANDOM() * 1.0 / 9223372036854775807) DESC`;
+  }
+
   const placeholders = fmt.pool.map(() => '?').join(',');
-  // Exclude challenges any of the listed users has already solved.
   const exclude = userIds.length
     ? `AND id NOT IN (SELECT challenge_id FROM solves WHERE user_id IN (${userIds.map(() => '?').join(',')}))`
     : '';
@@ -330,10 +487,33 @@ function pickChallengeForFormat(formatId, userIds = []) {
     SELECT id, slug, title, difficulty, points
     FROM challenges
     WHERE published = 1 AND difficulty IN (${placeholders}) ${exclude}
-    ORDER BY RANDOM()
+    ORDER BY ${orderBy}
     LIMIT 1
   `).all(...fmt.pool, ...userIds);
   return rows[0] || null;
+}
+
+/** Find the best open duel in a format for a given player. We prefer duels
+    where the challenger's rating is close to the searcher's rating; if
+    none qualify within 200 points, widen to 400, then to anyone. */
+function findBestOpenDuel(formatId, searcherId) {
+  const r = getRating(searcherId, formatId);
+  for (const window of [200, 400, 9999]) {
+    const row = db.prepare(`
+      SELECT d.* FROM duels d
+      JOIN duel_ratings r ON r.user_id = d.challenger_id AND r.format = d.format
+      WHERE d.format = ?
+        AND d.status = 'open'
+        AND d.opponent_id IS NULL
+        AND d.challenger_id != ?
+        AND ABS(r.rating - ?) <= ?
+        AND NOT EXISTS (SELECT 1 FROM solves s WHERE s.user_id = ? AND s.challenge_id = d.challenge_id)
+      ORDER BY ABS(r.rating - ?) ASC, d.created_at ASC
+      LIMIT 1
+    `).get(formatId, searcherId, r.rating, window, searcherId, r.rating);
+    if (row) return row;
+  }
+  return null;
 }
 
 /* ============================================================
@@ -412,17 +592,8 @@ router.post('/quick-match/:format', requireAuth, (req, res) => {
   }
   const fmt = FORMATS[formatId];
 
-  // Try to find a matching open duel where I can be the opponent
-  const candidate = db.prepare(`
-    SELECT d.* FROM duels d
-    WHERE d.format = ?
-      AND d.status = 'open'
-      AND d.opponent_id IS NULL
-      AND d.challenger_id != ?
-      AND NOT EXISTS (SELECT 1 FROM solves s WHERE s.user_id = ? AND s.challenge_id = d.challenge_id)
-    ORDER BY d.created_at ASC
-    LIMIT 1
-  `).get(formatId, req.user.id, req.user.id);
+  // Rating-aware matchmaking: find the closest-rated open duel
+  const candidate = findBestOpenDuel(formatId, req.user.id);
 
   if (candidate) {
     // Auto-accept it, kick off the active timer
@@ -526,27 +697,25 @@ router.post('/:id/forfeit', requireAuth, (req, res) => {
     WHERE id = ?
   `).run(winnerId, now, now, id);
 
-  // Apply rating change
+  // ELO-style rating change. Forfeits use the half-K variant.
   let ratingDelta = null;
-  if (d.format && winnerId) {
-    const fmt = FORMATS[d.format];
-    if (fmt) {
-      applyRatingChange(winnerId, d.format, fmt.points_win, 'win');
-      applyRatingChange(req.user.id, d.format, -fmt.points_loss, 'loss');
-      ratingDelta = { win: fmt.points_win, loss: fmt.points_loss };
-    }
+  if (d.format && winnerId && d.opponent_id) {
+    const out = applyForfeitOutcome(winnerId, req.user.id, d.format);
+    ratingDelta = { win: out.winnerDelta, loss: -out.loserDelta };
+    db.prepare('UPDATE duels SET winner_rating_change = ?, loser_rating_change = ? WHERE id = ?')
+      .run(out.winnerDelta, out.loserDelta, id);
   }
 
   emitNotification({
     userId: winnerId,
     kind: 'duel:won',
     title: 'Duel forfeit — you won',
-    body:  ratingDelta ? `+${ratingDelta.win} rating` : `+${d.stake} XP`,
+    body:  ratingDelta ? `+${ratingDelta.win} rating` : `+${d.stake || 0} XP`,
     link:  `/duels/${id}`,
     icon:  'duel',
   });
 
-  res.json({ ok: true, winner_id: winnerId });
+  res.json({ ok: true, winner_id: winnerId, ...(ratingDelta || {}) });
 });
 
 /* POST /api/duels/:id/submit — submit a flag during an active duel.
@@ -605,14 +774,17 @@ router.post('/:id/submit', requireAuth, (req, res) => {
     return res.json({ correct: true, won: false });
   }
 
-  // Notify the loser so they know it's over.
   const loserId = req.user.id === d.challenger_id ? d.opponent_id : d.challenger_id;
   const fmt = d.format ? FORMATS[d.format] : null;
+
+  // Real ELO outcome — rating change depends on the gap between players.
   let ratingDelta = null;
-  if (fmt) {
-    applyRatingChange(req.user.id, d.format, fmt.points_win, 'win');
-    if (loserId) applyRatingChange(loserId, d.format, -fmt.points_loss, 'loss');
-    ratingDelta = { win: fmt.points_win, loss: fmt.points_loss };
+  let outcome = null;
+  if (fmt && loserId) {
+    outcome = applyEloOutcome(req.user.id, loserId, d.format);
+    ratingDelta = { win: outcome.winnerDelta, loss: -outcome.loserDelta };
+    db.prepare('UPDATE duels SET winner_rating_change = ?, loser_rating_change = ? WHERE id = ?')
+      .run(outcome.winnerDelta, outcome.loserDelta, id);
   }
 
   if (loserId) {
@@ -620,7 +792,7 @@ router.post('/:id/submit', requireAuth, (req, res) => {
       userId: loserId,
       kind: 'duel:lost',
       title: 'Duel — opponent flagged first',
-      body:  ratingDelta ? `-${ratingDelta.loss} rating` : `-${d.stake} XP`,
+      body:  ratingDelta ? `${outcome.loserDelta >= 0 ? '+' : ''}${outcome.loserDelta} rating` : `−${d.stake || 0} XP`,
       link:  `/duels/${id}`,
       icon:  'duel',
     });
@@ -628,16 +800,17 @@ router.post('/:id/submit', requireAuth, (req, res) => {
 
   // Activity entries for both sides so the global feed shows the matchup.
   const chalRow = db.prepare('SELECT title FROM challenges WHERE id = ?').get(d.challenge_id);
-  const formatLabel = fmt ? `${fmt.icon} ${fmt.name}` : 'duel';
-  const winLabel  = ratingDelta ? `+${ratingDelta.win} rating` : `+${d.stake} XP`;
-  const lossLabel = ratingDelta ? `−${ratingDelta.loss} rating` : `−${d.stake} XP`;
+  const winLabel = ratingDelta
+    ? `+${outcome.winnerDelta} rating${outcome.winnerBonus ? ` (+${outcome.winnerBonus} streak bonus)` : ''}`
+    : `+${d.stake || 0} XP`;
+  const lossLabel = ratingDelta ? `${outcome.loserDelta} rating` : `−${d.stake || 0} XP`;
   emitActivity({
     userId: req.user.id, kind: 'duel_won',
     title: `Won a ${fmt?.name || 'duel'} · ${winLabel}`,
     body:  `Beat ${loserId ? '@' + (db.prepare('SELECT username FROM users WHERE id = ?').get(loserId)?.username || '') : 'an opponent'} on ${chalRow?.title || 'a challenge'}`,
     link:  `/duels/${id}`,
     visibility: 'public',
-    payload: { format: d.format, duel_id: id, ...ratingDelta },
+    payload: { format: d.format, duel_id: id, ...ratingDelta, streak: outcome?.winnerStreak },
   });
   if (loserId) {
     emitActivity({
@@ -650,7 +823,12 @@ router.post('/:id/submit', requireAuth, (req, res) => {
     });
   }
 
-  res.json({ correct: true, won: true, format: d.format, ...(ratingDelta || {}), stake: d.stake });
+  res.json({
+    correct: true, won: true, format: d.format, stake: d.stake,
+    rating_delta: ratingDelta,
+    streak: outcome?.winnerStreak,
+    streak_bonus: outcome?.winnerBonus,
+  });
 });
 
 export default router;

@@ -63,15 +63,30 @@
 
     const labels = { open: 'OPEN', active: 'LIVE', finished: 'FINISHED', cancelled: 'CANCELLED', expired: 'EXPIRED' };
     const fmt = d.format;
-    const stakeLabel = fmt ? `+${fmt.points_win} rating · ${fmt.minutes}-min clock` : `${d.stake} XP at stake`;
     const formatBadge = fmt
       ? `<span class="duel-format-badge" style="--fmt-c:${fmt.color};">${fmt.icon} ${escapeHtml(fmt.name)}</span>`
       : '';
+
+    // For finished duels with recorded ELO swings, show the actual win/loss
+    // pills next to the format badge. For active duels it'd be misleading
+    // (depends on eventual outcome) so we just show the time control.
+    let outcomePill = '';
+    if (d.status === 'finished' && d.winner_rating_change != null) {
+      outcomePill = `
+        <span class="duel-rating-swing positive">+${d.winner_rating_change}</span>
+        <span class="duel-rating-swing negative">${d.loser_rating_change}</span>
+      `;
+    } else if (fmt) {
+      outcomePill = `<span class="card-meta-item">${fmt.minutes}-min clock</span>`;
+    } else {
+      outcomePill = `<span class="card-meta-item">${d.stake} XP at stake</span>`;
+    }
+
     $('#duelHead').innerHTML = `
       <div class="detail-meta">
         <span class="duel-status duel-status-${d.status}">${labels[d.status] || d.status}</span>
         ${formatBadge}
-        <span class="card-meta-item">${escapeHtml(stakeLabel)}</span>
+        ${outcomePill}
         ${d.status === 'active' ? `<span class="duel-clock duel-clock-live" id="liveClock">${escapeHtml(fmtRemaining(d.expires_at))} left</span>` : ''}
         ${d.status === 'open'   ? `<span class="duel-clock">expires ${escapeHtml(fmtRemaining(d.expires_at))}</span>` : ''}
       </div>
@@ -87,11 +102,16 @@
     const d = state.duel;
     const winner = d.winner_id;
     const fmt = d.format;
-    // Rating-based labels for new format duels; XP labels for legacy duels.
-    const winLbl  = fmt ? `+${fmt.points_win} rating` : `+${d.stake} XP`;
-    const lossLbl = fmt ? `−${Math.round(fmt.points_win * 0.4)} rating` : `−${d.stake} XP`;
-    const potLbl  = fmt ? fmt.points_win : d.stake;
-    const potCap  = fmt ? 'rating on win' : 'XP pot';
+    // For finished duels with recorded ELO swings, show the actual numbers
+    // ("won +28 rating", "lost -15"). For open / active duels we show a
+    // generic placeholder since the swing depends on the eventual opponent.
+    const finishedWithElo = d.status === 'finished' && (d.winner_rating_change != null);
+    const winLbl  = finishedWithElo ? `+${d.winner_rating_change} rating`
+                  : fmt ? 'rating gain' : `+${d.stake} XP`;
+    const lossLbl = finishedWithElo ? `${d.loser_rating_change} rating`
+                  : fmt ? 'rating loss' : `−${d.stake} XP`;
+    const potLbl  = fmt ? '±ELO' : d.stake;
+    const potCap  = fmt ? `${fmt.minutes}-min ${fmt.name}` : 'XP pot';
 
     $('#duelArena').innerHTML = `
       <div class="duel-arena-grid">

@@ -11657,3 +11657,157 @@ select.input optgroup {
 .duel-panel[hidden],
 .field[hidden],
 [hidden] { display: none !important; }
+
+/* ============================================================
+   Duels v3 — single-click format tiles + tier badges + advanced
+   collapse. Replaces the verbose card grid with a chess.com-style
+   row layout: icon · name · time · rating · arrow.
+   ============================================================ */
+
+.duel-format-grid-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.duel-tile {
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 1rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--fmt-c, var(--accent));
+  border-radius: 12px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s ease, transform 0.06s, border-color 0.18s ease;
+  position: relative;
+}
+.duel-tile:hover {
+  background: color-mix(in srgb, var(--fmt-c) 9%, var(--bg-elev));
+  border-color: var(--fmt-c);
+}
+.duel-tile:active { transform: translateY(1px); }
+.duel-tile.is-loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.duel-tile-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.duel-tile-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.duel-tile-name {
+  font-weight: 700;
+  font-size: 1.0rem;
+  color: var(--fmt-c);
+}
+.duel-tile-time {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.duel-tile-rating {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 5%, var(--bg));
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.duel-tile-live, .duel-tile-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--terminal);
+}
+.duel-tile-open { color: var(--accent); }
+
+.duel-tile-arrow {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--text-muted);
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+.duel-tile:hover .duel-tile-arrow {
+  color: var(--fmt-c);
+  transform: translateX(3px);
+}
+
+@media (max-width: 540px) {
+  .duel-tile { grid-template-columns: 28px 1fr auto auto; gap: 0.55rem; padding: 0.6rem 0.7rem; }
+  .duel-tile-arrow { display: none; }
+}
+
+/* Advanced collapse */
+.duel-advanced {
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.duel-advanced > summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  user-select: none;
+  padding: 0.3rem 0;
+  outline: none;
+  list-style: none;
+}
+.duel-advanced > summary::-webkit-details-marker { display: none; }
+.duel-advanced > summary::before {
+  content: '+ ';
+  font-weight: 700;
+  color: var(--accent);
+}
+.duel-advanced[open] > summary::before { content: '− '; }
+.duel-advanced > summary:hover { color: var(--text); }
+
+/* Duel-detail tier + ELO swing pills */
+.duel-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--tier-c) 14%, transparent);
+  color: var(--tier-c);
+  border: 1px solid color-mix(in srgb, var(--tier-c) 40%, transparent);
+}
+.duel-rating-swing {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.duel-rating-swing.positive {
+  background: color-mix(in srgb, var(--terminal) 14%, transparent);
+  color: var(--terminal);
+}
+.duel-rating-swing.negative {
+  background: color-mix(in srgb, var(--hard) 14%, transparent);
+  color: var(--hard);
+}
