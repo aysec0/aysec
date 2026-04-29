@@ -25,6 +25,7 @@ export const VAULT = [
     title: 'A polite request',
     hint: 'Some files are written for robots, not humans. Read those first.',
     location: 'Try /robots.txt — read past the directives.',
+    deeper_hint: 'Open https://<this-site>/robots.txt directly. Scroll past the User-agent rules. The flag is in the comments at the bottom.',
     flag: 'flag{vault_robots_remember_what_humans_forget}',
     points: 50,
   },
@@ -33,6 +34,7 @@ export const VAULT = [
     title: 'The view source brigade',
     hint: 'Your browser has a "View source" feature. Use it.',
     location: 'On the home page. Look for HTML comments that don\'t belong.',
+    deeper_hint: 'Right-click the home page → View Page Source. Search the HTML for the literal string "flag{". The full text is in an HTML comment near the top of <body>.',
     flag: 'flag{html_comments_are_not_secrets}',
     points: 75,
   },
@@ -41,6 +43,7 @@ export const VAULT = [
     title: 'A token of appreciation',
     hint: 'aysec talks a lot about JWTs. There\'s one shipped statically somewhere.',
     location: 'A JS file in /js/ contains a "demo" JWT. Decode the payload.',
+    deeper_hint: 'Open /js/api.js. There\'s a JWT in a comment near the top. Three dot-separated base64url segments — decode the second one (`atob` works after URL-safe replacement).',
     flag: 'flag{alg_none_is_still_alive_in_2026}',
     points: 100,
   },
@@ -49,6 +52,7 @@ export const VAULT = [
     title: 'An undocumented endpoint',
     hint: 'Real systems have endpoints that aren\'t in the docs. So does this one.',
     location: 'Try /.well-known/security.txt — then follow the breadcrumb.',
+    deeper_hint: 'curl /.well-known/security.txt — the file ends with a "vault hint:" line followed by the flag.',
     flag: 'flag{security_dot_txt_is_a_starting_line}',
     points: 100,
   },
@@ -56,7 +60,8 @@ export const VAULT = [
     id: 'V05',
     title: 'The image that knew too much',
     hint: 'Steg basics. Look at what the favicon is hiding inside its own data.',
-    location: 'The favicon SVG has a comment with a base32-encoded payload.',
+    location: 'The favicon SVG has a comment with a base64-encoded payload.',
+    deeper_hint: 'curl /img/favicon.svg. The first SVG comment contains a base64 string. `echo "<that>" | base64 -d` gives the flag. (Earlier copies of this hint said base32 — it\'s actually base64.)',
     flag: 'flag{svg_comments_are_a_steganographers_dream}',
     points: 125,
   },
@@ -64,7 +69,8 @@ export const VAULT = [
     id: 'V06',
     title: 'The OSINT special',
     hint: 'aysec runs in public. The repo is on GitHub. The first commit message has a secret.',
-    location: 'Browse github.com/ays26-bon/aysec — read the initial commit body carefully.',
+    location: 'Browse github.com/aysec0/aysec — read the initial commit body carefully.',
+    deeper_hint: '`git clone https://github.com/aysec0/aysec` and `git log --reverse --format=fuller`. The very first commit\'s body contains the flag. Or use the GitHub UI: navigate to the initial commit and read the description.',
     flag: 'flag{git_log_p_is_a_pentesters_friend}',
     points: 150,
   },
@@ -73,6 +79,7 @@ export const VAULT = [
     title: 'The final stretch',
     hint: 'Six down, one to go. Combine what you know about hashes + the API.',
     location: 'POST a sha256 of the string "aysec-vault-final" to /api/vault/whisper. The response will be a flag.',
+    deeper_hint: 'echo -n "aysec-vault-final" | sha256sum   →   curl -X POST /api/vault/whisper -H "content-type: application/json" -d \'{"hash":"<that-hex>"}\'   →   the response JSON contains the flag.',
     flag: 'flag{the_final_flag_is_yours}',
     points: 200,
   },
@@ -162,16 +169,30 @@ router.post('/whisper', (req, res) => {
   res.json({ flag: VAULT[6].flag });
 });
 
+// ---- Hint on demand — burns the bragging-rights "blind solve" but moves you forward.
+router.get('/hint/:vaultId', requireAuth, (req, res) => {
+  const entry = VAULT.find((v) => v.id === req.params.vaultId);
+  if (!entry) return res.status(404).json({ error: 'unknown vault id' });
+  // Record use (idempotent — repeat reads don't double-penalize)
+  db.prepare(
+    'INSERT OR IGNORE INTO vault_hint_uses (user_id, vault_id) VALUES (?, ?)'
+  ).run(req.user.id, entry.id);
+  res.json({ vault_id: entry.id, deeper_hint: entry.deeper_hint });
+});
+
 // ---- Leaderboard ----
 router.get('/leaderboard', (_req, res) => {
   const rows = db.prepare(`
     SELECT u.username, u.display_name,
            COUNT(*) AS solves,
-           MAX(vs.solved_at) AS last
+           MAX(vs.solved_at) AS last,
+           MIN(vs.solved_at) AS first_solve,
+           (SELECT COUNT(*) FROM vault_hint_uses h
+            WHERE h.user_id = u.id) AS hints_used
     FROM vault_solves vs
     JOIN users u ON u.id = vs.user_id
     GROUP BY u.id
-    ORDER BY solves DESC, last ASC
+    ORDER BY solves DESC, hints_used ASC, last ASC
     LIMIT 30
   `).all();
   res.json({ leaderboard: rows, total: VAULT.length });

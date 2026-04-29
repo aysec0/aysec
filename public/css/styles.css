@@ -4379,7 +4379,7 @@ kbd {
   margin-bottom: 0.2rem;
 }
 
-.vault-card-hint strong, .vault-card-loc strong {
+.vault-card-hint strong, .vault-card-loc strong, .vault-card-deeper strong {
   color: var(--text-dim);
   font-family: var(--font-mono);
   font-size: 0.74rem;
@@ -4388,6 +4388,40 @@ kbd {
   font-weight: 700;
   margin-right: 0.4rem;
 }
+
+/* Deeper hint reveal — looks distinctive so the player feels the trade */
+.vault-card-deeper {
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  background: color-mix(in srgb, var(--challenge) 10%, var(--bg-elev));
+  border: 1px solid color-mix(in srgb, var(--challenge) 30%, var(--border));
+  border-radius: var(--radius-sm);
+}
+.vault-card-deeper strong { color: var(--challenge, #ffb74d); }
+.vault-card-deeper[hidden] { display: none; }
+
+/* Hint button on unsolved cards */
+.vault-hint-btn {
+  margin-top: 0.5rem;
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--challenge) 40%, var(--border));
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.vault-hint-btn:hover {
+  color: var(--challenge, #ffb74d);
+  border-color: var(--challenge, #ffb74d);
+  background: color-mix(in srgb, var(--challenge) 6%, transparent);
+}
+.vault-hint-btn:disabled { opacity: 0.5; cursor: wait; }
 
 .vault-card-meta {
   display: flex;

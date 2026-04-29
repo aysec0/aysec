@@ -25,12 +25,14 @@
     $('vaultList').innerHTML = entries.map((e, i) => {
       const idx = String(i + 1).padStart(2, '0');
       return `
-        <div class="vault-card ${e.solved ? 'is-solved' : ''}">
+        <div class="vault-card ${e.solved ? 'is-solved' : ''}" data-vault-id="${escapeHtml(e.id)}">
           <div class="vault-card-num">V${idx}</div>
           <div class="vault-card-body">
             <h3 class="vault-card-title">${escapeHtml(e.title)}</h3>
             <div class="vault-card-hint"><strong>hint:</strong> ${escapeHtml(e.hint)}</div>
             ${e.location ? `<div class="vault-card-loc"><strong>location:</strong> ${escapeHtml(e.location)}</div>` : `<div class="vault-card-loc muted">location unlocks after 2 solves</div>`}
+            <div class="vault-card-deeper" data-deeper="${escapeHtml(e.id)}" hidden></div>
+            ${!e.solved ? `<button type="button" class="vault-hint-btn" data-hint="${escapeHtml(e.id)}">stuck? show me the deeper hint</button>` : ''}
           </div>
           <div class="vault-card-meta">
             <div class="vault-card-points">+${e.points} XP</div>
@@ -38,6 +40,31 @@
           </div>
         </div>`;
     }).join('');
+
+    // Wire deeper-hint buttons
+    document.querySelectorAll('[data-hint]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.hint;
+        if (!confirm('Reveal the deeper hint? It will count against your "blind solve" stat on the vault leaderboard.')) return;
+        btn.disabled = true;
+        btn.textContent = 'opening…';
+        try {
+          const r = await window.api.get(`/api/vault/hint/${encodeURIComponent(id)}`);
+          const slot = document.querySelector(`[data-deeper="${id}"]`);
+          slot.hidden = false;
+          slot.innerHTML = `<strong>deeper hint:</strong> ${escapeHtml(r.deeper_hint)}`;
+          btn.remove();
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = 'stuck? show me the deeper hint';
+          if (err.status === 401) {
+            window.toast?.('sign in to use deeper hints', 'info');
+          } else {
+            window.toast?.(err.message || 'could not load hint', 'error');
+          }
+        }
+      });
+    });
   }
 
   async function load() {
@@ -60,16 +87,18 @@
       }
       lb.innerHTML = `
         <div class="leaderboard">
-          <div class="lb-row head">
+          <div class="lb-row head" style="grid-template-columns: 36px 1fr auto auto auto;">
             <div>#</div><div>Hunter</div>
             <div style="text-align:right">Found</div>
+            <div style="text-align:right" title="Number of times this hunter pulled a deeper hint">Hints</div>
             <div style="text-align:right">Last</div>
           </div>
           ${rows.map((r, i) => `
-            <div class="lb-row">
+            <div class="lb-row" style="grid-template-columns: 36px 1fr auto auto auto;">
               <div class="lb-rank">${String(i + 1).padStart(2, '0')}</div>
-              <div class="lb-user"><a href="/u/${escapeHtml(r.username)}" style="color:var(--text); font-weight:500;">${escapeHtml(r.display_name || r.username)}</a></div>
+              <div class="lb-user"><a href="/u/${escapeHtml(r.username)}" style="color:var(--text); font-weight:500;">${escapeHtml(r.display_name || r.username)}${r.solves >= data.total ? ' <span style="color:var(--accent); font-size:0.78rem;">★ cracker</span>' : ''}</a></div>
               <div class="lb-solves">${r.solves}/${data.total}</div>
+              <div class="lb-hints dim mono" style="font-size:0.78rem;">${r.hints_used > 0 ? r.hints_used : '—'}</div>
               <div class="lb-score dim">${escapeHtml(window.fmtRelative(r.last))}</div>
             </div>
           `).join('')}

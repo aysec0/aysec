@@ -638,3 +638,12 @@ CREATE TABLE IF NOT EXISTS vault_solves (
 );
 
 CREATE INDEX IF NOT EXISTS idx_vault_user ON vault_solves(user_id, solved_at DESC);
+
+-- Tracks every "show me a deeper hint" tap so the leaderboard can rank
+-- people who solved blind higher than people who unlocked hints.
+CREATE TABLE IF NOT EXISTS vault_hint_uses (
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  vault_id   TEXT NOT NULL,
+  used_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, vault_id)
+);
