@@ -34,6 +34,7 @@ import uploadsRoutes from './routes/uploads.js';
 import chatRoutes from './routes/chat.js';
 import searchRoutes, { rebuildSearchIndex } from './routes/search.js';
 import streaksRoutes from './routes/streaks.js';
+import duelsRoutes from './routes/duels.js';
 import { marked } from 'marked';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -75,6 +76,7 @@ app.use('/api/uploads',        uploadsRoutes);
 app.use('/api/chat',           chatRoutes);
 app.use('/api/search',         searchRoutes);
 app.use('/api/streaks',        streaksRoutes);
+app.use('/api/duels',          duelsRoutes);
 
 // Build the FTS5 index on startup so /api/search has data to query.
 // (Adding/editing entities via admin doesn't auto-trigger a rebuild yet —
@@ -164,7 +166,7 @@ app.get('/sitemap.xml', (_req, res) => {
     '/daily', '/live', '/pro-labs', '/assessments', '/teams',
     '/tools', '/cheatsheets', '/events', '/community', '/about',
     '/hire', '/talks', '/terms', '/privacy', '/refunds',
-    '/vault', '/levels', '/search',
+    '/vault', '/levels', '/search', '/duels',
   ];
   const courses    = db.prepare('SELECT slug, updated_at FROM courses    WHERE published = 1').all();
   const challenges = db.prepare('SELECT slug, updated_at FROM challenges WHERE published = 1').all();
@@ -221,6 +223,8 @@ const OG_BY_PATH = {
                         desc: 'Quick reference for tools, syntax, and tactics across the cybersec stack.' },
   '/search':          { title: 'Search — aysec',
                         desc: 'Search across courses, lessons, posts, CTF challenges, cheatsheets, and certs.' },
+  '/duels':           { title: 'Duels — aysec',
+                        desc: '1v1 challenge races. Stake XP, pick a CTF, first correct flag wins.' },
 };
 
 function ogBlock(path, override) {
@@ -359,6 +363,7 @@ app.get('/u/:username/dna',       sendDetail('dna.html'));
 app.get('/certifications/:slug',  sendDetail('cert-detail.html', certOg));
 app.get('/cheatsheets/:slug',     sendDetail('cheatsheet-detail.html'));
 app.get('/events/:slug',          sendDetail('event-detail.html'));
+app.get('/duels/:id',             sendDetail('duel-detail.html'));
 
 // Permanent redirects for routes that have been merged elsewhere — covers
 // the bare path, the trailing-slash variant, and the legacy .html variant

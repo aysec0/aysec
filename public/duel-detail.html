@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0d12" />
+  <title>Duel — aysec</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/theme.js"></script>
+</head>
+<body class="duel-detail-page">
+  <div id="navbar-mount"></div>
+
+  <header class="page-header">
+    <div class="container">
+      <div class="crumbs">
+        <a href="/">~</a><span class="sep">/</span>
+        <a href="/duels">duels</a><span class="sep">/</span>
+        <span id="crumbId">…</span>
+      </div>
+      <div id="duelHead">
+        <div class="skeleton" style="height:34px;width:50%"></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="duel-shell">
+        <main>
+          <div id="duelArena" class="duel-arena">
+            <div class="skeleton" style="height:160px;border-radius:18px"></div>
+          </div>
+
+          <div id="duelChallengeBox" class="duel-challenge-box" hidden></div>
+
+          <div id="duelFlagBox" class="duel-flag-box" hidden>
+            <h3 class="duel-section-title">Submit flag</h3>
+            <form id="duelFlagForm" class="form">
+              <div id="duelFlagAlert" hidden></div>
+              <div class="field">
+                <div class="field-row">
+                  <input class="input mono flag-input" type="text" id="duelFlagInput" name="flag" placeholder="flag{...}" autocomplete="off" required />
+                  <button class="btn btn-primary" type="submit" id="duelFlagBtn">Submit</button>
+                </div>
+                <span class="field-hint">5 attempts/min. First correct flag wins the pot.</span>
+              </div>
+            </form>
+          </div>
+
+          <div id="duelTimeline" class="duel-timeline">
+            <h3 class="duel-section-title">Timeline</h3>
+            <div id="duelTimelineBox"><p class="muted">No submissions yet.</p></div>
+          </div>
+        </main>
+
+        <aside class="detail-side duel-side">
+          <div id="duelStats"></div>
+
+          <div id="duelActions" class="duel-actions"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-mount"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/duel-detail.js"></script>
+</body>
+</html>

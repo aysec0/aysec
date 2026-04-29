@@ -10,6 +10,7 @@
     { href: '/courses',        label: 'Courses' },
     { href: '/certifications', label: 'Certs' },
     { href: '/challenges',     label: 'CTF' },
+    { href: '/duels',          label: 'Duels' },
     { href: '/daily',          label: 'Daily' },
     { type: 'tools',           label: 'Tools' },
     { href: '/events',         label: 'Events' },
@@ -176,6 +177,7 @@
 
         <div class="mobile-section-title">Compete</div>
         <a class="nav-link" href="/daily" data-href="/daily">Daily challenge</a>
+        <a class="nav-link" href="/duels" data-href="/duels">Duels (1v1)</a>
         <a class="nav-link" href="/live" data-href="/live">Live events</a>
         <a class="nav-link" href="/pro-labs" data-href="/pro-labs">Pro Labs</a>
         <a class="nav-link" href="/assessments" data-href="/assessments">Skill assessments</a>
@@ -224,6 +226,7 @@
             <div class="footer-col-title">Compete</div>
             <ul class="footer-links">
               <li><a href="/daily">Daily challenge</a></li>
+              <li><a href="/duels">Duels (1v1)</a></li>
               <li><a href="/live">Live events</a></li>
               <li><a href="/pro-labs">Pro Labs</a></li>
               <li><a href="/assessments">Skill assessments</a></li>

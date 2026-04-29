@@ -665,3 +665,42 @@ CREATE TABLE IF NOT EXISTS vault_hint_uses (
   used_at    TEXT NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (user_id, vault_id)
 );
+
+-- ============================================================
+-- Duels — 1v1 challenge races. Two players agree on a challenge
+-- and stake XP; first one to submit the correct flag wins the pot.
+-- Open duels can also be issued without a specific opponent
+-- (anyone signed in can accept).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS duels (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  challenger_id   INTEGER NOT NULL REFERENCES users(id)      ON DELETE CASCADE,
+  opponent_id     INTEGER          REFERENCES users(id)      ON DELETE SET NULL, -- NULL = open
+  challenge_id    INTEGER NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+  stake           INTEGER NOT NULL DEFAULT 50,                -- XP at stake per side
+  status          TEXT    NOT NULL DEFAULT 'open',            -- open | active | finished | cancelled | expired
+  winner_id       INTEGER          REFERENCES users(id)       ON DELETE SET NULL,
+  message         TEXT,                                       -- optional trash-talk note from challenger
+  started_at      TEXT,
+  finished_at     TEXT,
+  expires_at      TEXT,                                       -- 24h while open, 60min after start once active
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_duels_status      ON duels(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_duels_challenger  ON duels(challenger_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_duels_opponent    ON duels(opponent_id, created_at DESC);
+
+-- One row per flag attempt within a duel. We keep every attempt so the
+-- in-duel timeline can show "X submitted at t+0:42, Y at t+1:05".
+CREATE TABLE IF NOT EXISTS duel_submissions (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  duel_id        INTEGER NOT NULL REFERENCES duels(id) ON DELETE CASCADE,
+  user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  submitted_flag TEXT    NOT NULL,
+  is_correct     INTEGER NOT NULL DEFAULT 0,
+  submitted_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_duel_subs_duel ON duel_submissions(duel_id, submitted_at);
