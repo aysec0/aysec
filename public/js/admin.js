@@ -510,10 +510,17 @@
   }
 
   function renderChalForm(c) {
-    $('#chalForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${c.id ? 'Edit' : 'New'} challenge</h3>
-        <form id="chForm" class="admin-form">
+    const isEdit = !!c.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New challenge'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(c.title || 'challenge') : 'Add a challenge'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="chForm" class="admin-form" style="padding:1.25rem;">
           <label>slug      <input class="input mono" name="slug" value="${escapeHtml(c.slug || '')}" required /></label>
           <label>title     <input class="input" name="title" value="${escapeHtml(c.title || '')}" required /></label>
           <label>category  <select class="input" name="category">${['web','crypto','pwn','rev','forensics','ai','misc'].map((x) => `<option ${x===c.category?'selected':''}>${x}</option>`).join('')}</select></label>
@@ -521,15 +528,14 @@
           <label>points    <input class="input mono" type="number" name="points" value="${c.points || 100}" /></label>
           <label>author    <input class="input" name="author" value="${escapeHtml(c.author || '')}" /></label>
           <label class="full">description <textarea class="textarea" name="description" rows="3">${escapeHtml(c.description || '')}</textarea></label>
-          <label class="full">flag (leave blank to keep current) <input class="input mono" name="flag" placeholder="aysec{...}" ${c.id ? '' : 'required'} /></label>
+          <label class="full">flag (leave blank to keep current) <input class="input mono" name="flag" placeholder="aysec{...}" ${isEdit ? '' : 'required'} /></label>
           <label>published <input type="checkbox" name="published" ${c.published ? 'checked' : ''} /></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${c.id ? 'Save changes' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="chCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create challenge'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#chCancel').addEventListener('click', () => { $('#chalForm').innerHTML = ''; });
+      </div>`);
     $('#chForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -545,6 +551,8 @@
       try {
         if (c.id) await api.req('PATCH', `/api/admin/challenges/${c.id}`, body);
         else      await api.post('/api/admin/challenges', body);
+        window.toast?.(isEdit ? 'Challenge updated' : 'Challenge created', 'success');
+        closeAdminModal();
         challenges();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
@@ -647,23 +655,29 @@
       const tzOff = d.getTimezoneOffset() * 60000;
       return new Date(d - tzOff).toISOString().slice(0, 16);
     };
-    $('#evForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${ev.id ? 'Edit' : 'New'} CTF event</h3>
-        <form id="eForm" class="admin-form">
+    const isEdit = !!ev.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New CTF event'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(ev.title || 'event') : 'Add a CTF event'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="eForm" class="admin-form" style="padding:1.25rem;">
           <label>slug   <input class="input mono" name="slug" value="${escapeHtml(ev.slug || '')}" required /></label>
           <label>title  <input class="input" name="title" value="${escapeHtml(ev.title || '')}" required /></label>
           <label>starts <input class="input mono" type="datetime-local" name="starts_at" value="${dtVal(ev.starts_at)}" required /></label>
           <label>ends   <input class="input mono" type="datetime-local" name="ends_at"   value="${dtVal(ev.ends_at)}"   required /></label>
           <label>prize  <input class="input" name="prize" value="${escapeHtml(ev.prize || '')}" /></label>
           <label class="full">description <textarea class="textarea" name="description" rows="3">${escapeHtml(ev.description || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${ev.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="evCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create event'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#evCancel').addEventListener('click', () => { $('#evForm').innerHTML = ''; });
+      </div>`);
     $('#eForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -677,6 +691,8 @@
       try {
         if (ev.id) await api.req('PATCH', `/api/admin/ctf-events/${ev.id}`, body);
         else       await api.post('/api/admin/ctf-events', body);
+        window.toast?.(isEdit ? 'Event updated' : 'Event created', 'success');
+        closeAdminModal();
         ctfEvents();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
@@ -776,10 +792,17 @@
   }
 
   function renderAForm(a) {
-    $('#aForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${a.id ? 'Edit' : 'New'} assessment</h3>
-        <form id="aSubForm" class="admin-form">
+    const isEdit = !!a.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New assessment'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(a.title || 'assessment') : 'Add an assessment'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="aSubForm" class="admin-form" style="padding:1.25rem;">
           <label>slug      <input class="input mono" name="slug" value="${escapeHtml(a.slug || '')}" required /></label>
           <label>title     <input class="input" name="title" value="${escapeHtml(a.title || '')}" required /></label>
           <label>cert code <input class="input mono" name="cert_code" value="${escapeHtml(a.cert_code || '')}" placeholder="OSCP" /></label>
@@ -788,13 +811,12 @@
           <label>passing pts      <input class="input mono" type="number" name="passing_points" value="${a.passing_points || 70}" /></label>
           <label class="full">description <textarea class="textarea" name="description" rows="3">${escapeHtml(a.description || '')}</textarea></label>
           <label>published <input type="checkbox" name="published" ${a.published ? 'checked' : ''} /></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${a.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="aCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create assessment'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#aCancel').addEventListener('click', () => { $('#aForm').innerHTML = ''; });
+      </div>`);
     $('#aSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -810,6 +832,8 @@
       try {
         if (a.id) await api.req('PATCH', `/api/admin/assessments/${a.id}`, body);
         else      await api.post('/api/admin/assessments', body);
+        window.toast?.(isEdit ? 'Assessment updated' : 'Assessment created', 'success');
+        closeAdminModal();
         assessments();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
@@ -907,10 +931,17 @@
   }
 
   function renderLForm(l) {
-    $('#lForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${l.id ? 'Edit' : 'New'} pro lab</h3>
-        <form id="lSubForm" class="admin-form">
+    const isEdit = !!l.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New pro lab'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(l.title || 'lab') : 'Add a pro lab'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="lSubForm" class="admin-form" style="padding:1.25rem;">
           <label>slug      <input class="input mono" name="slug" value="${escapeHtml(l.slug || '')}" required /></label>
           <label>title     <input class="input" name="title" value="${escapeHtml(l.title || '')}" required /></label>
           <label>difficulty<select class="input" name="difficulty">${['easy','medium','hard','insane'].map((x) => `<option ${x===l.difficulty?'selected':''}>${x}</option>`).join('')}</select></label>
@@ -918,13 +949,12 @@
           <label class="full">scenario <textarea class="textarea" name="scenario" rows="2">${escapeHtml(l.scenario || '')}</textarea></label>
           <label class="full">description <textarea class="textarea" name="description" rows="3">${escapeHtml(l.description || '')}</textarea></label>
           <label class="full">network diagram (ascii) <textarea class="textarea mono" name="network_diagram" rows="3">${escapeHtml(l.network_diagram || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${l.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="lCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create lab'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#lCancel').addEventListener('click', () => { $('#lForm').innerHTML = ''; });
+      </div>`);
     $('#lSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -939,6 +969,8 @@
       try {
         if (l.id) await api.req('PATCH', `/api/admin/pro-labs/${l.id}`, body);
         else      await api.post('/api/admin/pro-labs', body);
+        window.toast?.(l.id ? 'Lab updated' : 'Lab created', 'success');
+        closeAdminModal();
         proLabs();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
@@ -1249,10 +1281,17 @@
   }
 
   function renderPForm(p) {
-    $('#pForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${p.id ? 'Edit' : 'New'} post</h3>
-        <form id="pSubForm" class="admin-form">
+    const isEdit = !!p.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New post'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(p.title || 'post') : 'Add a post'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="pSubForm" class="admin-form" style="padding:1.25rem;">
           <label>slug      <input class="input mono" name="slug" value="${escapeHtml(p.slug || '')}" required /></label>
           <label>title     <input class="input" name="title" value="${escapeHtml(p.title || '')}" required /></label>
           <label>kind      <select class="input" name="kind">${['note','writeup','tutorial','rant','update'].map((x) => `<option ${x===p.kind?'selected':''}>${x}</option>`).join('')}</select></label>
@@ -1260,13 +1299,12 @@
           <label>published <input type="checkbox" name="published" ${p.published ? 'checked' : ''} /></label>
           <label class="full">excerpt <textarea class="textarea" name="excerpt" rows="2">${escapeHtml(p.excerpt || '')}</textarea></label>
           <label class="full">content (markdown) <textarea class="textarea mono" name="content_md" rows="10" data-md>${escapeHtml(p.content_md || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${p.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="pCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create post'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#pCancel').addEventListener('click', () => { $('#pForm').innerHTML = ''; });
+      </div>`);
     $('#pSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -1279,10 +1317,12 @@
       try {
         if (p.id) await api.req('PATCH', `/api/admin/posts/${p.id}`, body);
         else      await api.post('/api/admin/posts', body);
+        window.toast?.(isEdit ? 'Post updated' : 'Post created', 'success');
+        closeAdminModal();
         posts();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
-    wireMarkdownPreview($('#pForm'));
+    wireMarkdownPreview(document.getElementById('adminModalBody'));
   }
 
   // ----------------------- Site settings -----------------------
@@ -1381,10 +1421,17 @@
   }
 
   function renderLesForm(l, courseId, courseTitle) {
-    $('#lesForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${l.id ? 'Edit' : 'New'} lesson</h3>
-        <form id="lesSubForm" class="admin-form">
+    const isEdit = !!l.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New lesson'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(l.title || 'lesson') : 'Add a lesson'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="lesSubForm" class="admin-form" style="padding:1.25rem;">
           <label>slug      <input class="input mono" name="slug" value="${escapeHtml(l.slug || '')}" required /></label>
           <label>title     <input class="input" name="title" value="${escapeHtml(l.title || '')}" required /></label>
           <label>position  <input class="input mono" type="number" name="position" value="${l.position || 0}" /></label>
@@ -1392,13 +1439,12 @@
           <label>video url <input class="input mono" name="video_url" value="${escapeHtml(l.video_url || '')}" /></label>
           <label>free preview <input type="checkbox" name="is_preview" ${l.is_preview ? 'checked' : ''} /></label>
           <label class="full">content (markdown) <textarea class="textarea mono" name="content_md" rows="14" data-md>${escapeHtml(l.content_md || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${l.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="lesCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create lesson'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#lesCancel').addEventListener('click', () => { $('#lesForm').innerHTML = ''; });
+      </div>`);
     $('#lesSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -1413,10 +1459,12 @@
       try {
         if (l.id) await api.req('PATCH', `/api/admin/lessons/${l.id}`, body);
         else      await api.post(`/api/admin/courses/${courseId}/lessons`, body);
+        window.toast?.(isEdit ? 'Lesson updated' : 'Lesson created', 'success');
+        closeAdminModal();
         manageLessons(courseId, courseTitle || '(course)');
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
-    wireMarkdownPreview($('#lesForm'));
+    wireMarkdownPreview(document.getElementById('adminModalBody'));
   }
 
 
@@ -1461,10 +1509,17 @@
   }
 
   function renderTForm(t) {
-    $('#tForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${t.id ? 'Edit' : 'New'} path</h3>
-        <form id="tSubForm" class="admin-form">
+    const isEdit = !!t.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New path'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(t.title || 'path') : 'Add a path'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="tSubForm" class="admin-form" style="padding:1.25rem;">
           <label>slug     <input class="input mono" name="slug" value="${escapeHtml(t.slug || '')}" required /></label>
           <label>title    <input class="input" name="title" value="${escapeHtml(t.title || '')}" required /></label>
           <label>subtitle <input class="input" name="subtitle" value="${escapeHtml(t.subtitle || '')}" /></label>
@@ -1472,13 +1527,12 @@
           <label>position <input class="input mono" type="number" name="position" value="${t.position || 0}" /></label>
           <label>published <input type="checkbox" name="published" ${t.published ? 'checked' : ''} /></label>
           <label class="full">description <textarea class="textarea" name="description" rows="3" data-md>${escapeHtml(t.description || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${t.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="tCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create path'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#tCancel').addEventListener('click', () => { $('#tForm').innerHTML = ''; });
+      </div>`);
     $('#tSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -1492,10 +1546,12 @@
       try {
         if (t.id) await api.req('PATCH', `/api/admin/tracks/${t.id}`, body);
         else      await api.post('/api/admin/tracks', body);
+        window.toast?.(isEdit ? 'Path updated' : 'Path created', 'success');
+        closeAdminModal();
         tracks();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
-    wireMarkdownPreview($('#tForm'));
+    wireMarkdownPreview(document.getElementById('adminModalBody'));
   }
 
   async function manageTrackCourses(trackId) {
@@ -1584,10 +1640,17 @@
   }
 
   function renderCpForm(c) {
-    $('#cpForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${c.id ? 'Edit' : 'New'} cert prep</h3>
-        <form id="cpSubForm" class="admin-form">
+    const isEdit = !!c.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New cert prep'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(c.cert_name || 'cert') : 'Add a cert prep'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="cpSubForm" class="admin-form" style="padding:1.25rem;">
           <label>slug      <input class="input mono" name="slug" value="${escapeHtml(c.slug || '')}" required /></label>
           <label>cert name <input class="input" name="cert_name" value="${escapeHtml(c.cert_name || '')}" placeholder="OSCP" required /></label>
           <label>full name <input class="input" name="cert_full_name" value="${escapeHtml(c.cert_full_name || '')}" /></label>
@@ -1603,13 +1666,12 @@
           <label class="full">what covered <textarea class="textarea" name="what_covered" rows="3" data-md>${escapeHtml(c.what_covered || '')}</textarea></label>
           <label class="full">what NOT covered <textarea class="textarea" name="what_not_covered" rows="2" data-md>${escapeHtml(c.what_not_covered || '')}</textarea></label>
           <label class="full">exam tips <textarea class="textarea" name="exam_tips" rows="3" data-md>${escapeHtml(c.exam_tips || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${c.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="cpCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create cert prep'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#cpCancel').addEventListener('click', () => { $('#cpForm').innerHTML = ''; });
+      </div>`);
     $('#cpSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -1632,10 +1694,12 @@
       try {
         if (c.id) await api.req('PATCH', `/api/admin/cert-prep/${c.id}`, body);
         else      await api.post('/api/admin/cert-prep', body);
+        window.toast?.(isEdit ? 'Cert prep updated' : 'Cert prep created', 'success');
+        closeAdminModal();
         certPrep();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
-    wireMarkdownPreview($('#cpForm'));
+    wireMarkdownPreview(document.getElementById('adminModalBody'));
   }
 
   // ----------------------- Cheatsheets -----------------------
@@ -1678,10 +1742,17 @@
   }
 
   function renderChForm(c) {
-    $('#chForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${c.id ? 'Edit' : 'New'} cheatsheet</h3>
-        <form id="chSubForm" class="admin-form">
+    const isEdit = !!c.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New cheatsheet'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(c.title || 'cheatsheet') : 'Add a cheatsheet'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="chSubForm" class="admin-form" style="padding:1.25rem;">
           <label>slug      <input class="input mono" name="slug" value="${escapeHtml(c.slug || '')}" required /></label>
           <label>title     <input class="input" name="title" value="${escapeHtml(c.title || '')}" required /></label>
           <label>subtitle  <input class="input" name="subtitle" value="${escapeHtml(c.subtitle || '')}" /></label>
@@ -1690,13 +1761,12 @@
           <label>position  <input class="input mono" type="number" name="position" value="${c.position || 0}" /></label>
           <label>published <input type="checkbox" name="published" ${c.published ? 'checked' : ''} /></label>
           <label class="full">content (markdown) <textarea class="textarea mono" name="content_md" rows="14" data-md>${escapeHtml(c.content_md || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${c.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="chCancel2">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create cheatsheet'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#chCancel2').addEventListener('click', () => { $('#chForm').innerHTML = ''; });
+      </div>`);
     $('#chSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -1712,10 +1782,12 @@
       try {
         if (c.id) await api.req('PATCH', `/api/admin/cheatsheets/${c.id}`, body);
         else      await api.post('/api/admin/cheatsheets', body);
+        window.toast?.(isEdit ? 'Cheatsheet updated' : 'Cheatsheet created', 'success');
+        closeAdminModal();
         cheatsheets();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
-    wireMarkdownPreview($('#chForm'));
+    wireMarkdownPreview(document.getElementById('adminModalBody'));
   }
 
   // ----------------------- Calendar events (community-listing kind) -----------------------
@@ -1756,10 +1828,17 @@
   }
 
   function renderCalForm(e) {
-    $('#calForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${e.id ? 'Edit' : 'New'} calendar event</h3>
-        <form id="calSubForm" class="admin-form">
+    const isEdit = !!e.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New event'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(e.name || 'event') : 'Add an event'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="calSubForm" class="admin-form" style="padding:1.25rem;">
           <label>slug    <input class="input mono" name="slug" value="${escapeHtml(e.slug || '')}" required /></label>
           <label>name    <input class="input" name="name" value="${escapeHtml(e.name || '')}" required /></label>
           <label>kind    <select class="input" name="kind">${['ctf','conference','bugbounty','awareness','workshop'].map((x) => `<option ${x===e.kind?'selected':''}>${x}</option>`).join('')}</select></label>
@@ -1775,13 +1854,12 @@
           <label>position <input class="input mono" type="number" name="position" value="${e.position || 0}" /></label>
           <label>published <input type="checkbox" name="published" ${e.published ? 'checked' : ''} /></label>
           <label class="full">description <textarea class="textarea" name="description" rows="3" data-md>${escapeHtml(e.description || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${e.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="calCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create event'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#calCancel').addEventListener('click', () => { $('#calForm').innerHTML = ''; });
+      </div>`);
     $('#calSubForm').addEventListener('submit', async (ev) => {
       ev.preventDefault();
       const fd = new FormData(ev.target);
@@ -1792,10 +1870,12 @@
       try {
         if (e.id) await api.req('PATCH', `/api/admin/calendar-events/${e.id}`, body);
         else      await api.post('/api/admin/calendar-events', body);
+        window.toast?.(isEdit ? 'Event updated' : 'Event created', 'success');
+        closeAdminModal();
         calendar();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
-    wireMarkdownPreview($('#calForm'));
+    wireMarkdownPreview(document.getElementById('adminModalBody'));
   }
 
   // ----------------------- Talks -----------------------
@@ -1836,10 +1916,17 @@
   }
 
   function renderTkForm(t) {
-    $('#tkForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${t.id ? 'Edit' : 'New'} talk</h3>
-        <form id="tkSubForm" class="admin-form">
+    const isEdit = !!t.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New talk'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(t.title || 'talk') : 'Add a talk'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="tkSubForm" class="admin-form" style="padding:1.25rem;">
           <label>title    <input class="input" name="title" value="${escapeHtml(t.title || '')}" required /></label>
           <label>venue    <input class="input" name="venue" value="${escapeHtml(t.venue || '')}" required /></label>
           <label>date     <input class="input mono" type="date" name="date" value="${escapeHtml(t.date || '')}" required /></label>
@@ -1848,13 +1935,12 @@
           <label>position <input class="input mono" type="number" name="position" value="${t.position || 0}" /></label>
           <label>published <input type="checkbox" name="published" ${t.published ? 'checked' : ''} /></label>
           <label class="full">description <textarea class="textarea" name="description" rows="3" data-md>${escapeHtml(t.description || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${t.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="tkCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create talk'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#tkCancel').addEventListener('click', () => { $('#tkForm').innerHTML = ''; });
+      </div>`);
     $('#tkSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -1868,10 +1954,12 @@
       try {
         if (t.id) await api.req('PATCH', `/api/admin/talks/${t.id}`, body);
         else      await api.post('/api/admin/talks', body);
+        window.toast?.(isEdit ? 'Talk updated' : 'Talk created', 'success');
+        closeAdminModal();
         talks();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
-    wireMarkdownPreview($('#tkForm'));
+    wireMarkdownPreview(document.getElementById('adminModalBody'));
   }
 
   // ----------------------- Testimonials -----------------------
@@ -1912,10 +2000,17 @@
   }
 
   function renderTmForm(t) {
-    $('#tmForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${t.id ? 'Edit' : 'New'} testimonial</h3>
-        <form id="tmSubForm" class="admin-form">
+    const isEdit = !!t.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New testimonial'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(t.author_name || 'testimonial') : 'Add a testimonial'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="tmSubForm" class="admin-form" style="padding:1.25rem;">
           <label>author name    <input class="input" name="author_name" value="${escapeHtml(t.author_name || '')}" required /></label>
           <label>author title   <input class="input" name="author_title" value="${escapeHtml(t.author_title || '')}" /></label>
           <label>author company <input class="input" name="author_company" value="${escapeHtml(t.author_company || '')}" /></label>
@@ -1924,13 +2019,12 @@
           <label>position       <input class="input mono" type="number" name="position" value="${t.position || 0}" /></label>
           <label>published      <input type="checkbox" name="published" ${t.published ? 'checked' : ''} /></label>
           <label class="full">quote <textarea class="textarea" name="quote" rows="4" required>${escapeHtml(t.quote || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${t.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="tmCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create testimonial'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#tmCancel').addEventListener('click', () => { $('#tmForm').innerHTML = ''; });
+      </div>`);
     $('#tmSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -1947,6 +2041,8 @@
       try {
         if (t.id) await api.req('PATCH', `/api/admin/testimonials/${t.id}`, body);
         else      await api.post('/api/admin/testimonials', body);
+        window.toast?.(isEdit ? 'Testimonial updated' : 'Testimonial created', 'success');
+        closeAdminModal();
         testimonials();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
@@ -1989,23 +2085,29 @@
   }
 
   function renderFqForm(f) {
-    $('#fqForm').innerHTML = `
-      <div class="card" style="padding:1.25rem; margin-top:1rem;">
-        <h3 style="margin-top:0;">${f.id ? 'Edit' : 'New'} FAQ</h3>
-        <form id="fqSubForm" class="admin-form">
+    const isEdit = !!f.id;
+    openAdminModal(`
+      <div class="card admin-form-card">
+        <header class="admin-form-head">
+          <div>
+            <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New FAQ'}</span>
+            <h3 class="admin-form-title">${isEdit ? escapeHtml(f.question || 'FAQ') : 'Add a FAQ'}</h3>
+          </div>
+          <button class="admin-form-close" type="button" aria-label="Close" data-close-modal>×</button>
+        </header>
+        <form id="fqSubForm" class="admin-form" style="padding:1.25rem;">
           <label>scope     <select class="input" name="scope">${['general','course','pricing','hire'].map((x) => `<option ${x===(f.scope||'general')?'selected':''}>${x}</option>`).join('')}</select></label>
           <label>course id <input class="input mono" type="number" name="course_id" value="${f.course_id || ''}" /></label>
           <label>position  <input class="input mono" type="number" name="position" value="${f.position || 0}" /></label>
           <label>published <input type="checkbox" name="published" ${f.published ? 'checked' : ''} /></label>
           <label class="full">question <input class="input" name="question" value="${escapeHtml(f.question || '')}" required /></label>
           <label class="full">answer   <textarea class="textarea" name="answer" rows="4" required data-md>${escapeHtml(f.answer || '')}</textarea></label>
-          <div class="full" style="display:flex; gap:0.4rem;">
-            <button class="btn btn-primary" type="submit">${f.id ? 'Save' : 'Create'}</button>
-            <button class="btn btn-ghost" type="button" id="fqCancel">Cancel</button>
-          </div>
+          <footer class="admin-form-foot full">
+            <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
+            <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create FAQ'}</button>
+          </footer>
         </form>
-      </div>`;
-    $('#fqCancel').addEventListener('click', () => { $('#fqForm').innerHTML = ''; });
+      </div>`);
     $('#fqSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -2019,10 +2121,12 @@
       try {
         if (f.id) await api.req('PATCH', `/api/admin/faqs/${f.id}`, body);
         else      await api.post('/api/admin/faqs', body);
+        window.toast?.(isEdit ? 'FAQ updated' : 'FAQ created', 'success');
+        closeAdminModal();
         faqs();
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
-    wireMarkdownPreview($('#fqForm'));
+    wireMarkdownPreview(document.getElementById('adminModalBody'));
   }
 
   // ----------------------- Newsletter (read-only + CSV) -----------------------
