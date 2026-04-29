@@ -836,6 +836,18 @@
     loadAskFab();
     wireHoverPrefetch();
     applySiteSettings();
+    registerServiceWorker();
+  }
+
+  // PWA: register the service worker so the app is installable + offline-capable.
+  // Skipped on /admin and /site-editor — those need real network for live data.
+  function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/site-editor')) return;
+    // Wait until idle so we don't fight initial paint
+    const reg = () => navigator.serviceWorker.register('/sw.js').catch(() => {});
+    if (document.readyState === 'complete') reg();
+    else window.addEventListener('load', reg, { once: true });
   }
 
   // Apply admin-edited site settings to any [data-site*] attributes on the

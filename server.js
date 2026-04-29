@@ -226,7 +226,15 @@ function ogBlock(path, override) {
   const url   = SITE_URL + path;
   const image = SITE_URL + '/img/og.svg';
   const safe = (s = '') => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  // PWA + OG/Twitter tags packaged together so every page is shareable
+  // AND installable. The manifest link is what triggers Add-to-Home-Screen
+  // on iOS / "Install app" on Chrome.
   return `
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/img/favicon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="aysec" />
     <meta property="og:type" content="${safe(d.type || 'website')}" />
     <meta property="og:site_name" content="aysec" />
     <meta property="og:title" content="${safe(d.title)}" />

@@ -1,0 +1,22 @@
+{
+  "name": "aysec — cybersecurity training",
+  "short_name": "aysec",
+  "description": "Hands-on cybersecurity training, CTF challenges, and writeups by Ammar Yasser.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0d12",
+  "theme_color": "#0a0d12",
+  "icons": [
+    { "src": "/img/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/img/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Today's daily",   "short_name": "Daily",   "url": "/daily",      "description": "One rotating challenge per day." },
+    { "name": "CTF challenges",  "short_name": "CTF",     "url": "/challenges", "description": "Browse all challenges." },
+    { "name": "Courses",         "short_name": "Courses", "url": "/courses",    "description": "All training courses." },
+    { "name": "Vault",           "short_name": "Vault",   "url": "/vault",      "description": "Seven flags hidden across this site." }
+  ],
+  "categories": ["education", "productivity"]
+}
