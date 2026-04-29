@@ -9260,18 +9260,45 @@ body.admin-modal-open { overflow: hidden; }
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 24px -8px rgba(0,0,0,0.6);
-  transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.2s ease;
+  /* Subtle breathing — makes the character feel alive at rest */
+  animation: ask-fab-breathe 4.2s ease-in-out infinite;
 }
 
 .ask-fab-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-2px);
+  box-shadow: 0 14px 32px -10px rgba(0,0,0,0.7), 0 0 24px -4px color-mix(in srgb, var(--accent) 35%, transparent);
+  animation: none;
 }
 
 .ask-fab-btn.is-open {
   border-color: var(--terminal, #39ff7a);
   color: var(--terminal, #39ff7a);
+  animation: none;
+}
+
+/* The "?" glyph in the hood gently pulses so it draws the eye without nagging */
+.ask-fab-glyph {
+  animation: ask-fab-glyph-pulse 3s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+.ask-fab-btn:hover .ask-fab-glyph,
+.ask-fab-btn.is-open .ask-fab-glyph { animation: none; }
+
+@keyframes ask-fab-breathe {
+  0%, 100% { transform: translateY(0); box-shadow: 0 8px 24px -8px rgba(0,0,0,0.6); }
+  50%      { transform: translateY(-1.5px); box-shadow: 0 12px 28px -8px rgba(0,0,0,0.65); }
+}
+@keyframes ask-fab-glyph-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-fab-btn, .ask-fab-glyph { animation: none !important; }
 }
 
 .ask-fab-panel {
