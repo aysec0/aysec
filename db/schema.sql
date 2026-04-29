@@ -647,6 +647,16 @@ CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(
   tokenize = 'porter unicode61'
 );
 
+-- Login-streak rewards. Refreshed via POST /api/streaks/checkin on each
+-- visit while signed in. XP awarded daily + bonuses at 3/7/14/30/100 days.
+CREATE TABLE IF NOT EXISTS login_streaks (
+  user_id          INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  current_days     INTEGER NOT NULL DEFAULT 0,
+  longest_days     INTEGER NOT NULL DEFAULT 0,
+  last_login_date  TEXT,                                      -- YYYY-MM-DD UTC
+  total_xp         INTEGER NOT NULL DEFAULT 0
+);
+
 -- Tracks every "show me a deeper hint" tap so the leaderboard can rank
 -- people who solved blind higher than people who unlocked hints.
 CREATE TABLE IF NOT EXISTS vault_hint_uses (

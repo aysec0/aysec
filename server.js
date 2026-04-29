@@ -33,6 +33,7 @@ import vaultRoutes from './routes/vault.js';
 import uploadsRoutes from './routes/uploads.js';
 import chatRoutes from './routes/chat.js';
 import searchRoutes, { rebuildSearchIndex } from './routes/search.js';
+import streaksRoutes from './routes/streaks.js';
 import { marked } from 'marked';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -73,6 +74,7 @@ app.use('/api/vault',          vaultRoutes);
 app.use('/api/uploads',        uploadsRoutes);
 app.use('/api/chat',           chatRoutes);
 app.use('/api/search',         searchRoutes);
+app.use('/api/streaks',        streaksRoutes);
 
 // Build the FTS5 index on startup so /api/search has data to query.
 // (Adding/editing entities via admin doesn't auto-trigger a rebuild yet —

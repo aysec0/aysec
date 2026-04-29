@@ -837,6 +837,24 @@
     wireHoverPrefetch();
     applySiteSettings();
     registerServiceWorker();
+    checkLoginStreak();
+  }
+
+  // Idempotent per-day login streak ping. Backend awards XP and emits a
+  // notification on milestones (3 / 7 / 14 / 30 / 100 days). Anonymous
+  // users get a 401, which we silently ignore. localStorage de-dupes
+  // within the same UTC day so we don't hammer the endpoint.
+  async function checkLoginStreak() {
+    if (!window.api) return;
+    const today = new Date().toISOString().slice(0, 10);
+    try { if (localStorage.getItem('aysec.streakCheckedAt') === today) return; } catch {}
+    try {
+      const r = await window.api.post('/api/streaks/checkin');
+      try { localStorage.setItem('aysec.streakCheckedAt', today); } catch {}
+      if (r?.awarded_xp > 0 && window.toast && r.current >= 2) {
+        window.toast(`🔥 ${r.current}-day streak — +${r.awarded_xp} XP`, 'success');
+      }
+    } catch {}
   }
 
   // PWA: register the service worker so the app is installable + offline-capable.
