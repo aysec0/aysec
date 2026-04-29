@@ -4510,6 +4510,48 @@ kbd {
   75%      { transform: rotate(-3deg); }
 }
 
+/* EasyMDE — make the lesson editor blend into the dark admin theme */
+.admin-form-lesson { width: min(960px, 100%); }
+.admin-form-lesson + .admin-modal-shell { width: min(960px, 100%); }
+.admin-modal-shell:has(.admin-form-lesson) { width: min(960px, 100%); }
+
+.EasyMDEContainer .editor-toolbar {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+}
+.EasyMDEContainer .editor-toolbar button {
+  color: var(--text-muted);
+}
+.EasyMDEContainer .editor-toolbar button:hover,
+.EasyMDEContainer .editor-toolbar button.active {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--accent);
+}
+.EasyMDEContainer .editor-toolbar i.separator { border-color: var(--border); }
+.EasyMDEContainer .CodeMirror {
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+}
+.EasyMDEContainer .CodeMirror-cursor { border-left-color: var(--accent); }
+.EasyMDEContainer .CodeMirror-selected { background: color-mix(in srgb, var(--accent) 25%, transparent) !important; }
+.EasyMDEContainer .editor-preview-side,
+.EasyMDEContainer .editor-preview {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+.EasyMDEContainer .editor-statusbar {
+  color: var(--text-dim);
+}
+
 /* Lesson code-block copy button */
 .lesson-copy-btn {
   position: absolute; top: 0.4rem; right: 0.4rem;

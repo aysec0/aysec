@@ -1423,7 +1423,7 @@
   function renderLesForm(l, courseId, courseTitle) {
     const isEdit = !!l.id;
     openAdminModal(`
-      <div class="card admin-form-card">
+      <div class="card admin-form-card admin-form-lesson">
         <header class="admin-form-head">
           <div>
             <span class="admin-form-eyebrow">${isEdit ? 'Editing' : 'New lesson'}</span>
@@ -1438,13 +1438,55 @@
           <label>estimated min <input class="input mono" type="number" name="estimated_minutes" value="${l.estimated_minutes || 10}" /></label>
           <label>video url <input class="input mono" name="video_url" value="${escapeHtml(l.video_url || '')}" /></label>
           <label>free preview <input type="checkbox" name="is_preview" ${l.is_preview ? 'checked' : ''} /></label>
-          <label class="full">content (markdown) <textarea class="textarea mono" name="content_md" rows="14" data-md>${escapeHtml(l.content_md || '')}</textarea></label>
+          <label class="full">
+            <span class="admin-field-label">Content</span>
+            <textarea class="textarea mono" name="content_md" id="lesContent">${escapeHtml(l.content_md || '')}</textarea>
+          </label>
           <footer class="admin-form-foot full">
             <button class="btn btn-ghost" type="button" data-close-modal>Cancel</button>
             <button class="btn btn-primary" type="submit">${isEdit ? 'Save changes' : 'Create lesson'}</button>
           </footer>
         </form>
       </div>`);
+
+    // Hand the lesson body off to EasyMDE — markdown-native WYSIWYG with
+    // a toolbar, side-by-side preview, fullscreen, and image-upload via
+    // our /api/uploads endpoint. Falls back to the plain textarea if the
+    // CDN failed or window.EasyMDE isn't loaded.
+    let mde = null;
+    if (window.EasyMDE) {
+      mde = new window.EasyMDE({
+        element: document.getElementById('lesContent'),
+        spellChecker: false,
+        autoDownloadFontAwesome: true,
+        forceSync: true, // keep the underlying textarea in sync for FormData
+        minHeight: '320px',
+        status: ['lines', 'words'],
+        previewClass: ['editor-preview', 'prose'],
+        toolbar: [
+          'bold', 'italic', 'heading', '|',
+          'quote', 'unordered-list', 'ordered-list', '|',
+          'link', 'image', 'code', 'table', '|',
+          'preview', 'side-by-side', 'fullscreen', '|',
+          {
+            name: 'guide', action: 'https://www.markdownguide.org/basic-syntax/',
+            className: 'fa fa-question-circle', title: 'Markdown guide',
+          },
+        ],
+        uploadImage: true,
+        imageUploadFunction: async (file, onSuccess, onError) => {
+          try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const r = await fetch('/api/uploads', { method: 'POST', credentials: 'include', body: fd });
+            const j = await r.json();
+            if (!r.ok) return onError(j.error || `upload failed (${r.status})`);
+            onSuccess(j.url);
+          } catch (err) { onError(err.message || 'upload failed'); }
+        },
+      });
+    }
+
     $('#lesSubForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -1454,17 +1496,17 @@
         estimated_minutes: Number(fd.get('estimated_minutes')) || 10,
         video_url: fd.get('video_url') || null,
         is_preview: fd.get('is_preview') === 'on',
-        content_md: fd.get('content_md') || '',
+        content_md: (mde ? mde.value() : fd.get('content_md')) || '',
       };
       try {
         if (l.id) await api.req('PATCH', `/api/admin/lessons/${l.id}`, body);
         else      await api.post(`/api/admin/courses/${courseId}/lessons`, body);
         window.toast?.(isEdit ? 'Lesson updated' : 'Lesson created', 'success');
+        try { mde?.cleanup(); } catch {}
         closeAdminModal();
         manageLessons(courseId, courseTitle || '(course)');
       } catch (err2) { window.toast(err2.message, 'error'); }
     });
-    wireMarkdownPreview(document.getElementById('adminModalBody'));
   }
 
 
