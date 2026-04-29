@@ -41,12 +41,72 @@
     wrap.innerHTML = cells.join('');
   }
 
+  // Canonical category set — lets the radar always show the same axes
+  // even if the user hasn't solved one yet (the value just sits at 0).
+  const RADAR_CATEGORIES = ['web', 'crypto', 'pwn', 'rev', 'forensics', 'ai', 'misc', 'osint'];
+
+  function renderRadar(rows) {
+    const svg = document.getElementById('profileRadarSvg');
+    if (!svg) return;
+    // Build a {category: score} lookup; missing categories default to 0.
+    const byCat = Object.fromEntries((rows || []).map((r) => [String(r.category).toLowerCase(), r.score]));
+    const axes = RADAR_CATEGORIES;
+    const N = axes.length;
+    const max = Math.max(...axes.map((c) => byCat[c] || 0), 100); // floor at 100 so the chart isn't tiny
+    const R = 90;
+    const RINGS = 4;
+
+    const angleFor = (i) => (Math.PI * 2 * i) / N - Math.PI / 2;
+    const point = (val, i) => {
+      const r = (val / max) * R;
+      const a = angleFor(i);
+      return [Math.cos(a) * r, Math.sin(a) * r];
+    };
+
+    // Concentric rings
+    let ringsHtml = '';
+    for (let k = 1; k <= RINGS; k++) {
+      const r = (k / RINGS) * R;
+      ringsHtml += `<circle class="radar-ring" cx="0" cy="0" r="${r.toFixed(2)}" />`;
+    }
+    // Spoke lines
+    let axesHtml = '';
+    for (let i = 0; i < N; i++) {
+      const [x, y] = point(max, i);
+      axesHtml += `<line class="radar-axis" x1="0" y1="0" x2="${x.toFixed(2)}" y2="${y.toFixed(2)}" />`;
+    }
+    // Data polygon
+    const points = axes.map((c, i) => point(byCat[c] || 0, i).map((n) => n.toFixed(2)).join(',')).join(' ');
+    const dots = axes.map((c, i) => {
+      const [x, y] = point(byCat[c] || 0, i);
+      const has = (byCat[c] || 0) > 0;
+      return `<circle class="radar-dot ${has ? 'has' : ''}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${has ? 3 : 2}" data-cat="${c}"/>`;
+    }).join('');
+    // Labels — push out a bit past R
+    const labels = axes.map((c, i) => {
+      const [x, y] = point(max * 1.18, i);
+      const align = Math.abs(x) < 6 ? 'middle' : (x > 0 ? 'start' : 'end');
+      return `<text class="radar-label" x="${x.toFixed(2)}" y="${y.toFixed(2)}" text-anchor="${align}" dominant-baseline="middle">${c}</text>`;
+    }).join('');
+
+    svg.innerHTML = `
+      <g class="radar-grid">${ringsHtml}${axesHtml}</g>
+      <polygon class="radar-poly" points="${points}" />
+      ${dots}
+      ${labels}`;
+  }
+
   function renderCategories(rows) {
     const card = document.getElementById('profileCategoryCard');
     const box  = document.getElementById('profileCategoryBars');
     if (!card || !box) return;
-    if (!rows?.length) { card.hidden = true; return; }
+    // Always show the radar (with zeroed axes if no solves yet) — much more
+    // identity-defining than an empty card. We just hide the supplementary
+    // bars below it when there's no data.
     card.hidden = false;
+    renderRadar(rows || []);
+
+    if (!rows?.length) { box.innerHTML = ''; return; }
     const max = Math.max(...rows.map((r) => r.score), 1);
     box.innerHTML = rows.map((r) => `
       <div class="cat-bar" data-cat="${escapeHtml(r.category)}">

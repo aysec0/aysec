@@ -10971,3 +10971,71 @@ html, body {
 }
 .api-method.get { background: color-mix(in srgb, var(--terminal) 16%, transparent); color: var(--terminal); }
 .api-method.post { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+
+/* ============================================================
+   Profile skill radar — 8-axis SVG spider plot of category mastery
+   ============================================================ */
+.profile-radar-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: center;
+}
+@media (max-width: 720px) {
+  .profile-radar-card { grid-template-columns: 1fr; }
+}
+
+.profile-radar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-radar {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.radar-ring {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+.radar-axis {
+  stroke: var(--border);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.radar-poly {
+  fill: color-mix(in srgb, var(--accent) 26%, transparent);
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 40%, transparent));
+  transition: fill 0.2s, stroke 0.2s;
+}
+.radar-dot {
+  fill: var(--bg);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.radar-dot.has {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+.radar-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.profile-radar-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
