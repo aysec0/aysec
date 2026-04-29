@@ -36,6 +36,7 @@ import searchRoutes, { rebuildSearchIndex } from './routes/search.js';
 import streaksRoutes from './routes/streaks.js';
 import duelsRoutes from './routes/duels.js';
 import presenceRoutes from './routes/presence.js';
+import activityRoutes from './routes/activity.js';
 import { marked } from 'marked';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -79,6 +80,7 @@ app.use('/api/search',         searchRoutes);
 app.use('/api/streaks',        streaksRoutes);
 app.use('/api/duels',          duelsRoutes);
 app.use('/api/presence',       presenceRoutes);
+app.use('/api/activity',       activityRoutes);
 
 // Build the FTS5 index on startup so /api/search has data to query.
 // (Adding/editing entities via admin doesn't auto-trigger a rebuild yet —

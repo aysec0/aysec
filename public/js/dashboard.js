@@ -497,6 +497,77 @@
     cert:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 22 12 19 17 22 15.79 13.88"/></svg>',
   };
 
+  // ---------- Global / Friends activity feed ----------
+  // Pulls from /api/activity{,/friends} — populated by emitActivity()
+  // hooks across challenges, duels, forum, etc. Different shape from the
+  // legacy renderFeed (which is solve/lesson/cert specific) so we render
+  // it separately.
+  const ACTIVITY_KIND_ICON = {
+    solve:        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+    first_blood:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2 19h20l-2-9-5 4-5-8-5 8-5-4-2 9zm0 2h20v2H2v-2z"/></svg>',
+    duel_won:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/></svg>',
+    duel_lost:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/></svg>',
+    post:         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    comment:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    level_up:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    course_done:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>',
+    cert_earned:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 22 12 19 17 22 15.79 13.88"/></svg>',
+    streak:       '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg>',
+  };
+
+  function activityRowHTML(a) {
+    const u = a.user || {};
+    const avatarHTML = u.avatar_url
+      ? `<img class="dash-feed-avatar" src="${escapeHtml(u.avatar_url)}" alt="" />`
+      : `<div class="dash-feed-avatar dash-feed-avatar-letter">${escapeHtml((u.display_name || u.username || '?').slice(0, 1).toUpperCase())}</div>`;
+    const linkOpen  = a.link ? `<a href="${escapeHtml(a.link)}" class="dash-feed-row-link">` : '<div class="dash-feed-row-link">';
+    const linkClose = a.link ? '</a>' : '</div>';
+    return `
+      <div class="dash-feed-item dash-feed-row" data-kind="${escapeHtml(a.kind)}">
+        ${linkOpen}
+          ${avatarHTML}
+          <div class="dash-feed-row-body">
+            <div class="dash-feed-title">
+              <a href="/u/${escapeHtml(u.username)}" class="dash-feed-username">@${escapeHtml(u.username)}</a>
+              <span class="dash-feed-headline">${escapeHtml(a.title)}</span>
+            </div>
+            ${a.body ? `<div class="dash-feed-sub">${escapeHtml(a.body)}</div>` : ''}
+          </div>
+          <span class="dash-feed-icon dash-feed-row-icon">${ACTIVITY_KIND_ICON[a.kind] || ''}</span>
+          <span class="dash-feed-when">${escapeHtml(relTime(a.created_at))}</span>
+        ${linkClose}
+      </div>`;
+  }
+
+  async function renderGlobalFeed(which = 'global') {
+    const box = $('globalActivityFeed');
+    if (!box) return;
+    box.innerHTML = '<div class="dash-empty"><span>Loading…</span></div>';
+    try {
+      const url = which === 'friends' ? '/api/activity/friends' : '/api/activity';
+      const r = await window.api.get(url);
+      const rows = r.activity || [];
+      if (!rows.length) {
+        box.innerHTML = `<div class="dash-empty"><strong>Quiet right now.</strong><br/><span class="dim">First user to drop a flag fills this feed.</span></div>`;
+        return;
+      }
+      const fallbackBanner = which === 'friends' && r.fallback
+        ? `<div class="dim mono" style="font-size:0.78rem; padding: 0 0.4rem 0.5rem;">// you don't follow anyone yet — showing global feed</div>`
+        : '';
+      box.innerHTML = fallbackBanner + rows.map(activityRowHTML).join('');
+    } catch (err) {
+      box.innerHTML = `<div class="dash-empty"><strong>Could not load feed.</strong><br/><span class="dim">${escapeHtml(err.message || '')}</span></div>`;
+    }
+  }
+
+  // Tab swap (Global / Friends)
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('.global-feed-tab');
+    if (!t) return;
+    document.querySelectorAll('.global-feed-tab').forEach((x) => x.classList.toggle('is-active', x === t));
+    renderGlobalFeed(t.dataset.feed);
+  });
+
   function renderFeed(activity) {
     const box = $('activityFeed');
     if (!activity?.length) {
@@ -646,6 +717,7 @@
     renderHeatmap(heatmap);
     renderRadar(categories);
     renderFeed(activity);
+    renderGlobalFeed(); // /api/activity, separate fetch — runs in parallel with above
     renderAchievements(achievements || []);
     renderCertificates(certificates || []);
 

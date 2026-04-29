@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
 import * as discord from '../lib/discord.js';
+import { emitActivity } from './activity.js';
 
 const router = Router();
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
@@ -79,15 +80,18 @@ router.post('/:slug/submit', requireAuth, (req, res) => {
       INSERT OR IGNORE INTO solves (user_id, challenge_id) VALUES (?, ?)
     `).run(req.user.id, ch.id);
 
-    // Detect first blood and announce on Discord (background, non-blocking)
+    // Only emit activity / announce first-blood on the genuine first solve
+    // for this user (info.changes === 0 means a duplicate INSERT OR IGNORE).
     if (info.changes === 1) {
+      const fullChal = db.prepare(
+        'SELECT title, slug, points, category, difficulty FROM challenges WHERE id = ?'
+      ).get(ch.id);
       const totalSolves = db.prepare(
         'SELECT COUNT(*) AS c FROM solves WHERE challenge_id = ?'
       ).get(ch.id).c;
-      if (totalSolves === 1) {
-        const fullChal = db.prepare(
-          'SELECT title, slug, points FROM challenges WHERE id = ?'
-        ).get(ch.id);
+      const isFirstBlood = totalSolves === 1;
+
+      if (isFirstBlood) {
         discord.announceFirstBlood({
           userDisplay:    req.user.display_name,
           userUsername:   req.user.username,
@@ -96,6 +100,18 @@ router.post('/:slug/submit', requireAuth, (req, res) => {
           points:         fullChal.points,
         }).catch(() => {});
       }
+
+      emitActivity({
+        userId: req.user.id,
+        kind: isFirstBlood ? 'first_blood' : 'solve',
+        title: isFirstBlood
+          ? `🩸 First blood on ${fullChal.title}`
+          : `Solved ${fullChal.title}`,
+        body: `${fullChal.category} · ${fullChal.difficulty} · ${fullChal.points} pts`,
+        link: `/challenges/${fullChal.slug}`,
+        visibility: 'public',
+        payload: { points: fullChal.points, category: fullChal.category, difficulty: fullChal.difficulty },
+      });
     }
   }
 

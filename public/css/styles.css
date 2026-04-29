@@ -10776,3 +10776,114 @@ html, body {
   font-style: italic;
   color: var(--text-dim);
 }
+
+/* ============================================================
+   Global activity feed (dashboard "// community pulse")
+   Pulls from /api/activity. One row per event, with the event
+   user's avatar on the left, headline center, kind icon + time
+   on the right. Whole row is the link target.
+   ============================================================ */
+.global-feed-tabs {
+  display: inline-flex;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 3px;
+}
+.global-feed-tab {
+  background: transparent;
+  border: none;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.global-feed-tab:hover { color: var(--text); }
+.global-feed-tab.is-active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+
+.global-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+
+.dash-feed-row {
+  padding: 0;
+}
+.dash-feed-row-link {
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, transform 0.06s, background 0.15s;
+}
+.dash-feed-row-link:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  background: color-mix(in srgb, var(--accent) 4%, var(--bg));
+}
+.dash-feed-row-link:active { transform: translateY(1px); }
+
+.dash-feed-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bg-elev);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.dash-feed-avatar-letter {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg-elev));
+  color: var(--accent);
+}
+
+.dash-feed-row-body { min-width: 0; }
+.dash-feed-username {
+  color: var(--accent);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-decoration: none;
+  margin-right: 0.4rem;
+}
+.dash-feed-username:hover { text-decoration: underline; }
+.dash-feed-headline {
+  font-size: 0.92rem;
+  color: var(--text);
+}
+.dash-feed-row .dash-feed-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+.dash-feed-row-icon {
+  color: var(--text-dim);
+  display: inline-flex;
+  align-items: center;
+}
+.dash-feed-item[data-kind="first_blood"] .dash-feed-row-icon { color: var(--challenge); }
+.dash-feed-item[data-kind="solve"]       .dash-feed-row-icon { color: var(--terminal); }
+.dash-feed-item[data-kind="duel_won"]    .dash-feed-row-icon { color: var(--challenge); }
+.dash-feed-item[data-kind="level_up"]    .dash-feed-row-icon { color: var(--accent); }
+.dash-feed-item[data-kind="streak"]      .dash-feed-row-icon { color: var(--medium); }
+
+@media (max-width: 540px) {
+  .dash-feed-row-link { grid-template-columns: 28px 1fr auto; gap: 0.55rem; padding: 0.55rem 0.7rem; }
+  .dash-feed-row-icon { display: none; }
+  .dash-feed-avatar { width: 28px; height: 28px; }
+}

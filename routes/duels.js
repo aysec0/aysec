@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto';
 import { db } from '../db/index.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import { emit as emitNotification } from './notifications.js';
+import { emitActivity } from './activity.js';
 
 const router = Router();
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
@@ -423,6 +424,27 @@ router.post('/:id/submit', requireAuth, (req, res) => {
       body:  `-${d.stake} XP`,
       link:  `/duels/${id}`,
       icon:  'duel',
+    });
+  }
+
+  // Activity entries for both sides so the global feed shows the matchup.
+  const chalRow = db.prepare('SELECT title FROM challenges WHERE id = ?').get(d.challenge_id);
+  emitActivity({
+    userId: req.user.id, kind: 'duel_won',
+    title: `Won a duel · +${d.stake} XP`,
+    body:  `Beat ${loserId ? '@' + (db.prepare('SELECT username FROM users WHERE id = ?').get(loserId)?.username || '') : 'an opponent'} on ${chalRow?.title || 'a challenge'}`,
+    link:  `/duels/${id}`,
+    visibility: 'public',
+    payload: { stake: d.stake, duel_id: id },
+  });
+  if (loserId) {
+    emitActivity({
+      userId: loserId, kind: 'duel_lost',
+      title: `Lost a duel · −${d.stake} XP`,
+      body:  `Beaten by @${req.user.username} on ${chalRow?.title || 'a challenge'}`,
+      link:  `/duels/${id}`,
+      visibility: 'self',
+      payload: { stake: d.stake, duel_id: id },
     });
   }
 

@@ -6,6 +6,7 @@ import { Router } from 'express';
 import { db } from '../db/index.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
 import { emit as emitNotification } from './notifications.js';
+import { emitActivity } from './activity.js';
 
 // ---- @mention parser ---------------------------------------------------
 // Pulls every @username out of a markdown body, deduplicates, returns the
@@ -115,6 +116,13 @@ router.post('/posts', requireAuth, (req, res) => {
       icon: '@',
     });
   }
+  emitActivity({
+    userId: req.user.id, kind: 'post',
+    title: `Posted "${title.trim().slice(0, 80)}"`,
+    body:  `in /community/${category}`,
+    link:  `/community/post/${info.lastInsertRowid}`,
+    visibility: 'public',
+  });
   res.json({ id: info.lastInsertRowid });
 });
 
