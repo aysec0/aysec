@@ -71,7 +71,7 @@
       : '';
     const verifiedBadge = p.verified_writeup
       ? `<span class="forum-verified" title="Author solved ${escapeHtml(p.verified_writeup.challenge.title)} on ${escapeHtml(p.verified_writeup.challenge.source || 'aysec')}">
-           ✓ verified writeup
+           ${window.icon ? window.icon('check-circle', 12) : ''} verified writeup
          </span>`
       : '';
     return `
@@ -87,8 +87,8 @@
             <span class="dim">posted by <a href="/u/${escapeHtml(p.username)}">@${escapeHtml(p.username)}</a> ${escapeHtml(relTime(p.created_at))}</span>
             ${liveBadge}
             ${verifiedBadge}
-            ${p.pinned ? '<span class="tag" style="background: var(--accent-soft); color: var(--accent);">pinned</span>' : ''}
-            ${p.locked ? '<span class="tag">locked</span>' : ''}
+            ${p.pinned ? `<span class="tag forum-tag-icon" style="background: var(--accent-soft); color: var(--accent);">${window.icon ? window.icon('pin', 11) : ''} pinned</span>` : ''}
+            ${p.locked ? `<span class="tag forum-tag-icon">${window.icon ? window.icon('lock', 11) : ''} locked</span>` : ''}
           </div>
           <h3 class="forum-title"><a href="/community/post/${p.id}">${escapeHtml(p.title)}</a></h3>
           ${p.url ? `<a class="forum-url-pill" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(hostFromUrl(p.url))} ↗</a>` : ''}
@@ -98,7 +98,9 @@
             </a>` : ''}
           ${p.body_md ? `<div class="forum-excerpt">${escapeHtml((p.body_md || '').slice(0, 240))}${p.body_md.length > 240 ? '…' : ''}</div>` : ''}
           <div class="forum-actions">
-            <a href="/community/post/${p.id}" class="dim">💬 ${p.comment_count} comments</a>
+            <a href="/community/post/${p.id}" class="dim forum-comments-link">
+              ${window.icon ? window.icon('message-square', 14) : ''} <span>${p.comment_count} comments</span>
+            </a>
           </div>
         </div>
       </article>`;
@@ -170,7 +172,17 @@
     }, 1000);
   }
 
+  // Hydrate any <span data-icon="name"> placeholders (sort chips, buttons, etc.)
+  function hydrateIconPlaceholders(root = document) {
+    if (!window.icon) return;
+    root.querySelectorAll('[data-icon]:not([data-icon-rendered])').forEach((el) => {
+      el.innerHTML = window.icon(el.dataset.icon, +(el.dataset.iconSize) || 14);
+      el.dataset.iconRendered = '1';
+    });
+  }
+
   async function init() {
+    hydrateIconPlaceholders();   // run once for the static toolbar chips
     try {
       const [cr, weights] = await Promise.all([
         window.api.get('/api/forum/categories'),

@@ -73,7 +73,7 @@
       <li>
         <button type="button" class="chat-room-btn ${currentRoom?.slug === r.slug ? 'is-active' : ''}"
                 data-slug="${escapeHtml(r.slug)}" style="--rc:${r.color || '#888'};">
-          <span class="chat-room-icon">${r.icon || '#'}</span>
+          <span class="chat-room-icon">${window.iconForChatRoom ? window.iconForChatRoom(r.slug) : '#'}</span>
           <span class="chat-room-name">${escapeHtml(r.name)}</span>
           ${unread[r.slug] ? `<span class="chat-room-unread">${unread[r.slug]}</span>` : ''}
         </button>
@@ -95,7 +95,7 @@
     renderRoomList();
 
     // Header
-    $('#roomIcon').textContent = room.icon || '#';
+    $('#roomIcon').innerHTML = window.iconForChatRoom ? window.iconForChatRoom(room.slug) : '#';
     $('#roomName').textContent = '#' + room.name;
     $('#roomDesc').textContent = room.description || '';
     $('#chatInput').placeholder = `Message #${room.name}`;
@@ -137,7 +137,7 @@
     if (!currentMessages.length) {
       container.innerHTML = `
         <div class="chat-empty">
-          <div class="chat-empty-icon">${currentRoom.icon || '💬'}</div>
+          <div class="chat-empty-icon">${window.iconForChatRoom ? window.iconForChatRoom(currentRoom.slug) : ''}</div>
           <h2>Welcome to <span style="color:${currentRoom.color || 'var(--accent)'};">#${escapeHtml(currentRoom.name)}</span></h2>
           <p class="muted">${escapeHtml(currentRoom.description || '')}</p>
           <p class="dim">${viewer ? "You're the first one in. Say hi." : 'Sign in to send messages.'}</p>
@@ -191,9 +191,11 @@
         ${escapeHtml(r.emoji)} <span>${r.count}</span>
       </button>`;
     }).join('');
+    // Reply-context "corner-down-left" SVG instead of the ↩ glyph
+    const replyArrow = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
     const replyHTML = m.reply_context ? `
       <div class="chat-msg-reply">
-        <span class="dim mono">↩ ${escapeHtml(m.reply_context.display_name || m.reply_context.username)}:</span>
+        <span class="dim mono">${replyArrow} ${escapeHtml(m.reply_context.display_name || m.reply_context.username)}:</span>
         <span class="chat-msg-reply-snippet">${escapeHtml(m.reply_context.body || '')}</span>
       </div>` : '';
     const bodyHTML = m.deleted
@@ -217,9 +219,15 @@
           ${reactionsHTML ? `<div class="chat-reactions">${reactionsHTML}</div>` : ''}
         </div>
         <div class="chat-msg-actions" role="toolbar">
-          <button type="button" class="chat-msg-action chat-msg-react" data-msg="${m.id}" title="React">😊</button>
-          <button type="button" class="chat-msg-action chat-msg-reply" data-msg="${m.id}" title="Reply">↩</button>
-          ${isOwn || viewer?.role === 'admin' ? `<button type="button" class="chat-msg-action chat-msg-del" data-msg="${m.id}" title="Delete">🗑</button>` : ''}
+          <button type="button" class="chat-msg-action chat-msg-react" data-msg="${m.id}" title="React" aria-label="React">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </button>
+          <button type="button" class="chat-msg-action chat-msg-reply" data-msg="${m.id}" title="Reply" aria-label="Reply">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+          </button>
+          ${isOwn || viewer?.role === 'admin' ? `<button type="button" class="chat-msg-action chat-msg-del" data-msg="${m.id}" title="Delete" aria-label="Delete">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>` : ''}
         </div>
       </article>`;
   }

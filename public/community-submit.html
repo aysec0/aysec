@@ -33,7 +33,10 @@
         </label>
         <label>body (markdown, optional)
           <div class="forum-textarea-toolbar">
-            <button type="button" class="forum-attach-btn" id="newPostAttach" title="Attach an image">📎 Image</button>
+            <button type="button" class="forum-attach-btn" id="newPostAttach" title="Attach an image">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 17.93 8.8l-8.58 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              Attach image
+            </button>
             <span class="dim" style="font-size:0.78rem;">or drop / paste an image into the textarea</span>
           </div>
           <textarea class="textarea" name="body_md" id="newPostBody" rows="10" placeholder="What did you find / learn / question?"></textarea>
@@ -48,19 +51,25 @@
           <label class="forum-option">
             <input type="checkbox" id="newPostGoLive" />
             <div>
-              <span class="forum-option-name">🟢 Go live for 60 minutes</span>
+              <span class="forum-option-name">
+                <span class="forum-option-icon" data-icon="circle-dot" data-icon-size="14"></span>
+                Go live for 60 minutes
+              </span>
               <span class="forum-option-desc">Post pins to the top of the feed and replies stream in real-time. Switches to a normal thread after.</span>
             </div>
           </label>
           <label class="forum-option">
             <span style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; width:100%;">
-              <span class="forum-option-name">✓ Verify as writeup of:</span>
+              <span class="forum-option-name">
+                <span class="forum-option-icon" data-icon="check-circle" data-icon-size="14"></span>
+                Verify as writeup of:
+              </span>
               <select class="input mono" id="newPostClaimChallenge" style="flex:1; min-width:240px;">
                 <option value="">— Don't claim a challenge —</option>
               </select>
             </span>
             <span class="forum-option-desc">
-              Only challenges you've solved show up. Verified writeups get a green ✓ badge and surface higher in the feed.
+              Only challenges you've solved show up. Verified writeups get a green check badge and surface higher in the feed.
             </span>
           </label>
         </div>
@@ -76,12 +85,22 @@
   <div id="footer-mount"></div>
   <script src="/js/api.js"></script>
   <script src="/js/layout.js"></script>
+  <script src="/js/icons.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@14.1.2/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <script src="/js/forum-upload.js"></script>
   <script>
     (() => {
       const $ = (id) => document.getElementById(id);
+      // Hydrate any inline data-icon placeholders (live + verified labels)
+      function hydrateIcons() {
+        if (!window.icon) return;
+        document.querySelectorAll('[data-icon]:not([data-icon-rendered])').forEach((el) => {
+          el.innerHTML = window.icon(el.dataset.icon, +(el.dataset.iconSize) || 14);
+          el.dataset.iconRendered = '1';
+        });
+      }
+      hydrateIcons();
       (async () => {
         const me = await window.api.get('/api/auth/me').catch(() => null);
         if (!me?.user) { location.href = '/login?next=/community/submit'; return; }

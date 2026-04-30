@@ -22,14 +22,19 @@
 
   const $ = (s) => document.querySelector(s);
 
-  // Small visual labels for source platforms (icon + display name)
+  // Visual labels for source platforms — SVG icons (resolved at render time
+  // via window.icon) instead of emoji so they look consistent across OSes.
   const SOURCE_LABELS = {
-    aysec:       { name: 'aysec original', icon: '~$', color: '#39ff7a' },
-    overthewire: { name: 'OverTheWire',    icon: '🐚', color: '#7aa2f7' },
-    cryptohack:  { name: 'CryptoHack',     icon: '🔐', color: '#bb88ff' },
-    tryhackme:   { name: 'TryHackMe',      icon: '🎯', color: '#88e8a3' },
-    htb:         { name: 'Hack The Box',   icon: '🟢', color: '#9fef00' },
+    aysec:       { name: 'aysec original', iconName: 'check',       color: '#39ff7a' },
+    overthewire: { name: 'OverTheWire',    iconName: 'globe',       color: '#7aa2f7' },
+    cryptohack:  { name: 'CryptoHack',     iconName: 'lock',        color: '#bb88ff' },
+    tryhackme:   { name: 'TryHackMe',      iconName: 'target',      color: '#88e8a3' },
+    htb:         { name: 'Hack The Box',   iconName: 'shield',      color: '#9fef00' },
   };
+  function sourceIcon(id, size = 12) {
+    const s = SOURCE_LABELS[id] || SOURCE_LABELS.aysec;
+    return window.icon ? window.icon(s.iconName, size) : '';
+  }
 
   function avatarFor(u, large = false) {
     const cls = `arena-avatar${large ? ' arena-avatar-lg' : ''}`;
@@ -81,7 +86,7 @@
     const labels = { open: 'OPEN', active: 'LIVE', finished: 'FINISHED', cancelled: 'CANCELLED', expired: 'EXPIRED' };
     const fmt = d.format;
     const formatBadge = fmt
-      ? `<span class="duel-format-badge" style="--fmt-c:${fmt.color};">${fmt.icon} ${escapeHtml(fmt.name)}</span>`
+      ? `<span class="duel-format-badge" style="--fmt-c:${fmt.color};">${window.iconForDuelFormat ? window.iconForDuelFormat(fmt.id) : ''} ${escapeHtml(fmt.name)}</span>`
       : '';
 
     let label = '';
@@ -133,7 +138,7 @@
         </div>
 
         <div class="arena-versus-mid" ${fmt ? `style="--fmt-c:${fmt.color};"` : ''}>
-          ${fmt ? `<div class="arena-versus-icon">${fmt.icon}</div>` : ''}
+          ${fmt ? `<div class="arena-versus-icon">${window.iconForDuelFormat ? window.iconForDuelFormat(fmt.id) : ''}</div>` : ''}
           <div class="arena-versus-vs">VS</div>
           <div class="arena-versus-cap">${escapeHtml(centerLabel)}</div>
         </div>
@@ -175,13 +180,14 @@
       box.hidden = false;
       const externalCta = c.external_url
         ? `<a class="btn btn-primary arena-source-btn" href="${escapeHtml(c.external_url)}" target="_blank" rel="noopener" style="--src-c:${src.color};">
-             ${src.icon} Open on ${escapeHtml(src.name)} ↗
+             ${sourceIcon(c.source, 14)} Open on ${escapeHtml(src.name)}
+             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="margin-left:0.2rem;"><path d="M7 17 17 7"/><polyline points="7 7 17 7 17 17"/></svg>
            </a>`
         : `<a class="btn btn-ghost btn-sm" href="/challenges/${escapeHtml(c.slug)}" target="_blank" rel="noopener">Open challenge ↗</a>`;
       box.innerHTML = `
         <div class="arena-challenge-head">
           <div class="arena-challenge-tags">
-            <span class="arena-source-badge" style="--src-c:${src.color};">${src.icon} ${escapeHtml(src.name)}</span>
+            <span class="arena-source-badge" style="--src-c:${src.color};">${sourceIcon(c.source, 12)} ${escapeHtml(src.name)}</span>
             <span class="arena-cat-pill">${escapeHtml(c.category)}</span>
             ${diffDot(c.difficulty)}
             <span class="dim mono" style="font-size:0.78rem;">${c.points} pts</span>
@@ -207,7 +213,7 @@
     const src = SOURCE_LABELS[c.source || 'aysec'] || SOURCE_LABELS.aysec;
     $('#duelStats').innerHTML = `
       <div class="stat"><span class="stat-key">status</span><span class="stat-val">${escapeHtml(d.status)}</span></div>
-      ${d.format ? `<div class="stat"><span class="stat-key">format</span><span class="stat-val" style="color:${d.format.color};">${d.format.icon} ${escapeHtml(d.format.name)}</span></div>` : ''}
+      ${d.format ? `<div class="stat"><span class="stat-key">format</span><span class="stat-val" style="color:${d.format.color};">${window.iconForDuelFormat ? window.iconForDuelFormat(d.format.id) : ''} ${escapeHtml(d.format.name)}</span></div>` : ''}
       <div class="stat"><span class="stat-key">source</span><span class="stat-val" style="color:${src.color};">${escapeHtml(src.name)}</span></div>
       <div class="stat"><span class="stat-key">category</span><span class="stat-val">${escapeHtml(c.category)}</span></div>
       <div class="stat"><span class="stat-key">difficulty</span><span class="stat-val">${escapeHtml(c.difficulty)}</span></div>

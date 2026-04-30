@@ -67,7 +67,7 @@
         <div class="duel-card-head">
           ${statusBadge(d)}
           ${d.format
-            ? `<span class="duel-format-badge" style="--fmt-c:${d.format.color};">${d.format.icon} ${escapeHtml(d.format.name)}</span>
+            ? `<span class="duel-format-badge" style="--fmt-c:${d.format.color};">${window.iconForDuelFormat ? window.iconForDuelFormat(d.format.id) : ''} ${escapeHtml(d.format.name)}</span>
                <span class="duel-stake duel-stake-rating">+${d.format.points_win}</span>`
             : `<span class="duel-stake"><span class="duel-stake-num">${d.stake}</span> XP</span>`}
           ${d.status === 'open'   ? `<span class="duel-clock">expires ${escapeHtml(fmtRemaining(d.expires_at))}</span>` : ''}
@@ -285,7 +285,7 @@
             : '';
         return `
           <button type="button" class="duel-tile" data-format="${f.id}" role="listitem" style="--fmt-c:${f.color};" aria-label="${f.name} — ${f.minutes} minutes">
-            <span class="duel-tile-icon">${f.icon}</span>
+            <span class="duel-tile-icon">${window.iconForDuelFormat ? window.iconForDuelFormat(f.id) : ''}</span>
             <span class="duel-tile-body">
               <span class="duel-tile-name">${escapeHtml(f.name)}</span>
               <span class="duel-tile-time">${formatTimeLabel(f.minutes)}</span>

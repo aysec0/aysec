@@ -45,9 +45,9 @@
             <span class="forum-cat-pill" style="--cat: ${p.cat_color || 'var(--accent)'};">/${escapeHtml(p.cat_slug)}</span>
             <span class="dim">posted by <a href="/u/${escapeHtml(p.username)}">@${escapeHtml(p.username)}</a> ${relTime(p.created_at)}</span>
             ${p.is_live ? `<span class="forum-live-badge"><span class="forum-live-dot"></span> LIVE</span>` : ''}
-            ${p.verified_writeup ? `<span class="forum-verified" title="Author solved ${escapeHtml(p.verified_writeup.challenge.title)}">✓ verified writeup</span>` : ''}
-            ${p.pinned ? '<span class="tag" style="background: var(--accent-soft); color: var(--accent);">📌 pinned</span>' : ''}
-            ${p.locked ? '<span class="tag">🔒 locked</span>' : ''}
+            ${p.verified_writeup ? `<span class="forum-verified" title="Author solved ${escapeHtml(p.verified_writeup.challenge.title)}">${window.icon ? window.icon('check-circle', 12) : ''} verified writeup</span>` : ''}
+            ${p.pinned ? `<span class="tag forum-tag-icon" style="background: var(--accent-soft); color: var(--accent);">${window.icon ? window.icon('pin', 12) : ''} pinned</span>` : ''}
+            ${p.locked ? `<span class="tag forum-tag-icon">${window.icon ? window.icon('lock', 12) : ''} locked</span>` : ''}
             ${canDelete ? `<button class="forum-del" data-pdel="${p.id}">delete</button>` : ''}
             <span data-presence-scope="community-post" data-presence-id="${p.id}"></span>
           </div>
@@ -60,8 +60,8 @@
           ${p.body_md ? `<div class="forum-md prose">${md(p.body_md)}</div>` : ''}
           ${isAdmin ? `
             <div class="forum-mod-row">
-              <button class="forum-mod-btn ${p.pinned ? 'is-on' : ''}" data-mod="pinned">📌 ${p.pinned ? 'unpin' : 'pin'}</button>
-              <button class="forum-mod-btn ${p.locked ? 'is-on' : ''}" data-mod="locked">🔒 ${p.locked ? 'unlock' : 'lock'}</button>
+              <button class="forum-mod-btn ${p.pinned ? 'is-on' : ''}" data-mod="pinned">${window.icon ? window.icon('pin', 12) : ''} ${p.pinned ? 'unpin' : 'pin'}</button>
+              <button class="forum-mod-btn ${p.locked ? 'is-on' : ''}" data-mod="locked">${window.icon ? window.icon('lock', 12) : ''} ${p.locked ? 'unlock' : 'lock'}</button>
             </div>` : ''}
         </div>
       </article>`;
@@ -321,9 +321,9 @@
       bar.hidden = true;
       bar.innerHTML = `
         <span class="forum-comment-sort-label">sort by</span>
-        <button class="chip ${sort==='top'?'is-active':''}" data-csort="top">⭐ Top</button>
-        <button class="chip ${sort==='new'?'is-active':''}" data-csort="new">🆕 New</button>
-        <button class="chip ${sort==='old'?'is-active':''}" data-csort="old">⏱ Old</button>`;
+        <button class="chip ${sort==='top'?'is-active':''}" data-csort="top"><span class="chip-icon">${window.icon ? window.icon('star', 13) : ''}</span> Top</button>
+        <button class="chip ${sort==='new'?'is-active':''}" data-csort="new"><span class="chip-icon">${window.icon ? window.icon('plus', 13) : ''}</span> New</button>
+        <button class="chip ${sort==='old'?'is-active':''}" data-csort="old"><span class="chip-icon">${window.icon ? window.icon('check', 13) : ''}</span> Oldest</button>`;
       head.insertAdjacentElement('afterend', bar);
     }
     wireSortBar();

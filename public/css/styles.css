@@ -12829,3 +12829,120 @@ select.input optgroup {
   margin-top: 0.15rem;
   line-height: 1.4;
 }
+
+/* ============================================================
+   Icon-bearing chips, tags, and forum-comments link.
+   The .chip-icon span wraps an SVG so it inherits color and
+   sits on the text baseline cleanly.
+   ============================================================ */
+.chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -2px;
+  margin-right: 0.3rem;
+}
+.chip-icon svg { width: 13px; height: 13px; }
+
+/* tags with leading icon (pinned, locked, etc.) */
+.forum-tag-icon {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.25rem;
+}
+.forum-tag-icon svg { flex-shrink: 0; }
+
+/* Comments-link icon (replaces the 💬 emoji) */
+.forum-comments-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-decoration: none;
+}
+.forum-comments-link svg { flex-shrink: 0; opacity: 0.7; }
+.forum-comments-link:hover svg { opacity: 1; color: var(--accent); }
+
+/* Submit-form option icon (live + verified labels) */
+.forum-option-icon {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: -2px;
+  margin-right: 0.25rem;
+  color: var(--accent);
+}
+.forum-option-icon svg { width: 14px; height: 14px; }
+
+/* Chat room icon swap from emoji-text to inline-flex SVG */
+.chat-room-icon {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  font-size: 0;        /* hide leftover text content if any */
+}
+.chat-room-icon svg { width: 16px; height: 16px; }
+
+.chat-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-header-icon svg { width: 22px; height: 22px; }
+
+.chat-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+.chat-empty-icon svg { width: 28px; height: 28px; }
+
+.chat-msg-action svg { display: block; }
+.chat-msg-reply svg { vertical-align: -1px; opacity: 0.65; }
+
+.chat-composer-emoji {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+.chat-composer-emoji:hover { color: var(--accent); }
+
+.chat-reply-bar svg { vertical-align: -1px; }
+.chat-reply-bar button { display: inline-flex; align-items: center; justify-content: center; }
+
+/* Duel format tile icon — now SVG, give it a square slot */
+.duel-tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  color: var(--fmt-c, var(--accent));
+}
+.duel-tile-icon svg { width: 22px; height: 22px; }
+
+/* Duel format badge inline icon */
+.duel-format-badge svg {
+  vertical-align: -2px;
+  margin-right: 0.25rem;
+}
+
+/* Arena versus center icon */
+.arena-versus-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  color: var(--fmt-c, var(--challenge));
+}
+.arena-versus-icon svg { width: 28px; height: 28px; }
+
+/* Source-badge inline icon */
+.arena-source-badge svg {
+  vertical-align: -2px;
+  margin-right: 0.2rem;
+}
