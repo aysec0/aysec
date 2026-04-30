@@ -12946,3 +12946,170 @@ select.input optgroup {
   vertical-align: -2px;
   margin-right: 0.2rem;
 }
+
+/* ============================================================
+   Cipher pipeline (cryptii-style 3-panel layout)
+   Input → Method/Settings → Output, side-by-side on desktop,
+   stacked on mobile. Each panel has a colored top "ribbon".
+   ============================================================ */
+.cipher-pipeline {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: stretch;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+@media (max-width: 880px) {
+  .cipher-pipeline { grid-template-columns: 1fr; gap: 0.4rem; }
+  .cipher-arrow    { display: none; }
+}
+
+.cipher-panel {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.85rem 0.95rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+}
+.cipher-panel-left,
+.cipher-panel-right {
+  border-top: 3px solid var(--accent);   /* aysec-blue ribbon */
+}
+.cipher-panel-mid {
+  border-top: 3px solid var(--medium, #f0b34a);  /* amber ribbon for the method panel */
+}
+
+.cipher-panel-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+.cipher-panel-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.cipher-panel-title {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.cipher-panel-mid .cipher-panel-title { color: var(--medium, #f0b34a); }
+
+.cipher-panel-section {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cipher-panel-foot {
+  margin-top: auto;
+  padding-top: 0.55rem;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+}
+
+.cipher-textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.cipher-arrow {
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  color: var(--accent);
+  padding: 0 0.2rem;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* — Encode/Decode mode toggle — */
+.cipher-mode {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  overflow: hidden;
+  padding: 2px;
+  gap: 2px;
+  margin-bottom: 0;
+}
+.cipher-mode-btn {
+  background: transparent;
+  border: 0;
+  padding: 0.35rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.cipher-mode-btn:hover { color: var(--text); }
+.cipher-mode-btn.is-active {
+  background: color-mix(in srgb, var(--medium, #f0b34a) 16%, transparent);
+  color: var(--medium, #f0b34a);
+}
+
+.cipher-method {
+  width: 100%;
+  font-family: var(--font-mono);
+}
+
+.cipher-shift-row {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+.cipher-shift-row input[type="range"] { accent-color: var(--accent); }
+.cipher-shift-row input[type="number"] { text-align: center; }
+
+.cipher-affine-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.cipher-affine-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+.cipher-affine-row input { width: 60px; text-align: center; }
+
+#cipher-affine-warn {
+  color: var(--medium, #f0b34a);
+  font-size: 0.74rem;
+  margin-top: 0.25rem;
+}
+
+.cipher-copy-btn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.cipher-copy-btn:hover { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }

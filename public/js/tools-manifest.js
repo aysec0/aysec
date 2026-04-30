@@ -140,22 +140,101 @@
         </div>`,
     },
     {
-      slug: 'cipher', title: 'Cipher translator', tag: 'encoding',
-      desc: 'Decode + encode every common cipher in one shot — ROT13, Caesar (any shift), Atbash, ROT47, Reverse, Leet, hex, binary, decimal-bytes, Morse, A1Z26, Vigenère.',
-      shortDesc: 'Try every cipher / encoding at once.', icon: SVG_SWAP,
+      slug: 'cipher', title: 'Cipher pipeline', tag: 'encoding',
+      desc: 'cryptii-style three-panel decoder/encoder. Input on the left, pick a cipher in the middle (Caesar, ROT13, Vigenère, Atbash, Affine, Base64, hex, binary, decimal, URL, Morse, A1Z26, Reverse, Leet), output streams to the right as you type.',
+      shortDesc: 'Three-panel cipher pipeline (cryptii-style).', icon: SVG_SWAP,
       html: `
-        <div class="tool-panel-head"><h2 class="tool-panel-title"><span class="icon">${SVG_SWAP}</span>Cipher translator</h2></div>
-        <p class="tool-panel-desc">One input → every common cipher and encoding decoded/encoded simultaneously. Empty cells mean the input couldn&apos;t decode as that scheme.</p>
-        <input class="input mono" id="cipher-in" placeholder="text or ciphertext" />
-        <div class="tool-grid-2">
-          <div><span class="tool-out-label">Caesar shift</span>
-            <input class="input mono" id="cipher-caesar-shift" type="number" min="1" max="25" value="3" />
+        <div class="tool-panel-head"><h2 class="tool-panel-title"><span class="icon">${SVG_SWAP}</span>Cipher pipeline</h2></div>
+        <p class="tool-panel-desc">Type on the left. Pick a cipher and tweak its parameters in the middle. The decoded / encoded output appears on the right, live, as you type.</p>
+
+        <div class="cipher-pipeline">
+          <!-- LEFT — input -->
+          <div class="cipher-panel cipher-panel-left">
+            <div class="cipher-panel-head">
+              <span class="cipher-panel-eyebrow">VIEW</span>
+              <span class="cipher-panel-title">Input</span>
+            </div>
+            <textarea class="input mono cipher-textarea" id="cipher-in" rows="8" placeholder="Type or paste here…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+            <div class="cipher-panel-foot dim mono" id="cipher-in-foot">0 chars</div>
           </div>
-          <div><span class="tool-out-label">Vigenère key</span>
-            <input class="input mono" id="cipher-vig-key" placeholder="LEMON" />
+
+          <!-- ARROW -->
+          <div class="cipher-arrow" aria-hidden="true">→</div>
+
+          <!-- MIDDLE — method picker + options -->
+          <div class="cipher-panel cipher-panel-mid">
+            <div class="cipher-panel-head cipher-mode">
+              <button type="button" class="cipher-mode-btn is-active" data-mode="decode" id="cipher-mode-decode">DECODE</button>
+              <button type="button" class="cipher-mode-btn"           data-mode="encode" id="cipher-mode-encode">ENCODE</button>
+            </div>
+            <div class="cipher-panel-section">
+              <span class="cipher-panel-eyebrow">METHOD</span>
+              <select class="input mono cipher-method" id="cipher-method">
+                <optgroup label="Classical">
+                  <option value="caesar">Caesar cipher</option>
+                  <option value="rot13">ROT13</option>
+                  <option value="rot47">ROT47</option>
+                  <option value="atbash">Atbash</option>
+                  <option value="vigenere">Vigenère cipher</option>
+                  <option value="affine">Affine cipher</option>
+                  <option value="reverse">Reverse</option>
+                  <option value="leet">Leet (1337)</option>
+                </optgroup>
+                <optgroup label="Encoding">
+                  <option value="base64">Base64</option>
+                  <option value="hex">Hex bytes</option>
+                  <option value="binary">Binary bytes</option>
+                  <option value="decimal">Decimal bytes</option>
+                  <option value="url">URL encoding</option>
+                </optgroup>
+                <optgroup label="Substitution / numeric">
+                  <option value="morse">Morse code</option>
+                  <option value="a1z26">A1Z26</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <!-- Per-method options. Hidden when the method doesn't need them. -->
+            <div class="cipher-panel-section" id="cipher-opts-shift" hidden>
+              <span class="cipher-panel-eyebrow">SHIFT</span>
+              <div class="cipher-shift-row">
+                <input class="input mono" id="cipher-shift" type="number" min="0" max="25" value="3" />
+                <input type="range"      id="cipher-shift-slider" min="0" max="25" value="3" />
+                <span class="dim mono" id="cipher-shift-label">a→d</span>
+              </div>
+            </div>
+
+            <div class="cipher-panel-section" id="cipher-opts-key" hidden>
+              <span class="cipher-panel-eyebrow">KEY</span>
+              <input class="input mono" id="cipher-key" placeholder="LEMON" autocomplete="off" />
+            </div>
+
+            <div class="cipher-panel-section" id="cipher-opts-affine" hidden>
+              <span class="cipher-panel-eyebrow">a · x + b mod 26</span>
+              <div class="cipher-affine-row">
+                <label>a <input class="input mono" id="cipher-affine-a" type="number" value="5" min="1" max="25" /></label>
+                <label>b <input class="input mono" id="cipher-affine-b" type="number" value="8" min="0" max="25" /></label>
+              </div>
+              <span class="dim mono" id="cipher-affine-warn"></span>
+            </div>
+
+            <div class="cipher-panel-foot dim mono" id="cipher-method-foot"></div>
           </div>
-        </div>
-        <div class="tool-out is-empty" id="cipher-out">type something to decode/encode</div>`,
+
+          <!-- ARROW -->
+          <div class="cipher-arrow" aria-hidden="true">→</div>
+
+          <!-- RIGHT — output -->
+          <div class="cipher-panel cipher-panel-right">
+            <div class="cipher-panel-head">
+              <span class="cipher-panel-eyebrow">VIEW</span>
+              <span class="cipher-panel-title">Output</span>
+              <button type="button" class="cipher-copy-btn" id="cipher-copy" title="Copy output">Copy</button>
+            </div>
+            <textarea class="input mono cipher-textarea" id="cipher-out" rows="8" readonly placeholder="…"></textarea>
+            <div class="cipher-panel-foot dim mono" id="cipher-out-foot">empty</div>
+          </div>
+        </div>`,
     },
     {
       slug: 'strings', title: 'Strings extractor', tag: 'encoding',

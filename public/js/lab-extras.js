@@ -215,14 +215,32 @@
   }
 
   // =========================================================
-  // Cipher translator
+  // Cipher pipeline (cryptii-style 3-panel)
   // =========================================================
-  if ($('cipher-out')) {
-    const inEl = $('cipher-in');
-    const shEl = $('cipher-caesar-shift');
-    const vkEl = $('cipher-vig-key');
-    const out  = $('cipher-out');
+  if ($('cipher-in') && $('cipher-method')) {
+    const inEl       = $('cipher-in');
+    const out        = $('cipher-out');
+    const inFoot     = $('cipher-in-foot');
+    const outFoot    = $('cipher-out-foot');
+    const methodSel  = $('cipher-method');
+    const methodFoot = $('cipher-method-foot');
+    const optsShift  = $('cipher-opts-shift');
+    const optsKey    = $('cipher-opts-key');
+    const optsAffine = $('cipher-opts-affine');
+    const shiftIn    = $('cipher-shift');
+    const shiftSlider= $('cipher-shift-slider');
+    const shiftLabel = $('cipher-shift-label');
+    const keyIn      = $('cipher-key');
+    const affineA    = $('cipher-affine-a');
+    const affineB    = $('cipher-affine-b');
+    const affineWarn = $('cipher-affine-warn');
+    const modeDecBtn = $('cipher-mode-decode');
+    const modeEncBtn = $('cipher-mode-encode');
+    const copyBtn    = $('cipher-copy');
 
+    let mode = 'decode';   // 'encode' | 'decode'
+
+    /* ---- Cipher implementations -------------------------------------- */
     function rotN(s, n) {
       return s.replace(/[A-Za-z]/g, (c) => {
         const base = c <= 'Z' ? 65 : 97;
@@ -243,10 +261,13 @@
       }).join('');
     }
     const LEET = { a:'4', b:'8', e:'3', g:'6', i:'1', l:'1', o:'0', s:'5', t:'7', z:'2' };
-    function leet(s) { return s.toLowerCase().split('').map((c) => LEET[c] || c).join(''); }
+    const LEET_REV = Object.fromEntries(Object.entries({4:'a',8:'b',3:'e',6:'g',1:'i',0:'o',5:'s',7:'t',2:'z'}));
+    function leetEnc(s) { return s.toLowerCase().split('').map((c) => LEET[c] || c).join(''); }
+    function leetDec(s) { return s.split('').map((c) => LEET_REV[c] || c).join(''); }
 
     function safeBtoa(s) { try { return btoa(unescape(encodeURIComponent(s))); } catch { return ''; } }
-    function safeAtob(s) { try { return decodeURIComponent(escape(atob(s.trim()))); } catch { return ''; } }
+    function safeAtob(s) { try { return decodeURIComponent(escape(atob(s.trim().replace(/\s+/g, '')))); } catch { return ''; } }
+
     function strToHex(s) { return [...new TextEncoder().encode(s)].map((b) => b.toString(16).padStart(2, '0')).join(' '); }
     function hexToStr(s) {
       const bs = fromHex(s);
@@ -291,8 +312,7 @@
       }).join('');
     }
     function vigEnc(s, key) {
-      if (!key) return '';
-      const k = key.toUpperCase().replace(/[^A-Z]/g, '');
+      const k = (key || '').toUpperCase().replace(/[^A-Z]/g, '');
       if (!k) return '';
       let i = 0;
       return s.replace(/[A-Za-z]/g, (c) => {
@@ -302,8 +322,7 @@
       });
     }
     function vigDec(s, key) {
-      if (!key) return '';
-      const k = key.toUpperCase().replace(/[^A-Z]/g, '');
+      const k = (key || '').toUpperCase().replace(/[^A-Z]/g, '');
       if (!k) return '';
       let i = 0;
       return s.replace(/[A-Za-z]/g, (c) => {
@@ -312,42 +331,153 @@
         return String.fromCharCode(((c.charCodeAt(0) - base - shift + 26) % 26) + base);
       });
     }
+    /* Affine cipher: encode = (a*x + b) mod 26, decode needs a's modular
+       inverse mod 26 — only valid when gcd(a, 26) = 1. */
+    function modInverse(a, m) {
+      a = ((a % m) + m) % m;
+      for (let x = 1; x < m; x++) if ((a * x) % m === 1) return x;
+      return null;
+    }
+    function affineEnc(s, a, b) {
+      return s.replace(/[A-Za-z]/g, (c) => {
+        const base = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode((a * (c.charCodeAt(0) - base) + b) % 26 + base);
+      });
+    }
+    function affineDec(s, a, b) {
+      const inv = modInverse(a, 26);
+      if (inv == null) return '';
+      return s.replace(/[A-Za-z]/g, (c) => {
+        const base = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode((((inv * ((c.charCodeAt(0) - base) - b)) % 26) + 26) % 26 + base);
+      });
+    }
+
+    /* Method registry — for each method, what options it shows + how
+       encode and decode actually run. The UI hides irrelevant options
+       automatically based on the option flags. */
+    const METHODS = {
+      caesar:   { opts: ['shift'],          enc: (s, o) => rotN(s, o.shift),         dec: (s, o) => rotN(s, -o.shift) },
+      rot13:    { opts: [],                 enc: (s)    => rotN(s, 13),              dec: (s)    => rotN(s, 13) },
+      rot47:    { opts: [],                 enc: (s)    => rot47(s),                 dec: (s)    => rot47(s) },
+      atbash:   { opts: [],                 enc: (s)    => atbash(s),                dec: (s)    => atbash(s) },
+      vigenere: { opts: ['key'],            enc: (s, o) => vigEnc(s, o.key),         dec: (s, o) => vigDec(s, o.key) },
+      affine:   { opts: ['affine'],         enc: (s, o) => affineEnc(s, o.a, o.b),   dec: (s, o) => affineDec(s, o.a, o.b) },
+      reverse:  { opts: [],                 enc: (s)    => s.split('').reverse().join(''), dec: (s) => s.split('').reverse().join('') },
+      leet:     { opts: [],                 enc: leetEnc,                            dec: leetDec },
+      base64:   { opts: [],                 enc: safeBtoa,                           dec: safeAtob },
+      hex:      { opts: [],                 enc: strToHex,                           dec: hexToStr },
+      binary:   { opts: [],                 enc: strToBin,                           dec: binToStr },
+      decimal:  { opts: [],                 enc: strToDec,                           dec: decToStr },
+      url:      { opts: [],                 enc: (s) => encodeURIComponent(s),       dec: (s) => { try { return decodeURIComponent(s); } catch { return ''; } } },
+      morse:    { opts: [],                 enc: strToMorse,                         dec: morseToStr },
+      a1z26:    { opts: [],                 enc: strToA1Z26,                         dec: a1z26ToStr },
+    };
+
+    /* Method-specific footer hint */
+    const METHOD_HINTS = {
+      caesar:   'Letters shift `shift` positions. ROT13 is shift=13.',
+      rot13:    'Symmetric — same operation encodes and decodes.',
+      rot47:    'Like ROT13 but on printable ASCII (33–126).',
+      atbash:   'Maps A↔Z, B↔Y, … — symmetric.',
+      vigenere: 'Polyalphabetic. Repeating key shifts each letter by key[i] mod len(key).',
+      affine:   'Encode: c = a·x + b mod 26. Decode needs gcd(a, 26) = 1.',
+      reverse:  'Just reverses the string. Symmetric.',
+      leet:     'Letter substitutions: a→4, e→3, l→1, o→0, s→5, t→7…',
+      base64:   'RFC 4648 base64. Decode strips whitespace.',
+      hex:      'Two hex digits per byte, space-separated. Decoder accepts continuous hex too.',
+      binary:   '8-bit groups, space-separated.',
+      decimal:  'Decimal byte values 0–255, space- or comma-separated.',
+      url:      'percent-encoding (RFC 3986).',
+      morse:    'International Morse. " / " separates words.',
+      a1z26:    'A=1, B=2, …, Z=26. " / " separates words.',
+    };
+
+    /* ---- UI binding -------------------------------------------------- */
+    function showOpts(opts) {
+      optsShift.hidden  = !opts.includes('shift');
+      optsKey.hidden    = !opts.includes('key');
+      optsAffine.hidden = !opts.includes('affine');
+    }
+
+    function setMode(next) {
+      mode = next;
+      modeDecBtn.classList.toggle('is-active', mode === 'decode');
+      modeEncBtn.classList.toggle('is-active', mode === 'encode');
+      run();
+    }
+
+    function syncShiftLabel() {
+      const n = parseInt(shiftIn.value, 10) || 0;
+      const a = String.fromCharCode(97);
+      const shifted = String.fromCharCode(97 + ((n % 26) + 26) % 26);
+      shiftLabel.textContent = `${a}→${shifted}`;
+    }
 
     function run() {
       const v = inEl.value;
-      if (!v) { setOut(out, 'type something to decode/encode', false); return; }
-      const shift = parseInt(shEl.value, 10) || 3;
-      const vkey  = vkEl.value;
-      const rows = [
-        ['ROT13',                rotN(v, 13)],
-        [`Caesar (shift ${shift})`, rotN(v, shift)],
-        ['Atbash',               atbash(v)],
-        ['ROT47',                rot47(v)],
-        ['Reverse',              v.split('').reverse().join('')],
-        ['Leet',                 leet(v)],
-        ['Base64 encode',        safeBtoa(v)],
-        ['Base64 decode',        safeAtob(v)],
-        ['Hex encode',           strToHex(v)],
-        ['Hex decode',           hexToStr(v)],
-        ['Binary encode',        strToBin(v)],
-        ['Binary decode',        binToStr(v)],
-        ['Decimal-bytes encode', strToDec(v)],
-        ['Decimal-bytes decode', decToStr(v)],
-        ['URL encode',           encodeURIComponent(v)],
-        ['URL decode',           (() => { try { return decodeURIComponent(v); } catch { return ''; } })()],
-        ['Morse encode',         strToMorse(v)],
-        ['Morse decode',         morseToStr(v)],
-        ['A1Z26 encode',         strToA1Z26(v)],
-        ['A1Z26 decode',         a1z26ToStr(v)],
-        [`Vigenère encode (key=${vkey || '∅'})`, vigEnc(v, vkey)],
-        [`Vigenère decode (key=${vkey || '∅'})`, vigDec(v, vkey)],
-      ];
-      out.classList.remove('is-empty');
-      out.innerHTML = rows.map(([label, val]) =>
-        `<div style="margin-bottom:0.45rem;"><span class="tool-out-label">${label}</span><div style="font-family:var(--font-mono); font-size:0.85rem; color:${val ? 'var(--text)' : 'var(--text-dim)'}; word-break:break-all;">${val ? escapeHtml(val) : '—'}</div></div>`
-      ).join('');
+      const m = methodSel.value;
+      const def = METHODS[m];
+      const o = {
+        shift: parseInt(shiftIn.value, 10) || 0,
+        key:   keyIn.value,
+        a:     parseInt(affineA.value, 10) || 1,
+        b:     parseInt(affineB.value, 10) || 0,
+      };
+
+      // Affine validity: a must be coprime to 26
+      affineWarn.textContent = '';
+      if (m === 'affine' && o.a != null) {
+        const inv = modInverse(o.a, 26);
+        if (inv == null) {
+          affineWarn.textContent = `a=${o.a} has no inverse mod 26 — pick an odd a that isn't 13.`;
+        }
+      }
+
+      methodFoot.textContent = METHOD_HINTS[m] || '';
+      inFoot.textContent = `${v.length} char${v.length === 1 ? '' : 's'}`;
+
+      if (!v) { out.value = ''; outFoot.textContent = 'empty'; return; }
+
+      let result = '';
+      try {
+        result = (mode === 'encode' ? def.enc(v, o) : def.dec(v, o)) || '';
+      } catch { result = ''; }
+
+      out.value = result;
+      outFoot.textContent = result
+        ? `${mode}d ${result.length} char${result.length === 1 ? '' : 's'}`
+        : (mode === 'decode' ? `couldn't decode as ${m}` : 'no output');
     }
-    [inEl, shEl, vkEl].forEach((el) => el.addEventListener('input', debounce(run, 100)));
+
+    /* ---- Wire-up ----------------------------------------------------- */
+    methodSel.addEventListener('change', () => {
+      const m = methodSel.value;
+      showOpts((METHODS[m] && METHODS[m].opts) || []);
+      run();
+    });
+    modeDecBtn.addEventListener('click', () => setMode('decode'));
+    modeEncBtn.addEventListener('click', () => setMode('encode'));
+
+    // Shift number ↔ slider stay in sync
+    shiftIn.addEventListener('input', () => { shiftSlider.value = shiftIn.value; syncShiftLabel(); run(); });
+    shiftSlider.addEventListener('input', () => { shiftIn.value = shiftSlider.value; syncShiftLabel(); run(); });
+
+    [inEl, keyIn, affineA, affineB].forEach((el) => el.addEventListener('input', debounce(run, 60)));
+
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(out.value);
+        const old = copyBtn.textContent;
+        copyBtn.textContent = '✓ Copied';
+        setTimeout(() => { copyBtn.textContent = old; }, 1200);
+      } catch {}
+    });
+
+    // Initial render
+    showOpts(METHODS[methodSel.value].opts);
+    syncShiftLabel();
+    run();
   }
 
   // =========================================================
